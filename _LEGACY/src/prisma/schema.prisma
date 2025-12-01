@@ -1,0 +1,180 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  rank      String    @default("M")
+  userId    String    @unique
+  password  String
+  name      String
+  group     String
+  phone     String
+  birth     DateTime?
+  gender    String?
+  isDeleted Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  applications Application[]
+  prays      Pray[]
+  createdRooms   CarpoolRoom[]     @relation("DriverRooms")
+  joinedRooms    CarpoolMember[]
+  chats       Chat[]         @relation("UserChats")
+  tokens      FcmToken[]     @relation("UserTokens")
+
+  reportsMade      ChatReport[]       @relation("UserReportsMade")
+  reportsReceived  ChatReport[]       @relation("UserReportsReceived")
+  consents Consent[]
+}
+
+model Application {
+  id         Int       @id @default(autoincrement())
+  idn        String
+  surveyData Json      // {"meal":{3x3array},"transfer":{"own-car":string,"bus":[1,1],transfer:"대형버스"}}
+  attended   Boolean   @default(false)
+  feePaid    Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  userId     String
+  retreatId  Int
+  user       User      @relation(fields: [userId], references: [userId])
+  retreat    Retreat   @relation(fields: [retreatId], references: [id])
+
+  @@unique([userId, retreatId])
+}
+
+model Retreat {
+  id         Int       @id @default(autoincrement())
+  title      String
+  date       DateTime
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  applications Application[]
+  youtubes Youtube[]
+}
+
+model Youtube {
+  id        Int      @id @default(autoincrement())
+  retreatId  Int
+  title      String
+  link      String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+  retreat    Retreat   @relation(fields: [retreatId], references: [id])
+}
+
+model Pray {
+  id         Int       @id @default(autoincrement())
+  content    String
+  createdAt  DateTime  @default(now())
+  userId     Int
+  user       User      @relation(fields: [userId], references: [id])
+}
+
+model CarpoolRoom {
+  id             Int               @id @default(autoincrement())
+  driverId       Int
+
+  carInfo        String?
+  departureTime  DateTime  @default(now()) // 나중에 변경해야 함.
+
+  origin         String
+  originDetailed String?
+
+  destination    String
+  destinationDetailed String?
+
+  seatsTotal     Int
+  seatsLeft      Int
+
+  note           String
+
+  originLat      Decimal?  @db.Decimal(10, 6)
+  originLng      Decimal?  @db.Decimal(10, 6)
+  destLat        Decimal?  @db.Decimal(10, 6)
+  destLng        Decimal?  @db.Decimal(10, 6)
+
+  status         String            @default("before_departure")
+  isArrived      Boolean           @default(false)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  driver         User              @relation("DriverRooms", fields: [driverId], references: [id])
+  members        CarpoolMember[]
+  chats          Chat[]
+  reports        ChatReport[]
+}
+
+model CarpoolMember {
+  roomId         Int
+  userId         Int
+  joinedAt       DateTime          @default(now())
+
+  user           User              @relation(fields: [userId], references: [id])
+  room           CarpoolRoom       @relation(fields: [roomId], references: [id])
+
+  @@id([roomId, userId])
+  @@map("carpool_members")
+}
+
+model Chat {
+  id             Int               @id @default(autoincrement())
+  senderId       Int
+  roomId         Int
+  message        String
+  timestamp      DateTime
+
+  sender         User              @relation("UserChats", fields: [senderId], references: [id])
+  room           CarpoolRoom       @relation(fields: [roomId], references: [id])
+
+  @@unique([senderId, roomId, message, timestamp])
+  @@index([roomId])
+  @@index([senderId])
+}
+
+model ChatReport {
+  id              Int           @id @default(autoincrement())
+  reporterId      Int
+  reportedUserId  Int
+  roomId          Int
+  reason          String
+  createdAt       DateTime      @default(now())
+
+  reporter        User          @relation("UserReportsMade", fields: [reporterId], references: [id])
+  reported        User          @relation("UserReportsReceived", fields: [reportedUserId], references: [id])
+  room            CarpoolRoom   @relation(fields: [roomId], references: [id])
+
+  @@index([reporterId])
+  @@index([reportedUserId])
+  @@index([roomId])
+}
+
+
+model FcmToken {
+  id      Int @id @default(autoincrement())
+  userId  Int
+  token   String  @unique
+  platform  String  @default("android")
+
+  user  User  @relation("UserTokens", fields: [userId], references: [id])
+  @@index([userId])
+}
+
+model Consent {
+  userId       Int
+  consentType  String
+  consentedAt  DateTime  @default(now())
+  value        Boolean
+
+  user         User      @relation(fields: [userId], references: [id])
+
+  @@id([userId, consentType])
+  @@index([userId])
+  @@map("user_consents")
+}
