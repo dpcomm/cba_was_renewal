@@ -209,9 +209,9 @@ class UserService {
   async checkUserInfo (checkUserDto: checkUserDto) {
     try {
       if (checkUserDto.password) {
-        const currentData = await userRepository.findUserByUserId(checkUserDto.userId);
-        const currentHash = normalizeHash(currentData?.password);
-        // currentData가 null(undefined) & currentData.password도 null(undefined)일때 "" 반환
+        const user: user | null = await userRepository.findUserByUserId(checkUserDto.userId);
+        const currentHash = normalizeHash(user?.password);
+        // user null(undefined) & user.password도 null(undefined)일때 "" 반환
         const passwordPattern = /^(?=.*[a-zA-Z])(?=.*\d).{10,}$/;
         if (!passwordPattern.test(checkUserDto.password)) {
           return ({
@@ -224,7 +224,7 @@ class UserService {
           return {
             ok: 1,
             message: "본인인증 완료",
-            data:currentData
+            user
           };
         } else {
           return {

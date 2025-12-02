@@ -11,6 +11,43 @@ const consentService = new ConsentService();
  * tags:
  *   name: Consent
  *   description: Consent management
+ * components:
+ *   schemas:
+ *     Consent:
+ *       type: object
+ *       required:
+ *         - userId
+ *         - consentType
+ *         - consentedAt
+ *         - value
+ *       properties:
+ *         userId:
+ *           type: integer
+ *           example: 12
+ *         consentType:
+ *           type: string
+ *           example: "marketing"
+ *         consentedAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-02-05T12:34:56.000Z"
+ *         value:
+ *           type: boolean
+ *           example: true
+ *
+ *     Consents:
+ *       type: array
+ *       items:
+ *         $ref: '#/components/schemas/Consent'
+ *       example:
+ *         - userId: 12
+ *           consentType: "marketing"
+ *           consentedAt: "2025-02-05T12:34:56.000Z"
+ *           value: true
+ *         - userId: 12
+ *           consentType: "sms"
+ *           consentedAt: "2025-02-05T12:35:20.000Z"
+ *           value: false 
  */
 class ConsentController {
   /**
@@ -22,8 +59,28 @@ class ConsentController {
    *     responses:
    *       200:
    *         description: Get all consents success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data: 
+   *                       $ref: '#/components/schemas/Consents'
+   *                     error: null
    *       404:
    *         description: Consents not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: ConsentController getAllConsents error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async getAllConsents(req: Request, res: Response<ApiResponse>) {
     try {
@@ -65,8 +122,28 @@ class ConsentController {
    *     responses:
    *       200:
    *         description: Get consent success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data: 
+   *                       $ref: '#/components/schemas/Consent'
+   *                     error: null
    *       404:
    *         description: Consent not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: ConsentController getConsent error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async getConsent(req: Request, res: Response<ApiResponse>) {
     try {
@@ -121,8 +198,22 @@ class ConsentController {
    *     responses:
    *       201:
    *         description: Create consent success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiResponseEmptyData'
    *       400:
    *         description: Create consent failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: ConsentController createConsent error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async createConsent(req: Request, res: Response<ApiResponse>) {
     try {
@@ -169,8 +260,28 @@ class ConsentController {
    *     responses:
    *       200:
    *         description: Update consent success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data: 
+   *                       $ref: '#/components/schemas/Consent'
+   *                     error: null
    *       400:
    *         description: Update consent failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: ConsentController updateConsent error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async updateConsent(req: Request, res: Response<ApiResponse>) {
     try {
@@ -215,8 +326,22 @@ class ConsentController {
    *     responses:
    *       200:
    *         description: Delete consent success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiResponseEmptyData'
    *       400:
    *         description: Delete consent failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: ConsentController deleteConsent error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async deleteConsent(req: Request, res: Response<ApiResponse>) {
     try {

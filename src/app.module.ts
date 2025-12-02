@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
-import { DatabaseModule } from './database/database.module';
+import { DatabaseModule } from '@infrastructure/database/database.module';
+import { ConsentModule } from '@modules/consent/consent.module';
+import { RedisModule } from '@infrastructure/database/redis.module';
 
 @Module({
   imports: [
@@ -11,8 +11,8 @@ import { DatabaseModule } from './database/database.module';
       envFilePath: process.env.NODE_ENV === 'prod' ? '.env.prod' : '.env.dev',
     }),
     DatabaseModule,
+    ConsentModule,
+    RedisModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}

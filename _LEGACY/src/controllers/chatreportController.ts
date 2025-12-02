@@ -37,8 +37,23 @@ class ChatreportController {
      *     responses:
      *       201:
      *         description: Report success
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: "#/components/schemas/ApiResponseEmptyData"
      *       400:
      *         description: Report failed
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: "#/components/schemas/ApiErrorResponseEmptyError"
+     *       500:
+     *         description: Report controller Error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: "#/components/schemas/ApiErrorResponse"
+     *               
      */
     async report(req: Request, res: Response<ApiResponse>) {
         try{

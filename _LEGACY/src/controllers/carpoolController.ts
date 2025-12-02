@@ -14,6 +14,99 @@ import {
  * tags:
  *   name: Carpool
  *   description: Carpool management
+ * components:
+ *   schemas:
+ *     CarpoolRoom:
+ *       type: object
+ *       required:
+ *         - id
+ *         - driverId
+ *         - departureTime
+ *         - origin
+ *         - destination
+ *         - seatsTotal
+ *         - seatsLeft
+ *         - note
+ *         - status
+ *         - isArrived
+ *         - createdAt
+ *         - updatedAt
+ *       properties:
+ *         id:
+ *           type: integer
+ *           example: 12
+ *         driverId:
+ *           type: integer
+ *           example: 5
+ *         carInfo:
+ *           type: string
+ *           nullable: true
+ *           example: "HYUNDAI Avante - Blue"
+ *         departureTime:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-12-01T08:30:00.000Z"
+ *         origin:
+ *           type: string
+ *           example: "서울특별시 강남구 삼성역"
+ *         originDetailed:
+ *           type: string
+ *           nullable: true
+ *           example: "2번 출구"
+ *         destination:
+ *           type: string
+ *           example: "경기도 용인시 죽전역"
+ *         destinationDetailed:
+ *           type: string
+ *           nullable: true
+ *           example: " 앞"
+ *         seatsTotal:
+ *           type: integer
+ *           example: 4
+ *         seatsLeft:
+ *           type: integer
+ *           example: 2
+ *         note:
+ *           type: string
+ *           example: "탑승 전 5분 전에 도착해주세요."
+ *         originLat:
+ *           type: number
+ *           format: double
+ *           nullable: true
+ *           example: 37.5
+ *         originLng:
+ *           type: number
+ *           format: double
+ *           nullable: true
+ *           example: 127.0
+ *         destLat:
+ *           type: number
+ *           format: double
+ *           nullable: true
+ *           example: 37.3
+ *         destLng:
+ *           type: number
+ *           format: double
+ *           nullable: true
+ *           example: 127.1
+ *         status:
+ *           type: string
+ *           example: "open"
+ *         isArrived:
+ *           type: boolean
+ *           example: false
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-11-30T09:12:33.123Z"
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-11-30T10:15:21.789Z"
+ *     CarpoolRoomList:
+ *       type: array
+ *       items:
+ *         $ref: '#/components/schemas/CarpoolRoom'
  */
 class CarpoolController {
   constructor() {
@@ -42,8 +135,28 @@ class CarpoolController {
    *     responses:
    *       200:
    *         description: Get all carpool rooms success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#components/schemas/CarpoolRoomList'
+   *                     error: null
    *       404:
    *         description: No carpool rooms found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: CarpoolController getAllCarpool error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async getAllCarpoolRooms(req: Request, res: Response<ApiResponse>) {
     try {
@@ -90,8 +203,28 @@ class CarpoolController {
    *     responses:
    *       200:
    *         description: Get carpool room success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#components/schemas/CarpoolRoom'
+   *                     error: null
    *       404:
    *         description: Carpool room not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: CarpoolController getCarpoolById error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async getCarpoolRoomById(req: Request, res: Response<ApiResponse>) {
     try {
@@ -131,10 +264,34 @@ class CarpoolController {
    *     responses:
    *       200:
    *         description: Get carpool detail success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#components/schemas/CarpoolRoom'
+   *                     error: null
    *       400:
    *         description: Invalid ID
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
    *       404:
    *         description: Not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: CarpoolController getCarpoolRoomDetail error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async getCarpoolRoomDetail(req: Request, res: Response<ApiResponse>) {
     try {
@@ -175,10 +332,34 @@ class CarpoolController {
    *     responses:
    *       200:
    *         description: Get my carpool rooms success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#components/schemas/CarpoolRoomList'
+   *                     error: null
    *       400:
    *         description: Invalid User ID
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
    *       404:
    *         description: Not found
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: CarpoolController getMyCarpoolRooms error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async getMyCarpoolRooms(req: Request, res: Response<ApiResponse>) {
     try {
@@ -237,8 +418,28 @@ class CarpoolController {
    *     responses:
    *       201:
    *         description: Create success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#components/schemas/CarpoolRoom'
+   *                     error: null
    *       400:
    *         description: Create failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: CarpoolController createCarpool error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async createCarpoolRoom(req: Request, res: Response<ApiResponse>) {
     try {
@@ -287,8 +488,28 @@ class CarpoolController {
    *     responses:
    *       200:
    *         description: Edit success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#components/schemas/CarpoolRoom'
+   *                     error: null
    *       400:
    *         description: Edit failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: CarpoolController editCarpool error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async editCarpoolRoom(req: Request, res: Response<ApiResponse>) {
     try {
@@ -338,8 +559,28 @@ class CarpoolController {
    *     responses:
    *       200:
    *         description: Update success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data:
+   *                       $ref: '#components/schemas/CarpoolRoom'
+   *                     error: null
    *       400:
    *         description: Update failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: CarpoolController updateCarpool error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async updateCarpoolRoom(req: Request, res: Response<ApiResponse>) {
     try {
@@ -380,8 +621,22 @@ class CarpoolController {
    *     responses:
    *       200:
    *         description: Delete success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiResponseEmptyData'
    *       400:
    *         description: Delete failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: CarpoolController deleteCarpool error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async deleteCarpoolRoom(req: Request, res: Response<ApiResponse>) {
     try {
@@ -420,8 +675,22 @@ class CarpoolController {
    *     responses:
    *       201:
    *         description: Join success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiResponseEmptyData'
    *       400:
    *         description: Join failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: CarpoolController joinCarpoolRoom error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async joinCarpoolRoom(req: Request, res: Response<ApiResponse>) {
     try {
@@ -458,8 +727,22 @@ class CarpoolController {
    *     responses:
    *       200:
    *         description: Leave success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiResponseEmptyData'
    *       400:
    *         description: Leave failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: CarpoolController leaveCarpoolRoom error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'   
    */
   async leaveCarpoolRoom(req: Request, res: Response<ApiResponse>) {
     try {
@@ -496,8 +779,22 @@ class CarpoolController {
    *     responses:
    *       200:
    *         description: Update status success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiResponseEmptyData'
    *       400:
    *         description: Update status failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: CarpoolController updateCarpoolStatus error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'   
    */
   async updateCarpoolStatus(req: Request, res: Response<ApiResponse>) {
     try {
@@ -529,8 +826,22 @@ class CarpoolController {
    *     responses:
    *       200:
    *         description: Send notification success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiResponseEmptyData'
    *       400:
    *         description: Send notification failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: CarpoolController sendCarpoolStartNotificationMessage error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'   
    */
   async sendCarpoolStartNotificationMessage(req: Request, res: Response<ApiResponse>) {
     try {

@@ -11,6 +11,44 @@ const fcmService = new FcmService();
  * tags:
  *   name: FCM
  *   description: FCM Token management
+ * components:
+ *   schemas:
+ *     RegistFCMTokenData:
+ *       type: object
+ *       required: 
+ *         - userId
+ *         - token
+ *       properties:
+ *         userId:
+ *           type: integer
+ *           example: 13
+ *         token:
+ *           type: string
+ *           example: "exampletoken"
+ *     DeleteFCMTokenData:
+ *       type: object
+ *       required:
+ *         - token
+ *       properties:
+ *         token:
+ *           type: string
+ *           example: "exampletokentoken"
+ *     RefreshFCMTokenData:
+ *       type: object
+ *       required:
+ *         - userId
+ *         - oldToken
+ *         - newToken
+ *       properties:
+ *         userId:
+ *           type: integer
+ *           example: 14
+ *         oldToken:
+ *           type: string
+ *           example: "oldTokenexample"
+ *         newToken:
+ *           type: string
+ *           example: "newTokenexample"
  */
 class FcmTokenController {
     /**
@@ -35,8 +73,28 @@ class FcmTokenController {
      *     responses:
      *       201:
      *         description: Register success
+     *         content:
+     *           application/json:
+     *             schema:
+     *               allOf:
+     *                 - $ref: '#/components/schemas/ApiResponse'
+     *                 - type: object
+     *                   properties:
+     *                     data:
+     *                       $ref: '#/components/schemas/RegistFCMTokenData'
+     *                     error: null
      *       400:
      *         description: Register failed
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+     *       500:
+     *         description: FCM Token register error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ApiErrorResponse'       
      */
     async registToken(req: Request, res: Response<ApiResponse>) {
         try {
@@ -96,8 +154,28 @@ class FcmTokenController {
      *     responses:
      *       200:
      *         description: Delete success
+     *         content:
+     *           application/json:
+     *             schema:
+     *               allOf:
+     *                 - $ref: '#/components/schemas/ApiResponse'
+     *                 - type: object
+     *                   properties:
+     *                     data:
+     *                       $ref: '#/components/schemas/DeleteFCMTokenData'
+     *                     error: null
      *       400:
      *         description: Delete failed
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+     *       500:
+     *         description: FCM Token delete error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ApiErrorResponse'       
      */
     async deleteToken(req: Request, res: Response<ApiResponse>) {
         try {
@@ -155,8 +233,28 @@ class FcmTokenController {
      *     responses:
      *       200:
      *         description: Refresh success
+     *         content:
+     *           application/json:
+     *             schema:
+     *               allOf:
+     *                 - $ref: '#/components/schemas/ApiResponse'
+     *                 - type: object
+     *                   properties:
+     *                     data:
+     *                       $ref: '#/components/schemas/RefreshFCMTokenData'
+     *                     error: null
      *       400:
      *         description: Refresh failed
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+     *       500:
+     *         description: FCM Token refresh error
+     *         content:
+     *           application/json:
+     *             schema:
+     *               $ref: '#/components/schemas/ApiErrorResponse'       
      */
     async refreshToken(req: Request, res: Response<ApiResponse>) {
         try {

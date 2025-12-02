@@ -25,6 +25,89 @@ const userService = new UserService();
  * tags:
  *   name: User
  *   description: User management
+ * components:
+ *   schemas:
+ *     User:
+ *       type: object
+ *       required:
+ *         - id
+ *         - userId
+ *         - password
+ *         - name
+ *         - group
+ *         - phone
+ *         - rank
+ *         - createdAt
+ *         - updatedAt
+ *         - isDeleted
+ *       properties:
+ *         id:
+ *           type: integer
+ *           example: 1
+ *         userId:
+ *           type: string
+ *           example: "userId"
+ *         password:
+ *           type: string
+ *           example: "securePassword123!"
+ *         name:
+ *           type: string
+ *           example: "name"
+ *         group:
+ *           type: string
+ *           example: "group1"
+ *         phone:
+ *           type: string
+ *           example: "010-1234-5678"
+ *         birth:
+ *           type: string
+ *           format: date
+ *           nullable: true
+ *           example: "2000-01-01"
+ *         gender:
+ *           type: string
+ *           nullable: true
+ *           example: "male"
+ *         rank:
+ *           type: string
+ *           example: "M"
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2020-01-01T00:00:00Z"
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2025-12-31T00:00:00Z"
+ *         isDeleted:
+ *           type: boolean
+ *           example: false
+ *     AccessTokenData:
+ *       type: object
+ *       required:
+ *         - accessToken
+ *         - user
+ *       properties:
+ *         accessToken:
+ *           type: string
+ *           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *         user:
+ *           $ref: "#/components/schemas/User"
+ *     RefreshTokenData:
+ *       type: object
+ *       required:
+ *         - accessToken
+ *         - refreshToken
+ *         - user
+ *       properties:
+ *         accessToken:
+ *           type: string
+ *           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *         refreshToken:
+ *           type: string
+ *           example: "dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4..."
+ *         user:
+ *           $ref: "#/components/schemas/User"
  */
 class UserController {
   /**
@@ -49,8 +132,28 @@ class UserController {
    *     responses:
    *       200:
    *         description: Login success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data: 
+   *                       $ref: '#/components/schemas/RefreshTokenData'
+   *                     error: null
    *       401:
    *         description: Login failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: Login controller error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async login(req: Request, res: Response<ApiResponse>) {
     try {
@@ -100,8 +203,22 @@ class UserController {
    *     responses:
    *       200:
    *         description: Logout success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiResponseEmptyData'
    *       401:
    *         description: Logout failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: Logout controller error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async logout(req: Request, res: Response<ApiResponse>) {
     try {
@@ -162,8 +279,22 @@ class UserController {
    *     responses:
    *       200:
    *         description: Register success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiResponseEmptyData'
    *       401:
    *         description: Register failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: Register controller error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async register(req: Request, res: Response<ApiResponse>) {
     try {
@@ -209,8 +340,28 @@ class UserController {
    *     responses:
    *       200:
    *         description: Refresh success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data: 
+   *                       $ref: '#/components/schemas/AccessTokenData'
+   *                     error: null
    *       401:
    *         description: Refresh failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: Refresh controller error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async refreshAccessToken(req: Request, res: Response<ApiResponse>) {
     try {
@@ -255,8 +406,28 @@ class UserController {
    *     responses:
    *       200:
    *         description: Get user success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data: 
+   *                       $ref: '#/components/schemas/User'
+   *                     error: null
    *       401:
    *         description: Get user failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: Get user controller error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async getUser(req: Request, res: Response<ApiResponse>) {
     try {
@@ -316,9 +487,29 @@ class UserController {
    *                 type: string
    *     responses:
    *       200:
-   *         description: Auth check success
+   *         description: Check auth success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data: 
+   *                       $ref: '#/components/schemas/User'
+   *                     error: null
    *       401:
-   *         description: Auth check failed
+   *         description: Check auth failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: authCheck controller error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async authCheck(req: Request, res: Response<ApiResponse>) {
     const userDTO: requestAuthCheckDto = req.body;
@@ -342,6 +533,7 @@ class UserController {
       return res.status(500).json({
         success: false,
         message: err.message,
+        error: err
       })
     }
   }
@@ -375,8 +567,22 @@ class UserController {
    *     responses:
    *       200:
    *         description: Update success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiResponseEmptyData'
    *       401:
    *         description: Update failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: Update controller error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async updateUser(req:Request, res:Response<ApiResponse>) {
     try {
@@ -432,8 +638,28 @@ class UserController {
    *     responses:
    *       200:
    *         description: Check success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data: 
+   *                       $ref: '#/components/schemas/User'
+   *                     error: null
    *       401:
    *         description: Check failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: checkUser controller error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async checkUser(req: Request, res: Response<ApiResponse>) {
     try {
@@ -445,7 +671,9 @@ class UserController {
           return res.status(200).json({
             success: true,
             message: "본인인증 완료",
-            data: checkData.data
+            data: {
+              user: checkData.user
+            }
           });
         }
         return res.status(401).json({
@@ -497,9 +725,23 @@ class UserController {
    *                 type: string
    *     responses:
    *       200:
-   *         description: Reset success
+   *         description: Reset password success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiResponseEmptyData'
    *       401:
-   *         description: Reset failed
+   *         description: Reset password failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: resetPassword controller error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async resetPassword(req: Request, res: Response<ApiResponse>) {
     try {
@@ -550,9 +792,23 @@ class UserController {
    *                 type: string
    *     responses:
    *       200:
-   *         description: Update group success
+   *         description: Update user group success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiResponseEmptyData'
    *       401:
-   *         description: Update group failed
+   *         description: Update user group failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: UpdateUserGroup controller error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async updateUserGroup(req: Request, res: Response<ApiResponse>) {
     try {
@@ -597,9 +853,29 @@ class UserController {
    *                 type: string
    *     responses:
    *       200:
-   *         description: Update name success
+   *         description: Update user name success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data: 
+   *                       $ref: '#/components/schemas/User'
+   *                     error: null
    *       400:
-   *         description: Update name failed
+   *         description: Update user name failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: UpdateUserName controller error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async updateUserName(req: Request, res: Response<ApiResponse>) {
     try {
@@ -642,9 +918,29 @@ class UserController {
    *                 type: string
    *     responses:
    *       200:
-   *         description: Update phone success
+   *         description: Update user phone success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               allOf:
+   *                 - $ref: '#/components/schemas/ApiResponse'
+   *                 - type: object
+   *                   properties:
+   *                     data: 
+   *                       $ref: '#/components/schemas/User'
+   *                     error: null
    *       400:
-   *         description: Update phone failed
+   *         description: Update user phone failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: UpdateUserPhone controller error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async updateUserPhone(req: Request, res: Response<ApiResponse>) {
     try {
@@ -694,9 +990,23 @@ class UserController {
    *                 format: date
    *     responses:
    *       200:
-   *         description: Update birth success
+   *         description: Update user birth success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiResponseEmptyData'
    *       401:
-   *         description: Update birth failed
+   *         description: Update user birth failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: updateUserBirth controller error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async updateUserBirth(req: Request, res: Response<ApiResponse>) {
     try {
@@ -740,8 +1050,22 @@ class UserController {
    *     responses:
    *       200:
    *         description: Delete success
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiResponseEmptyData'
    *       401:
    *         description: Delete failed
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponseEmptyError'
+   *       500:
+   *         description: Delete controller error
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiErrorResponse'
    */
   async delete(req: Request, res: Response<ApiResponse>) {
     try {
