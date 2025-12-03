@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Consent } from '../../domain/entities/consent.entity';
-import { CreateConsentRequestDto } from '../../presentation/dto/create-consent.request.dto';
+import { CreateConsentDto } from '../dto/create-consent.dto';
 import { User } from '@modules/user/domain/entities/user.entity';
 import { ConsentType } from '../../domain/consent-type.enum';
 
@@ -26,7 +26,7 @@ export class ConsentService {
     return this.consentRepository.findOne({ where: { userId, consentType } });
   }
 
-  async create(dto: CreateConsentRequestDto): Promise<Consent> {
+  async create(dto: CreateConsentDto): Promise<Consent> {
     const user = await this.userRepository.findOne({
       where: { id: dto.userId },
     });

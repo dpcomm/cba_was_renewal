@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsEnum, IsInt } from 'class-validator';
 import { ConsentType } from '../../domain/consent-type.enum';
 
-export class CreateConsentRequestDto {
+export class CreateConsentDto {
   @ApiProperty({ example: 12 })
   @IsInt()
   userId: number;

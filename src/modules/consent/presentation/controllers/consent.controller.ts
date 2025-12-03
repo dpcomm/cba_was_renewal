@@ -9,7 +9,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ConsentService } from '../../application/services/consent.service';
-import { CreateConsentRequestDto } from '../dto/create-consent.request.dto';
+import { CreateConsentDto } from '../../application/dto/create-consent.dto';
 import { ok } from '@shared/responses/api-response';
 import {
   ConsentListResponse,
@@ -54,7 +54,7 @@ export class ConsentController {
 
   @Post()
   @ApiOkResponse({ type: ConsentResponseDto })
-  async create(@Body() dto: CreateConsentRequestDto) {
+  async create(@Body() dto: CreateConsentDto) {
     const consent = await this.consentService.create(dto);
     return ok<ConsentResponseDto>(
       this.mapper.toResponse(consent),
