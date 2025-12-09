@@ -12,13 +12,14 @@ import { User } from '@modules/user/domain/entities/user.entity';
 import { CarpoolMember } from './carpool-member.entity';
 import { Chat } from '@modules/chat/domain/entities/chat.entity';
 import { ChatReport } from '@modules/chat/domain/entities/chat-report.entity';
+import { CarpoolStatus } from '../../domain/carpool-status.enum';
 
-@Entity()
+@Entity('CarpoolRoom')
 export class CarpoolRoom {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ update: false })
   driverId: number;
 
   @Column({ nullable: true })
@@ -39,10 +40,10 @@ export class CarpoolRoom {
   @Column({ nullable: true })
   destinationDetailed: string;
 
-  @Column()
+  @Column({ name: 'seatsTotal' })
   seatsTotal: number;
 
-  @Column()
+  @Column({ name: 'seatsLeft' })
   seatsLeft: number;
 
   @Column()
@@ -60,8 +61,8 @@ export class CarpoolRoom {
   @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
   destLng: number;
 
-  @Column({ default: 'before_departure' })
-  status: string;
+  @Column({ default: CarpoolStatus.Before_Departure })
+  status: CarpoolStatus;
 
   @Column({ default: false })
   isArrived: boolean;

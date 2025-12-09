@@ -102,8 +102,8 @@ npm run start:prod
 3. **API Response interface 사용**:
    - 성공 시: `return ok(data)`
    - 실패 시: `throw new NotFoundException()` (Nest 내장 에러 사용 시 필터가 자동 처리)
-4. **Swagger 확인**: 개발하면서 `http://localhost:3000/docs` 에서 문서가 잘 나오는지 체크
+4. **Swagger 확인**: 개발하면서 `http://localhost:3000/api/docs` 에서 문서가 잘 나오는지 체크
 
 ## 참고
-- **Swagger UI**: [http://localhost:3000/docs](http://localhost:3000/docs)
+- **Swagger UI**: [http://localhost:3000/api/docs](http://localhost:3000/docs)
 - **레거시 코드**: `_LEGACY/` 폴더 (참고용)
