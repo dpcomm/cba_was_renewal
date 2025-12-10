@@ -10,7 +10,7 @@ import {
 import { User } from '@modules/user/domain/entities/user.entity';
 import { CarpoolRoom } from '@modules/carpool/domain/entities/carpool-room.entity';
 
-@Entity()
+@Entity('Chat')
 @Unique(['senderId', 'roomId', 'message', 'timestamp'])
 @Index(['roomId'])
 @Index(['senderId'])
