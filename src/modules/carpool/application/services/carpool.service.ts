@@ -284,15 +284,20 @@ export class CarpoolService {
     
 
     async updateCarpoolStatus(dto: updateCarpoolstatusRequestDto): Promise<CarpoolRoom> {
-        const result = await this.carpoolRoomRepository
-            .createQueryBuilder()
-            .update(CarpoolRoom)
-            .set({ status: dto.newStatus })
-            .where('id = :roomId', { roomId: dto.roomId })
-            .execute();
+        await this.carpoolRoomRepository.update(
+            { id: dto.roomId },
+            { status: dto.newStatus },
+        );
 
-        // affected가 1 이상이면 업데이트 성공
-        return result.raw[0] ?? null;
+        const carpool = await this.carpoolRoomRepository.findOne({
+            where: { id: dto.roomId },
+        });
+
+        if(!carpool) {
+            throw new NotFoundException('Carpool not found');
+        }
+
+        return carpool;
     }
 
     async oldCarpoolArriveUpdate(currentTime: Date): Promise<void> {
