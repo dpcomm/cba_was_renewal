@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  Index,
 } from 'typeorm';
 import { Application } from '@modules/application/domain/entities/application.entity';
 import { Pray } from '@modules/pray/domain/entities/pray.entity';
@@ -20,37 +21,38 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ default: 'M' })
+  @Column({ default: 'M', length: 191 })
   rank: string;
 
-  @Column({ unique: true })
+  @Column({ length: 191 })
+  @Index('User_userId_key', { unique: true })
   userId: string;
 
-  @Column()
+  @Column({ length: 191 })
   password: string;
 
-  @Column()
+  @Column({ length: 191 })
   name: string;
 
-  @Column()
+  @Column({ length: 191 })
   group: string;
 
-  @Column()
+  @Column({ length: 191 })
   phone: string;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'datetime', nullable: true, precision: 3 })
   birth: Date;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, length: 191 })
   gender: string;
 
   @Column({ default: false })
   isDeleted: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)', onUpdate: 'CURRENT_TIMESTAMP(3)' })
   updatedAt: Date;
 
   @OneToMany(() => Application, (application) => application.user)

@@ -11,9 +11,14 @@ import { User } from '@modules/user/domain/entities/user.entity';
 import { CarpoolRoom } from '@modules/carpool/domain/entities/carpool-room.entity';
 
 @Entity('Chat')
-@Unique(['senderId', 'roomId', 'message', 'timestamp'])
-@Index(['roomId'])
-@Index(['senderId'])
+@Unique('Chat_senderId_roomId_message_timestamp_key', [
+  'senderId',
+  'roomId',
+  'message',
+  'timestamp',
+])
+@Index('Chat_roomId_idx', ['roomId'])
+@Index('Chat_senderId_idx', ['senderId'])
 export class Chat {
   @PrimaryGeneratedColumn()
   id: number;
@@ -24,17 +29,17 @@ export class Chat {
   @Column()
   roomId: number;
 
-  @Column()
+  @Column({ length: 191 })
   message: string;
 
-  @Column()
+  @Column({ type: 'datetime', precision: 3 })
   timestamp: Date;
 
   @ManyToOne(() => User, (user) => user.chats)
-  @JoinColumn({ name: 'senderId' })
+  @JoinColumn({ name: 'senderId', foreignKeyConstraintName: 'Chat_senderId_fkey' })
   sender: User;
 
   @ManyToOne(() => CarpoolRoom, (room) => room.chats)
-  @JoinColumn({ name: 'roomId' })
+  @JoinColumn({ name: 'roomId', foreignKeyConstraintName: 'Chat_roomId_fkey' })
   room: CarpoolRoom;
 }

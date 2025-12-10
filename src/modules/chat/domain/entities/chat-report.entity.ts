@@ -10,10 +10,10 @@ import {
 import { User } from '@modules/user/domain/entities/user.entity';
 import { CarpoolRoom } from '@modules/carpool/domain/entities/carpool-room.entity';
 
-@Entity()
-@Index(['reporterId'])
-@Index(['reportedUserId'])
-@Index(['roomId'])
+@Entity('ChatReport')
+@Index('ChatReport_reporterId_idx', ['reporterId'])
+@Index('ChatReport_reportedUserId_idx', ['reportedUserId'])
+@Index('ChatReport_roomId_idx', ['roomId'])
 export class ChatReport {
   @PrimaryGeneratedColumn()
   id: number;
@@ -27,21 +27,21 @@ export class ChatReport {
   @Column()
   roomId: number;
 
-  @Column()
+  @Column({ length: 191 })
   reason: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
   createdAt: Date;
 
   @ManyToOne(() => User, (user) => user.reportsMade)
-  @JoinColumn({ name: 'reporterId' })
+  @JoinColumn({ name: 'reporterId', foreignKeyConstraintName: 'ChatReport_reporterId_fkey' })
   reporter: User;
 
   @ManyToOne(() => User, (user) => user.reportsReceived)
-  @JoinColumn({ name: 'reportedUserId' })
+  @JoinColumn({ name: 'reportedUserId', foreignKeyConstraintName: 'ChatReport_reportedUserId_fkey' })
   reported: User;
 
   @ManyToOne(() => CarpoolRoom, (room) => room.reports)
-  @JoinColumn({ name: 'roomId' })
+  @JoinColumn({ name: 'roomId', foreignKeyConstraintName: 'ChatReport_roomId_fkey' })
   room: CarpoolRoom;
 }

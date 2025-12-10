@@ -11,13 +11,13 @@ import {
 import { User } from '@modules/user/domain/entities/user.entity';
 import { Retreat } from '@modules/retreat/domain/entities/retreat.entity';
 
-@Entity()
-@Unique(['userId', 'retreatId'])
+@Entity('Application')
+@Unique('Application_userId_retreatId_key', ['userId', 'retreatId'])
 export class Application {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ length: 191 })
   idn: string;
 
   @Column({ type: 'json' })
@@ -29,23 +29,23 @@ export class Application {
   @Column({ default: false })
   feePaid: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)', onUpdate: 'CURRENT_TIMESTAMP(3)' })
   updatedAt: Date;
 
-  @Column()
+  @Column({ length: 191 })
   userId: string;
 
   @Column()
   retreatId: number;
 
   @ManyToOne(() => User, (user) => user.applications)
-  @JoinColumn({ name: 'userId', referencedColumnName: 'userId' })
+  @JoinColumn({ name: 'userId', referencedColumnName: 'userId', foreignKeyConstraintName: 'Application_userId_fkey' })
   user: User;
 
   @ManyToOne(() => Retreat, (retreat) => retreat.applications)
-  @JoinColumn({ name: 'retreatId' })
+  @JoinColumn({ name: 'retreatId', foreignKeyConstraintName: 'Application_retreatId_fkey' })
   retreat: Retreat;
 }

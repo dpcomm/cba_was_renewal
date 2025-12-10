@@ -18,8 +18,8 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('CBA Renewal API')
-    .setDescription('API reference for CBA renewal project')
+    .setTitle('CBA Connect Renewal API')
+    .setDescription('API reference for CBA Connect renewal project')
     .setVersion('1.0')
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);

@@ -9,21 +9,21 @@ import {
 import { Application } from '@modules/application/domain/entities/application.entity';
 import { Youtube } from '@modules/youtube/domain/entities/youtube.entity';
 
-@Entity()
+@Entity('Retreat')
 export class Retreat {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ length: 191 })
   title: string;
 
-  @Column()
+  @Column({ type: 'datetime', precision: 3 })
   date: Date;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)', onUpdate: 'CURRENT_TIMESTAMP(3)' })
   updatedAt: Date;
 
   @OneToMany(() => Application, (application) => application.retreat)

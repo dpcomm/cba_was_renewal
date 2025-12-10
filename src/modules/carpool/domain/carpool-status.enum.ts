@@ -1,5 +1,5 @@
 export enum CarpoolStatus {
-    Before_Departure = 'Before Departure',
-    In_Transit = 'In transit',
-    Arrived = 'Arrived'
+    Before_Departure = 'before_departure',
+    In_Transit = 'in_transit',
+    Arrived = 'arrived'
 }
