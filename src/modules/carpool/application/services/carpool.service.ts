@@ -121,7 +121,11 @@ export class CarpoolService {
     }
 
     async createCarpoolRoom(dto: createCarpoolRequestDto ): Promise<CarpoolRoom> {
-        const carpool = this.carpoolRoomRepository.create({
+ 
+        
+        return await this.dataSource.transaction(async (manager) => {
+            // 1. 방 생성
+            const carpool = manager.create(CarpoolRoom, {
             driverId: dto.driverId,
             carInfo: dto.carInfo,
             departureTime: new Date(dto.departureTime),
@@ -130,15 +134,24 @@ export class CarpoolService {
             destination: dto.destination,
             destinationDetailed: dto.destinationDetailed ?? null,
             seatsTotal: dto.seatsTotal,
-            seatsLeft: dto.seatsTotal,
+            seatsLeft: dto.seatsTotal - 1, // driver가 바로 참여
             note: dto.note,
             originLat: dto.originLat,
             originLng: dto.originLng,
             destLat: dto.destLat,
             destLng: dto.destLng,
-        } as DeepPartial<CarpoolRoom>);
+            } as DeepPartial<CarpoolRoom>);
 
-        return await this.carpoolRoomRepository.save(carpool);
+            const savedRoom = await manager.save(carpool);
+
+            // 2. driver를 member로 자동 추가
+            await manager.insert(CarpoolMember, {
+            userId: dto.driverId,
+            roomId: savedRoom.id,
+            });
+
+            return savedRoom;
+        });
     }
 
     async updateCarpoolRoom(dto: updateCarpoolRequestDto ): Promise<CarpoolRoom> {
