@@ -6,7 +6,7 @@ import { LocalStrategy } from "./strategies/local.strategy";
 import { AuthController } from "./presentation/auth.controller";
 import { JwtModule } from "@nestjs/jwt";
 import { ConfigModule, ConfigService } from "@nestjs/config";
-import { RedisModule } from "../../infrastructure/database/redis.module";
+import { RedisModule } from "../../infrastructure/redis/redis.module";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 
 @Module({

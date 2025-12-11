@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from '@infrastructure/database/database.module';
 import { ConsentModule } from '@modules/consent/consent.module';
-import { RedisModule } from '@infrastructure/database/redis.module';
+import { RedisModule } from '@infrastructure/redis/redis.module';
 import { CarpoolModule } from '@modules/carpool/carpool.module';
 import { ChatModule } from '@modules/chat/chat.module';
 import { AuthModule } from '@modules/auth/auth.module';
