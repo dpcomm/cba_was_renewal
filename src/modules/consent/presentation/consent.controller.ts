@@ -17,9 +17,11 @@ import {
   ConsentSingleResponse,
 } from './dto/consent.response.dto';
 import { ConsentMapper } from '../application/mappers/consent.mapper';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { ConsentType } from '../domain/consent-type.enum';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
+import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
+import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 
 @ApiTags('Consent')
 @Controller('consent')
@@ -31,7 +33,7 @@ export class ConsentController {
   ) {}
 
   @Get()
-  @ApiOkResponse({ type: ConsentResponseDto, isArray: true })
+  @ApiSuccessResponse({ type: ConsentResponseDto, isArray: true })
   async getAll() {
     const consents = await this.consentService.findAll();
     return ok<ConsentListResponse>(
@@ -41,7 +43,8 @@ export class ConsentController {
   }
 
   @Get(':userId/:consentType')
-  @ApiOkResponse({ type: ConsentResponseDto })
+  @ApiSuccessResponse({ type: ConsentResponseDto })
+  @ApiFailureResponse(404, 'Consent not found')
   async getOne(
     @Param('userId', ParseIntPipe) userId: number,
     @Param('consentType', new ParseEnumPipe(ConsentType))
@@ -55,7 +58,8 @@ export class ConsentController {
   }
 
   @Post()
-  @ApiOkResponse({ type: ConsentResponseDto })
+  @JwtGuard()
+  @ApiSuccessResponse({ type: ConsentResponseDto })
   async create(@Body() dto: CreateConsentDto) {
     const consent = await this.consentService.create(dto);
     return ok<ConsentResponseDto>(
@@ -65,6 +69,8 @@ export class ConsentController {
   }
 
   @Delete(':userId/:consentType')
+  @JwtGuard()
+  @ApiFailureResponse(404, 'Consent not found')
   async remove(
     @Param('userId', ParseIntPipe) userId: number,
     @Param('consentType', new ParseEnumPipe(ConsentType))
