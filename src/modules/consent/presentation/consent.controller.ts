@@ -8,20 +8,22 @@ import {
   ParseIntPipe,
   Post,
 } from '@nestjs/common';
-import { ConsentService } from '../../application/services/consent.service';
-import { CreateConsentDto } from '../../application/dto/create-consent.dto';
+import { ConsentService } from '../application/services/consent.service';
+import { CreateConsentDto } from '../application/dto/create-consent.dto';
 import { ok } from '@shared/responses/api-response';
 import {
   ConsentListResponse,
   ConsentResponseDto,
   ConsentSingleResponse,
-} from '../dto/consent.response.dto';
-import { ConsentMapper } from '../../application/mappers/consent.mapper';
+} from './dto/consent.response.dto';
+import { ConsentMapper } from '../application/mappers/consent.mapper';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { ConsentType } from '../../domain/consent-type.enum';
+import { ConsentType } from '../domain/consent-type.enum';
+import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 
 @ApiTags('Consent')
 @Controller('consent')
+@JwtGuard()
 export class ConsentController {
   constructor(
     private readonly consentService: ConsentService,

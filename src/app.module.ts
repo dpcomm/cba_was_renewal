@@ -5,6 +5,7 @@ import { ConsentModule } from '@modules/consent/consent.module';
 import { RedisModule } from '@infrastructure/database/redis.module';
 import { CarpoolModule } from '@modules/carpool/carpool.module';
 import { ChatModule } from '@modules/chat/chat.module';
+import { AuthModule } from '@modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -13,10 +14,11 @@ import { ChatModule } from '@modules/chat/chat.module';
       envFilePath: process.env.NODE_ENV === 'prod' ? '.env.prod' : '.env.dev',
     }),
     DatabaseModule,
+    RedisModule,
+    AuthModule,
     ConsentModule,
     CarpoolModule,
     ChatModule,
-    RedisModule,
   ],
 })
 export class AppModule {}

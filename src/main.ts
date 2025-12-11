@@ -21,6 +21,7 @@ async function bootstrap() {
     .setTitle('CBA Connect Renewal API')
     .setDescription('API reference for CBA Connect renewal project')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, swaggerDocument);

@@ -23,7 +23,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
           ? payload.message.join(', ')
           : (payload.message ?? exception.message);
 
-    const body = fail(message, payload);
+    const body = fail(message, payload, status);
     response.status(status).json(body);
   }
 }

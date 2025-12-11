@@ -30,6 +30,7 @@ export class ConsentService {
     const user = await this.userRepository.findOne({
       where: { id: dto.userId },
     });
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -40,6 +41,7 @@ export class ConsentService {
       value: dto.value,
       user,
     });
+    
     return this.consentRepository.save(consent);
   }
 
