@@ -6,6 +6,8 @@ import { RedisModule } from '@infrastructure/redis/redis.module';
 import { CarpoolModule } from '@modules/carpool/carpool.module';
 import { ChatModule } from '@modules/chat/chat.module';
 import { AuthModule } from '@modules/auth/auth.module';
+import { FirebaseModule } from '@infrastructure/firebase/firebase.module';
+import { FcmTokenModule } from '@modules/fcm/fcm-token.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { AuthModule } from '@modules/auth/auth.module';
     ConsentModule,
     CarpoolModule,
     ChatModule,
+    FirebaseModule,
+    FcmTokenModule,
   ],
 })
 export class AppModule {}
