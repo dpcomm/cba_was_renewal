@@ -16,17 +16,31 @@ export class ConsentService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  // ... (findAll and findOne unchanged)
-
   async findAll(): Promise<Consent[]> {
-    return this.consentRepository.find({ order: { consentedAt: 'DESC' } });
+    const consents = await this.consentRepository.find({
+      order: { consentedAt: 'DESC' },
+    });
+
+    if (!consents.length) {
+      throw new NotFoundException(ERROR_MESSAGES.CONSENT_NOT_FOUND);
+    }
+
+    return consents;
   }
 
   async findOne(
     userId: number,
     consentType: ConsentType,
-  ): Promise<Consent | null> {
-    return this.consentRepository.findOne({ where: { userId, consentType } });
+  ): Promise<Consent> {
+    const consent = await this.consentRepository.findOne({
+      where: { userId, consentType },
+    });
+
+    if (!consent) {
+      throw new NotFoundException(ERROR_MESSAGES.CONSENT_NOT_FOUND);
+    }
+
+    return consent;
   }
 
   async create(dto: CreateConsentDto): Promise<Consent> {

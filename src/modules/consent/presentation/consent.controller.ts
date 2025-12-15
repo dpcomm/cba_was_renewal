@@ -35,6 +35,7 @@ export class ConsentController {
 
   @Get()
   @ApiSuccessResponse({ type: ConsentResponseDto, isArray: true })
+  @ApiFailureResponse(404, ERROR_MESSAGES.CONSENT_NOT_FOUND)
   async getAll() {
     const consents = await this.consentService.findAll();
     return ok<ConsentListResponse>(
@@ -53,8 +54,8 @@ export class ConsentController {
   ) {
     const consent = await this.consentService.findOne(userId, consentType);
     return ok<ConsentSingleResponse>(
-      this.mapper.toResponseOrNull(consent),
-      consent ? 'Success fetch consent' : 'Consent not found',
+      this.mapper.toResponse(consent),
+      'Success fetch consent',
     );
   }
 
