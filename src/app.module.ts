@@ -8,6 +8,7 @@ import { ChatModule } from '@modules/chat/chat.module';
 import { AuthModule } from '@modules/auth/auth.module';
 import { FirebaseModule } from '@infrastructure/firebase/firebase.module';
 import { FcmTokenModule } from '@modules/fcm/fcm-token.module';
+import { UserModule } from '@modules/user/user.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { FcmTokenModule } from '@modules/fcm/fcm-token.module';
     DatabaseModule,
     RedisModule,
     AuthModule,
+    UserModule,
     ConsentModule,
     CarpoolModule,
     ChatModule,

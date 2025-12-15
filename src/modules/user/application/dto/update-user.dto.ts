@@ -1,33 +1,30 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsOptional, IsString, IsEnum } from 'class-validator';
+import { UserGender } from '@modules/user/domain/enums/user-gender.enum';
 
 export class UpdateUserDto {
-  @ApiProperty({ example: 'user123', description: 'User ID (Identity)' })
-  @IsString()
-  userId: string;
-
-  @ApiProperty({ example: 'New Name', description: 'Name', required: false })
+  @ApiProperty({ required: false, example: '홍길동' })
   @IsString()
   @IsOptional()
   name?: string;
 
-  @ApiProperty({ example: 'New Group', description: 'Group', required: false })
+  @ApiProperty({ required: false, example: '배윤희&김준영' })
   @IsString()
   @IsOptional()
   group?: string;
 
-  @ApiProperty({ example: '010-9876-5432', description: 'Phone', required: false })
+  @ApiProperty({ required: false, example: '010-1234-5678' })
   @IsString()
   @IsOptional()
   phone?: string;
 
-  @ApiProperty({ example: '1999-12-31', description: 'Birth', required: false })
+  @ApiProperty({ required: false, example: '1990-01-01' })
   @IsDateString()
   @IsOptional()
-  birth?: string;
+  birth?: Date;
 
-  @ApiProperty({ example: 'Female', description: 'Gender', required: false })
-  @IsString()
+  @ApiProperty({ required: false, enum: UserGender, example: UserGender.MALE })
+  @IsEnum(UserGender)
   @IsOptional()
-  gender?: string;
+  gender?: UserGender;
 }
