@@ -9,6 +9,7 @@ import { AuthModule } from '@modules/auth/auth.module';
 import { FirebaseModule } from '@infrastructure/firebase/firebase.module';
 import { FcmTokenModule } from '@modules/fcm/fcm-token.module';
 import { UserModule } from '@modules/user/user.module';
+import { StatusModule } from '@modules/status/status.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { UserModule } from '@modules/user/user.module';
     RedisModule,
     AuthModule,
     UserModule,
+    StatusModule,
     ConsentModule,
     CarpoolModule,
     ChatModule,
