@@ -22,6 +22,7 @@ import { ConsentType } from '../domain/consent-type.enum';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
+import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
 
 @ApiTags('Consent')
 @Controller('consent')
@@ -44,7 +45,7 @@ export class ConsentController {
 
   @Get(':userId/:consentType')
   @ApiSuccessResponse({ type: ConsentResponseDto })
-  @ApiFailureResponse(404, 'Consent not found')
+  @ApiFailureResponse(404, ERROR_MESSAGES.CONSENT_NOT_FOUND)
   async getOne(
     @Param('userId', ParseIntPipe) userId: number,
     @Param('consentType', new ParseEnumPipe(ConsentType))
@@ -70,7 +71,7 @@ export class ConsentController {
 
   @Delete(':userId/:consentType')
   @JwtGuard()
-  @ApiFailureResponse(404, 'Consent not found')
+  @ApiFailureResponse(404, ERROR_MESSAGES.CONSENT_NOT_FOUND)
   async remove(
     @Param('userId', ParseIntPipe) userId: number,
     @Param('consentType', new ParseEnumPipe(ConsentType))

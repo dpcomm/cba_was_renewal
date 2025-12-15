@@ -7,6 +7,7 @@ import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { AuthResponseDto } from './dto/auth.response.dto';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
+import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -17,8 +18,8 @@ export class AuthController {
   @Post('login')
   @ApiOperation({ summary: '로그인' })
   @ApiSuccessResponse({ type: AuthResponseDto })
-  @ApiFailureResponse(401, 'Invalid password')
-  @ApiFailureResponse(404, 'User not found')
+  @ApiFailureResponse(401, ERROR_MESSAGES.INVALID_PASSWORD)
+  @ApiFailureResponse(404, ERROR_MESSAGES.USER_NOT_FOUND)
   @ApiBody({ type: LoginDto })
   async login(@Req() req, @Body() loginDto: LoginDto) {
     const { autoLogin } = loginDto;

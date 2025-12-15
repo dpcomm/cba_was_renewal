@@ -112,6 +112,38 @@ npm run start:prod
    - 실패 시: `throw new NotFoundException()` (Nest 내장 에러 사용 시 필터가 자동 처리)
 4. **Swagger 확인**: 개발하면서 `http://localhost:3000/api/docs` 에서 문서가 잘 나오는지 체크
 
+## 📖 API 문서화 가이드 (Swagger)
+
+Swagger 문서가 실제 응답 포맷(`{ success, statusCode, data/error }`)과 일치하도록 **전용 데코레이터**를 사용합니다.
+
+### 1. 성공 응답 (`@ApiSuccessResponse`)
+성공했을 때 반환되는 데이터의 DTO 타입을 지정합니다. 자동으로 표준 성공 응답 구조로 감싸서 보여줍니다.
+
+```typescript
+// 사용 예시
+@ApiSuccessResponse({ type: UserResponseDto })
+async getUser() { ... }
+
+// 리스트인 경우
+@ApiSuccessResponse({ type: UserResponseDto, isArray: true })
+async getAllUsers() { ... }
+```
+
+### 2. 실패 응답 (`@ApiFailureResponse`)
+발생할 수 있는 에러 상황을 명시합니다.
+**중요**: 문서와 코드의 메시지 일치성을 위해 반드시 `src/shared/constants/error-messages.ts`에 정의된 상수를 사용합니다.
+
+```typescript
+import { ERROR_MESSAGES } from '@shared/constants/error-messages';
+
+// 사용 예시
+@ApiFailureResponse(401, ERROR_MESSAGES.INVALID_PASSWORD)
+@ApiFailureResponse(404, ERROR_MESSAGES.USER_NOT_FOUND)
+async getUser() { ... }
+```
+
+> **Note**: 서비스 코드에서도 동일한 상수를 사용하여 에러를 던져야 합니다 (`throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND)`).
+
 ## 참고
 - **Swagger UI**: [http://localhost:3000/api/docs](http://localhost:3000/docs)
 - **레거시 코드**: `_LEGACY/` 폴더 (참고용)

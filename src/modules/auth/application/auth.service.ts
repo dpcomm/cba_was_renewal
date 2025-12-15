@@ -4,6 +4,7 @@ import { User } from "@modules/user/domain/entities/user.entity";
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { RedisClientType } from 'redis';
+import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
 
 @Injectable()
 export class AuthService {
@@ -16,13 +17,13 @@ export class AuthService {
   async validateUser(userId: string, password: string): Promise<User> {
     const user = await this.userService.findOneByUserId(userId);
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
     
     if (!isPasswordCorrect) {
-      throw new UnauthorizedException('Invalid password');
+      throw new UnauthorizedException(ERROR_MESSAGES.INVALID_PASSWORD);
     }
     return user;
   }

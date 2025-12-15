@@ -5,6 +5,7 @@ import { Consent } from '../../domain/entities/consent.entity';
 import { CreateConsentDto } from '../dto/create-consent.dto';
 import { User } from '@modules/user/domain/entities/user.entity';
 import { ConsentType } from '../../domain/consent-type.enum';
+import { ERROR_MESSAGES } from '../../../../shared/constants/error-messages';
 
 @Injectable()
 export class ConsentService {
@@ -14,6 +15,8 @@ export class ConsentService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
   ) {}
+
+  // ... (findAll and findOne unchanged)
 
   async findAll(): Promise<Consent[]> {
     return this.consentRepository.find({ order: { consentedAt: 'DESC' } });
@@ -32,7 +35,7 @@ export class ConsentService {
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
     }
 
     const consent = this.consentRepository.create({
@@ -48,7 +51,7 @@ export class ConsentService {
   async remove(userId: number, consentType: ConsentType): Promise<void> {
     const result = await this.consentRepository.delete({ userId, consentType });
     if (!result.affected) {
-      throw new NotFoundException('Consent not found');
+      throw new NotFoundException(ERROR_MESSAGES.CONSENT_NOT_FOUND);
     }
   }
 }
