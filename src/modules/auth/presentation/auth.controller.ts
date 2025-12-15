@@ -39,7 +39,7 @@ export class AuthController {
     return ok(user, 'Register successful');
   }
 
-  @UseGuards(JwtGuard)
+  @JwtGuard()
   @Post('logout')
   @ApiOperation({ summary: '로그아웃' })
   @ApiSuccessResponse({})

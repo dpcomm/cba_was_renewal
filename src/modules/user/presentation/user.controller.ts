@@ -19,7 +19,7 @@ import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 @ApiTags('Users')
 @Controller('users')
-@UseGuards(JwtGuard)
+@JwtGuard()
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
