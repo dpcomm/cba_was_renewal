@@ -13,7 +13,7 @@ import { Youtube } from '../../modules/youtube/domain/entities/youtube.entity';
 import { FcmToken } from '../../modules/fcm/domain/entities/fcm-token.entity';
 import { Consent } from '../../modules/consent/domain/entities/consent.entity';
 
-dotenv.config({ path: '.env.dev' });
+dotenv.config();
 
 export const AppDataSource = new DataSource({
   type: 'mysql',
