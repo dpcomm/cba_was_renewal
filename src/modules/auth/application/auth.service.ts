@@ -11,6 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { RedisClientType } from 'redis';
 import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
 import { RegisterDto } from './dto/register.dto';
+import { AuthResponseDto } from '../presentation/dto/auth.response.dto';
 
 @Injectable()
 export class AuthService {
@@ -34,7 +35,7 @@ export class AuthService {
     return user;
   }
 
-  async login(user: User, autoLogin: boolean = false) {
+  async login(user: User, autoLogin: boolean = false): Promise<AuthResponseDto> {
     const payload = { id: user.id };
     const accessToken = this.jwtService.sign(payload);
     let refreshToken: string | null = null;
@@ -53,20 +54,27 @@ export class AuthService {
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
+      user: (() => {
+        const { password, ...result } = user;
+        return result;
+      })(),
     };
   }
 
-  async register(dto: RegisterDto): Promise<User> {
+  async register(dto: RegisterDto): Promise<Omit<User, 'password'>> {
     const exists = await this.userService.findOneByUserId(dto.userId).catch(() => null);
     if (exists) {
       throw new BadRequestException('User already exists');
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
-    return this.userService.create({
+    const newUser = await this.userService.create({
       ...dto,
       password: hashedPassword,
     });
+
+    const { password, ...result } = newUser;
+    return result;
   }
 
   async logout(user: User): Promise<void> {
