@@ -24,11 +24,19 @@ pipeline {
       }
     }
 
-    stage('Build & Push') {
+    stage('Build') {
       steps {
         sh '''
           set -e
           docker build -t ${IMAGE_RENEW} .
+        '''
+      }
+    }
+
+    stage('Push') {
+      steps {
+        sh '''
+          set -e
           docker push ${IMAGE_RENEW}
         '''
       }
