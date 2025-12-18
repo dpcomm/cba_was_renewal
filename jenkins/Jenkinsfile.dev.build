@@ -28,7 +28,6 @@ pipeline {
       steps {
         sh '''
           set -e
-          cd ./cba_was_renewal
           docker build -t ${IMAGE_RENEW} .
           docker push ${IMAGE_RENEW}
         '''
