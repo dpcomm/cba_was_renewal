@@ -12,6 +12,7 @@ import { RedisClientType } from 'redis';
 import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
 import { RegisterDto } from './dto/register.dto';
 import { AuthResponseDto } from '../presentation/dto/auth.response.dto';
+import { UserResponseDto } from '@modules/user/presentation/dto/user.response.dto';
 
 @Injectable()
 export class AuthService {
@@ -22,49 +23,37 @@ export class AuthService {
   ) {}
 
   async validateUser(userId: string, password: string): Promise<User> {
-    const user = await this.userService.findOneByUserId(userId);
-    if (!user) {
-      throw new BadRequestException(ERROR_MESSAGES.USER_NOT_FOUND);
-    }
-
-    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    const user = await this.userService.findOneByUserId(userId).catch(() => null);
     
-    if (!isPasswordCorrect) {
-      throw new BadRequestException(ERROR_MESSAGES.INVALID_PASSWORD);
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      throw new UnauthorizedException(ERROR_MESSAGES.INVALID_CREDENTIALS);
     }
+    
     return user;
   }
 
-  async login(user: User, autoLogin: boolean = false): Promise<AuthResponseDto> {
+  async login(user: User): Promise<AuthResponseDto> {
     const payload = { id: user.id };
     const accessToken = this.jwtService.sign(payload);
-    let refreshToken: string | null = null;
-    const expiresIn = parseInt(process.env.JWT_REFRESH_EXPIRENTTIME || '604800');
+    const expiresIn = parseInt(process.env.JWT_REFRESH_EXPIRENTTIME || '2592000');
 
-    if (autoLogin) {
-      refreshToken = this.jwtService.sign(
-        { id: user.id },
-        {
-          expiresIn,
-        },
-      );
-      await this.redis.set(String(user.id), refreshToken, { EX: expiresIn });
-    }
+    const refreshToken = this.jwtService.sign(
+      { id: user.id },
+      { expiresIn },
+    );
+    await this.redis.set(String(user.id), refreshToken, { EX: expiresIn });
 
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
-      user: (() => {
-        const { password, ...result } = user;
-        return result;
-      })(),
+      user: new UserResponseDto(user),
     };
   }
 
-  async register(dto: RegisterDto): Promise<Omit<User, 'password'>> {
+  async register(dto: RegisterDto): Promise<UserResponseDto> {
     const exists = await this.userService.findOneByUserId(dto.userId).catch(() => null);
     if (exists) {
-      throw new BadRequestException('User already exists');
+      throw new BadRequestException(ERROR_MESSAGES.USER_ALREADY_EXISTS);
     }
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
@@ -73,12 +62,11 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    const { password, ...result } = newUser;
-    return result;
+    return new UserResponseDto(newUser);
   }
 
   async logout(user: User): Promise<void> {
-    if (!user) return;
+    if (!user) throw new BadRequestException(ERROR_MESSAGES.USER_NOT_FOUND);
     await this.redis.del(String(user.id));
   }
 
@@ -87,15 +75,15 @@ export class AuthService {
       const payload = this.jwtService.verify(refreshToken);
       const userId = payload.id;
       
-      const storedToken = await this.redis.get(String(userId));
-      if (storedToken !== refreshToken) {
-        throw new UnauthorizedException('Invalid refresh token');
+      const storedRefreshToken = await this.redis.get(String(userId));
+      if (storedRefreshToken !== refreshToken) {
+        throw new UnauthorizedException(ERROR_MESSAGES.INVAILD_REFRESH_TOKEN);
       }
 
       const accessToken = this.jwtService.sign({ id: userId });
       return { access_token: accessToken };
     } catch (e) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException(ERROR_MESSAGES.INVAILD_REFRESH_TOKEN);
     }
   }
 }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class LoginDto {
   @ApiProperty({ example: 'user123', description: 'User ID' })
@@ -11,9 +11,4 @@ export class LoginDto {
   @IsString()
   @IsNotEmpty()
   password: string;
-
-  @ApiProperty({ example: true, description: '자동 로그인 여부', required: false })
-  @IsBoolean()
-  @IsOptional()
-  autoLogin?: boolean;
 }

@@ -1,13 +1,15 @@
 import { Controller, Post, UseGuards, Req, Body } from '@nestjs/common';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import { RefreshToken } from './decorators/refresh-token.decorator';
 import { AuthService } from '../application/auth.service';
 import { ok } from '@shared/responses/api-response';
 import { LoginDto } from '../application/dto/login.dto';
 import { RegisterDto } from '../application/dto/register.dto';
-import { RefreshDto } from '../application/dto/refresh.dto';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
-import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiHeader } from '@nestjs/swagger';
 import { AuthResponseDto } from './dto/auth.response.dto';
+import { RefreshResponseDto } from './dto/refresh.response.dto';
+import { UserResponseDto } from '@modules/user/presentation/dto/user.response.dto';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
@@ -17,32 +19,31 @@ import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @UseGuards(LocalAuthGuard)
   @Post('login')
+  @UseGuards(LocalAuthGuard)
   @ApiOperation({ summary: '로그인' })
   @ApiSuccessResponse({ type: AuthResponseDto })
-  @ApiFailureResponse(401, ERROR_MESSAGES.INVALID_PASSWORD)
-  @ApiFailureResponse(404, ERROR_MESSAGES.USER_NOT_FOUND)
+  @ApiFailureResponse(401, ERROR_MESSAGES.INVALID_CREDENTIALS)
   @ApiBody({ type: LoginDto })
-  async login(@Req() req, @Body() loginDto: LoginDto) {
-    const { autoLogin } = loginDto;
-    const result = await this.authService.login(req.user, autoLogin);
+  async login(@Req() req) {
+    const result = await this.authService.login(req.user);
     return ok(result, 'Login successful');
   }
 
   @Post('register')
   @ApiOperation({ summary: '회원가입' })
-  @ApiSuccessResponse({ type: AuthResponseDto })
-  @ApiFailureResponse(400, 'User already exists')
+  @ApiSuccessResponse({ type: UserResponseDto })
+  @ApiFailureResponse(400, ERROR_MESSAGES.USER_ALREADY_EXISTS)
   async register(@Body() dto: RegisterDto) {
     const user = await this.authService.register(dto);
     return ok(user, 'Register successful');
   }
 
-  @JwtGuard()
   @Post('logout')
+  @JwtGuard()
   @ApiOperation({ summary: '로그아웃' })
   @ApiSuccessResponse({})
+  @ApiFailureResponse(401, ERROR_MESSAGES.USER_NOT_FOUND)
   async logout(@Req() req) {
     await this.authService.logout(req.user);
     return ok(null, 'Logout successful');
@@ -50,10 +51,11 @@ export class AuthController {
 
   @Post('refresh')
   @ApiOperation({ summary: '토큰 갱신' })
-  @ApiSuccessResponse({ type: AuthResponseDto })
-  @ApiFailureResponse(401, 'Invalid refresh token')
-  async refresh(@Body() dto: RefreshDto) {
-    const result = await this.authService.refresh(dto.refreshToken);
+  @ApiHeader({ name: 'authorization', description: 'Bearer <refresh_token>' })
+  @ApiSuccessResponse({ type: RefreshResponseDto })
+  @ApiFailureResponse(401, ERROR_MESSAGES.INVAILD_REFRESH_TOKEN)
+  async refresh(@RefreshToken() refreshToken: string) {
+    const result = await this.authService.refresh(refreshToken);
     return ok(result, 'Refresh successful');
   }
 }
