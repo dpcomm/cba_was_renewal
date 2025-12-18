@@ -1,0 +1,44 @@
+pipeline {
+  agent { label 'joey-host' }
+  options { disableConcurrentBuilds() }
+
+  environment {
+    REGISTRY = "ap-chuncheon-1.ocir.io"
+    NAMESPACE = "axdhp42jvukm"
+    IMAGE_RENEW = "${REGISTRY}/${NAMESPACE}/cba_was_renew:latest_dev"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+
+    stage('Login OCI') {
+      steps {
+        withCredentials([usernamePassword(credentialsId: 'oci-registry-joey-local', usernameVariable: 'OCI_USER', passwordVariable: 'OCI_PASS')]) {
+          sh '''
+            set -e
+            echo "$OCI_PASS" | docker login ${REGISTRY} -u "$OCI_USER" --password-stdin
+          '''
+        }
+      }
+    }
+
+    stage('Build & Push') {
+      steps {
+        sh '''
+          set -e
+          cd ./cba_was_renewal
+          docker build -t ${IMAGE_RENEW} .
+          docker push ${IMAGE_RENEW}
+        '''
+      }
+    }
+
+    stage('Deploy') {
+      steps {
+        build job: 'deploy-was-dev', wait: false
+      }
+    }
+  }
+}

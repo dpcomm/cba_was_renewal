@@ -145,7 +145,7 @@ async getUser() { ... }
 > **Note**: 서비스 코드에서도 동일한 상수를 사용하여 에러를 던져야 합니다 (`throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND)`).
 
 ## 참고
-- **Swagger UI**: [http://localhost:3000/api/docs](http://localhost:3000/docs)
+- **Swagger UI**: [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
 - **레거시 코드**: `_LEGACY/` 폴더 (참고용)
 
 ## 🗄️ 데이터베이스 마이그레이션 (TypeORM)
