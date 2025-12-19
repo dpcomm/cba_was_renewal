@@ -21,6 +21,7 @@ pipeline {
         ]) {
           sh '''
             set -e
+            rm -f .env.dev serviceAccountKey.json
             cp "$ENV_DEV" .env.dev
             cp "$SERVICE_ACCOUNT_KEY" serviceAccountKey.json
           '''
