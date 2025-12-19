@@ -20,7 +20,6 @@ RUN addgroup -S nodejs && adduser -S nestjs -G nodejs
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
-COPY serviceAccountKey.json ./
 
 RUN --mount=type=cache,target=/root/.npm npm ci --only=production --ignore-scripts
 

@@ -13,6 +13,21 @@ pipeline {
       steps { checkout scm }
     }
 
+    stage('Copy env file') {
+      steps {
+        withCredentials([
+          file(credentialsId: 'env-dev', variable: 'ENV_DEV'),
+          file(credentialsId: 'service-account-key', variable: 'SERVICE_ACCOUNT_KEY')
+        ]) {
+          sh '''
+            set -e
+            cp "$ENV_DEV" .env.dev
+            cp "$SERVICE_ACCOUNT_KEY" serviceAccountKey.json
+          '''
+        }
+      }
+    }
+
     stage('Login OCI') {
       steps {
         withCredentials([usernamePassword(credentialsId: 'oci-registry-joey-local', usernameVariable: 'OCI_USER', passwordVariable: 'OCI_PASS')]) {
@@ -26,10 +41,18 @@ pipeline {
 
     stage('Build') {
       steps {
-        sh '''
-          set -e
-          docker build -t ${IMAGE_RENEW} .
-        '''
+        withCredentials([
+          file(credentialsId: 'env-dev', variable: 'ENV_DEV'),
+          file(credentialsId: 'service-account-key', variable: 'SERVICE_ACCOUNT_KEY')
+        ]) {
+          sh '''
+            set -e
+            cp "$ENV_DEV" .env.dev
+            cp "$SERVICE_ACCOUNT_KEY" serviceAccountKey.json
+            docker build -t ${IMAGE_RENEW} .
+            rm -f .env serviceAccountKey.json
+          '''
+        }
       }
     }
 
