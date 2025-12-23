@@ -1,4 +1,5 @@
-import { Controller, Post, UseGuards, Req, Body } from '@nestjs/common';
+import { Controller, Post, UseGuards, Req, Body, Get, Param, BadRequestException } from '@nestjs/common';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RefreshToken } from './decorators/refresh-token.decorator';
 import { AuthService } from '../application/auth.service';
@@ -58,4 +59,25 @@ export class AuthController {
     const result = await this.authService.refresh(refreshToken);
     return ok(result, 'Refresh successful');
   }
+
+  @Post('email/verify')
+  @ApiOperation({ summary: '이메일 인증 코드 확인' })
+  @ApiSuccessResponse({ type: Boolean })
+  @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_INVALID)
+  @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_EXPIRED)
+  @ApiBody({ type: VerifyEmailDto })
+  async verifyEmail(@Body() dto: VerifyEmailDto) {
+    await this.authService.verifyEmail(dto.email, dto.code);
+    return ok(true, 'Email verification successful');
+  }
+
+  @Get('mail/:email')
+  @ApiOperation({ summary: '이메일 인증 코드 발송' })
+  @ApiSuccessResponse({})
+  @ApiFailureResponse(500, ERROR_MESSAGES.FAILED_TO_SEND_EMAIL)
+  async sendEmail(@Param('email') email: string) {
+    await this.authService.sendEmail(email);
+    return ok(null, 'Email verification code sent successfully');
+  }
+  
 }

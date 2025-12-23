@@ -8,6 +8,7 @@ import { JwtModule } from "@nestjs/jwt";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { RedisModule } from "../../infrastructure/redis/redis.module";
 import { JwtStrategy } from "./strategies/jwt.strategy";
+import { MailModule } from "@infrastructure/mail/mail.module";
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
       inject: [ConfigService],
     }),
     RedisModule,
+    MailModule,
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy],
   controllers: [AuthController],
