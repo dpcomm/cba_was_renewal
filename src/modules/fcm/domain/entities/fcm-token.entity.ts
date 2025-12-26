@@ -15,8 +15,8 @@ export class FcmToken {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({nullable: true})
-  userId: number | null;
+  @Column()
+  userId: number;
 
   @Column({ length: 191 })
   @Index('FcmToken_token_key', { unique: true })
@@ -26,9 +26,8 @@ export class FcmToken {
   platform: Platform;
 
   @ManyToOne(() => User, (user) => user.tokens, {
-    nullable: true,
-    onDelete: 'SET NULL'
+    onDelete: 'NO ACTION'
   })
   @JoinColumn({ name: 'userId', foreignKeyConstraintName: 'FcmToken_userId_fkey' })
-  user?: User | null;
+  user: User;
 }

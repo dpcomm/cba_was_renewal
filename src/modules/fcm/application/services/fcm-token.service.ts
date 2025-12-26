@@ -82,7 +82,7 @@ export class FcmTokenService {
         return this.fcmTokenRepository.save(newToken);
     }
 
-    // 폐기되지 않은 token의 userId 정보를 null 처리
+    // 토큰 등록 해제 (userId가 NOT NULL이므로 레코드 삭제)
     // device의 token은 정상이지만 해당 토큰과 연결된 user가 없는 경우
     async unregistToken(dto: unregistFcmTokenRequestDto): Promise<boolean> {
         const existing = await this.fcmTokenRepository.findOne({
@@ -94,11 +94,8 @@ export class FcmTokenService {
             return true;
         }
 
-        // userId null 처리
-        existing.userId = null;
-        existing.user = null;
-
-        await this.fcmTokenRepository.save(existing);
+        // userId가 NOT NULL이므로 토큰 레코드 삭제
+        await this.fcmTokenRepository.delete({ token: dto.token });
 
         return true;
     }

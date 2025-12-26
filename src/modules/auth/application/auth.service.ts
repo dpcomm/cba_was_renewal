@@ -99,7 +99,7 @@ export class AuthService {
     await this.mailService.sendVerificationEmail(email, code);
   }
 
-  async verifyEmail(email: string, code: string): Promise<void> {
+  async verifyEmail(email: string, code: string): Promise<{ verificationToken: string }> {
     const redisKey = `email_verification:${email}`;
     const storedCode = await this.redis.get(redisKey);
 
@@ -112,5 +112,19 @@ export class AuthService {
     }
 
     await this.redis.del(redisKey);
+
+    // 비밀번호 재설정과 같은 기타 동작에 필요한 임시 토큰 발급
+    const verificationToken = this.jwtService.sign(
+      { 
+        email, 
+        type: 'verification',
+      },
+      { 
+        expiresIn: '5m', 
+        secret: process.env.JWT_SECRET
+      }
+    );
+
+    return { verificationToken };
   }
 }

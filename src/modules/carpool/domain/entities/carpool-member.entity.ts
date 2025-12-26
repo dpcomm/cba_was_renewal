@@ -10,7 +10,6 @@ import { User } from '@modules/user/domain/entities/user.entity';
 import { CarpoolRoom } from './carpool-room.entity';
 
 @Entity('carpool_members')
-@Index('carpool_members_userId_fkey', ['userId'])
 export class CarpoolMember {
   @PrimaryColumn()
   roomId: number;

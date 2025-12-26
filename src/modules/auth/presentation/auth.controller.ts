@@ -60,17 +60,6 @@ export class AuthController {
     return ok(result, 'Refresh successful');
   }
 
-  @Post('email/verify')
-  @ApiOperation({ summary: '이메일 인증 코드 확인' })
-  @ApiSuccessResponse({ type: Boolean })
-  @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_INVALID)
-  @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_EXPIRED)
-  @ApiBody({ type: VerifyEmailDto })
-  async verifyEmail(@Body() dto: VerifyEmailDto) {
-    await this.authService.verifyEmail(dto.email, dto.code);
-    return ok(true, 'Email verification successful');
-  }
-
   @Get('mail/:email')
   @ApiOperation({ summary: '이메일 인증 코드 발송' })
   @ApiSuccessResponse({})
@@ -79,5 +68,15 @@ export class AuthController {
     await this.authService.sendEmail(email);
     return ok(null, 'Email verification code sent successfully');
   }
-  
+
+  @Post('email/verify')
+  @ApiOperation({ summary: '이메일 인증 코드 확인' })
+  @ApiSuccessResponse({ type: Boolean })
+  @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_INVALID)
+  @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_EXPIRED)
+  @ApiBody({ type: VerifyEmailDto })
+  async verifyEmail(@Body() dto: VerifyEmailDto) {
+    const result = await this.authService.verifyEmail(dto.email, dto.code);
+    return ok(result, 'Email verification successful');
+  }
 }
