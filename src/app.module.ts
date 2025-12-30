@@ -11,6 +11,7 @@ import { FcmTokenModule } from '@modules/fcm/fcm-token.module';
 import { MailModule } from '@infrastructure/mail/mail.module';
 import { UserModule } from '@modules/user/user.module';
 import { StatusModule } from '@modules/status/status.module';
+import { ExpoPushTokenModule } from '@modules/expo-push-token/expo-push-token.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { StatusModule } from '@modules/status/status.module';
     FirebaseModule,
     FcmTokenModule,
     MailModule,
+    ExpoPushTokenModule
   ],
 })
 export class AppModule {}
