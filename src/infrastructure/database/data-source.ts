@@ -13,7 +13,8 @@ import { Youtube } from '../../modules/youtube/domain/entities/youtube.entity';
 import { FcmToken } from '../../modules/fcm/domain/entities/fcm-token.entity';
 import { Consent } from '../../modules/consent/domain/entities/consent.entity';
 
-dotenv.config();
+const envFile = process.env.NODE_ENV === 'prod' ? '.env.prod' : '.env.dev';
+dotenv.config({ path: envFile });
 
 export const AppDataSource = new DataSource({
   type: 'mysql',

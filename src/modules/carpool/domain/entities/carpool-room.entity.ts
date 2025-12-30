@@ -16,7 +16,6 @@ import { ChatReport } from '@modules/chat/domain/entities/chat-report.entity';
 import { CarpoolStatus } from '../../domain/carpool-status.enum';
 
 @Entity('CarpoolRoom')
-@Index('CarpoolRoom_driverId_fkey', ['driverId'])
 export class CarpoolRoom {
   @PrimaryGeneratedColumn()
   id: number;
@@ -27,7 +26,7 @@ export class CarpoolRoom {
   @Column({ nullable: true, length: 191 })
   carInfo: string;
 
-  @Column({ default: () => 'CURRENT_TIMESTAMP', precision: 3 })
+  @Column({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
   departureTime: Date;
 
   @Column({ length: 191 })

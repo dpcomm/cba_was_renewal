@@ -8,6 +8,7 @@ import { ChatModule } from '@modules/chat/chat.module';
 import { AuthModule } from '@modules/auth/auth.module';
 import { FirebaseModule } from '@infrastructure/firebase/firebase.module';
 import { FcmTokenModule } from '@modules/fcm/fcm-token.module';
+import { MailModule } from '@infrastructure/mail/mail.module';
 import { UserModule } from '@modules/user/user.module';
 import { StatusModule } from '@modules/status/status.module';
 
@@ -27,6 +28,7 @@ import { StatusModule } from '@modules/status/status.module';
     ChatModule,
     FirebaseModule,
     FcmTokenModule,
+    MailModule,
   ],
 })
 export class AppModule {}

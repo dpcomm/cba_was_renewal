@@ -49,6 +49,12 @@ export class User {
   @Column({ default: false })
   isDeleted: boolean;
 
+  @Column({ type: 'varchar', length: 255, nullable: true, unique: true })
+  email: string;
+
+  @Column({ type: 'datetime', precision: 3, nullable: true })
+  emailVerifiedAt: Date;
+
   @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
   createdAt: Date;
 
