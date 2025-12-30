@@ -22,11 +22,11 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { NotificationDto } from "../dto/notification.dto";
+import { NotificationDto } from "../../dto/notification.dto";
 import { NotificationType } from "@modules/notification/domain/notification-type.enum";
 import { FcmMessageSender } from "./FCMmessage.sender";
-import { NotificationFactory } from "./notification.factory";
-import { NoticeNotificationDto } from "../dto/notice-notification.dto";
+import { FcmNotificationFactory } from "./FCMmessage.factory";
+import { NoticeNotificationDto } from "../../dto/notice-notification.dto";
 import { 
     CarpoolDeleteNotificationDto, 
     CarpoolJoinNotificationDto, 
@@ -34,11 +34,11 @@ import {
     CarpoolReadyNotificationDto, 
     CarpoolStartNotificationDto, 
     CarpoolUpdateNotificationDto 
-} from "../dto/carpool-notification.dto";
+} from "../../dto/carpool-notification.dto";
 import { 
     ScheduleReadyNotificationDto, 
     ScheduleStartNotificationDto 
-} from "../dto/schedule-notification.dto";
+} from "../../dto/schedule-notification.dto";
 
 // 현재 TopicMessage를 사용하기 위한 구현
 //
@@ -46,10 +46,10 @@ import {
 // parameter와 내부 구현의 변경 예정
 // CarpoolRepository, MemberRepository, TokenRepository등을 활용하여, 수신 대상자와 대상의 토큰 리스트를 확보하는 과정이 필요.
 @Injectable()
-export class NotificationService {
+export class FcmNotificationService {
     constructor(
         private readonly sender: FcmMessageSender,
-        private readonly factory: NotificationFactory,
+        private readonly factory: FcmNotificationFactory,
     ) {}
 
     async notice(notice: string) {

@@ -1,9 +1,9 @@
 import { MulticastMessage, TopicMessage, AndroidConfig, ApnsConfig, Notification } from "firebase-admin/messaging";
-import { ANDROID_BASE_POLICY, APNS_BASE_POLICY } from "./notification.policy";
+import { ANDROID_BASE_POLICY, APNS_BASE_POLICY } from "./FCMmessage.policy";
 
 type Target = string | string[];
 
-export class NotificationBuilder {
+export class FcmNotificationBuilder {
     private message: Partial<MulticastMessage & TopicMessage> = {};
     
     setData(data: Record<string, string>): this {
