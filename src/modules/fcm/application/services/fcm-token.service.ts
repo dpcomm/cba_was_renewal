@@ -169,10 +169,10 @@ export class FcmTokenService {
         return true;
     }
 
-    async getTokens(userId: number): Promise<FcmToken[]> {
+    async getTokens(userId?: number): Promise<FcmToken[]> {
         let tokens: FcmToken[];
 
-        if (userId) {
+        if (userId != null) {
             tokens = await this.fcmTokenRepository.find({
                 where: { userId },
             });
