@@ -23,7 +23,7 @@ export class Retreat {
   @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)', onUpdate: 'CURRENT_TIMESTAMP(3)' })
+  @Column({ type: 'datetime', precision: 3 })
   updatedAt: Date;
 
   @OneToMany(() => Application, (application) => application.retreat)

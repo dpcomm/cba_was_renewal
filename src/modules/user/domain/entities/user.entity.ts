@@ -49,7 +49,8 @@ export class User {
   @Column({ default: false })
   isDeleted: boolean;
 
-  @Column({ type: 'varchar', length: 255, nullable: true, unique: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Index('IDX_User_email', { unique: true })
   email: string;
 
   @Column({ type: 'datetime', precision: 3, nullable: true })
@@ -58,7 +59,7 @@ export class User {
   @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)', onUpdate: 'CURRENT_TIMESTAMP(3)' })
+  @Column({ type: 'datetime', precision: 3 })
   updatedAt: Date;
 
   @OneToMany(() => Application, (application) => application.user)

@@ -25,7 +25,7 @@ export class Consent {
   @Column()
   value: boolean;
 
-  @ManyToOne(() => User, (user) => user.consents)
+  @ManyToOne(() => User, (user) => user.consents, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'userId', foreignKeyConstraintName: 'user_consents_userId_fkey' })
   user: User;
 }

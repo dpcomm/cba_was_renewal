@@ -22,7 +22,7 @@ export class Pray {
   @Column()
   userId: number;
 
-  @ManyToOne(() => User, (user) => user.prays)
+  @ManyToOne(() => User, (user) => user.prays, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'userId', foreignKeyConstraintName: 'Pray_userId_fkey' })
   user: User;
 }
