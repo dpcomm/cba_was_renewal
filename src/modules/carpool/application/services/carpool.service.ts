@@ -328,5 +328,29 @@ export class CarpoolService {
             .andWhere('is_arrived = false')
             .execute();       
     }
+
+    async getCarpoolMembers(roomId: number): Promise<number[]> {
+        const members = await this.carpoolMemberRepository.find({
+            where: { roomId },
+            select: ['userId'],
+        });
+
+        return members.map(member => member.userId);        
+    }
+
+    async getDriverName(roomId: number): Promise<string> {
+        const result = await this.carpoolRoomRepository
+            .createQueryBuilder('room')
+            .innerJoin('room.driver', 'driver')
+            .select('driver.name', 'name')
+            .where('room.id = :roomId', { roomId })
+            .getRawOne<{ name: string }>();
+
+        if (!result) {
+            throw new Error('Driver not found for this carpool room');
+        }
+
+        return result.name;       
+    }
 }
 
