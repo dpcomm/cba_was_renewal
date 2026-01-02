@@ -33,15 +33,15 @@ export class ChatReport {
   @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
   createdAt: Date;
 
-  @ManyToOne(() => User, (user) => user.reportsMade)
+  @ManyToOne(() => User, (user) => user.reportsMade, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'reporterId', foreignKeyConstraintName: 'ChatReport_reporterId_fkey' })
   reporter: User;
 
-  @ManyToOne(() => User, (user) => user.reportsReceived)
+  @ManyToOne(() => User, (user) => user.reportsReceived, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'reportedUserId', foreignKeyConstraintName: 'ChatReport_reportedUserId_fkey' })
   reported: User;
 
-  @ManyToOne(() => CarpoolRoom, (room) => room.reports)
+  @ManyToOne(() => CarpoolRoom, (room) => room.reports, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'roomId', foreignKeyConstraintName: 'ChatReport_roomId_fkey' })
   room: CarpoolRoom;
 }

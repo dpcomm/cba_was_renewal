@@ -32,7 +32,7 @@ export class Application {
   @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)', onUpdate: 'CURRENT_TIMESTAMP(3)' })
+  @Column({ type: 'datetime', precision: 3 })
   updatedAt: Date;
 
   @Column({ length: 191 })
@@ -41,11 +41,11 @@ export class Application {
   @Column()
   retreatId: number;
 
-  @ManyToOne(() => User, (user) => user.applications)
+  @ManyToOne(() => User, (user) => user.applications, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'userId', referencedColumnName: 'userId', foreignKeyConstraintName: 'Application_userId_fkey' })
   user: User;
 
-  @ManyToOne(() => Retreat, (retreat) => retreat.applications)
+  @ManyToOne(() => Retreat, (retreat) => retreat.applications, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'retreatId', foreignKeyConstraintName: 'Application_retreatId_fkey' })
   retreat: Retreat;
 }

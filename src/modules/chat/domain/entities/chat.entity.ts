@@ -35,11 +35,11 @@ export class Chat {
   @Column({ type: 'datetime', precision: 3 })
   timestamp: Date;
 
-  @ManyToOne(() => User, (user) => user.chats)
+  @ManyToOne(() => User, (user) => user.chats, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'senderId', foreignKeyConstraintName: 'Chat_senderId_fkey' })
   sender: User;
 
-  @ManyToOne(() => CarpoolRoom, (room) => room.chats)
+  @ManyToOne(() => CarpoolRoom, (room) => room.chats, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
   @JoinColumn({ name: 'roomId', foreignKeyConstraintName: 'Chat_roomId_fkey' })
   room: CarpoolRoom;
 }
