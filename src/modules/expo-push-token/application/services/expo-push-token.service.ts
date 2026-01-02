@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { DeepPartial, Repository, DataSource } from "typeorm";
+import { DeepPartial, Repository, DataSource, In } from "typeorm";
 import { ExpoPushToken } from "@modules/expo-push-token/domain/entities/expo-push-token.entity";
 import { registExpoPushTokenRequestDto } from "../dto/expo-push-token.request.dto";
 import { User } from "@modules/user/domain/entities/user.entity";
@@ -53,18 +53,33 @@ export class ExpoPushTokenService {
         // 
     }
 
-    async getTokens(userId?: number): Promise<ExpoPushToken[]> {
-        let tokens: ExpoPushToken[];
+    async getTokens(userIds?: number | number[] ): Promise<ExpoPushToken[]> {
 
-        if (userId != null) {
-            tokens = await this.expoPushTokenRepository.find({
-                where: { userId },
-            });
-        } else {
-            tokens = await this.expoPushTokenRepository.find();
+        if (userIds == null) {
+            return this.expoPushTokenRepository.find();
         }
 
-        return tokens;
+        const ids = Array.isArray(userIds) ? userIds : [userIds];
+
+        if (ids.length === 0) {
+            return [];
+        }
+
+        return this.expoPushTokenRepository.find({
+            where: { userId: In(ids) },
+        });
+
+        // let tokens: ExpoPushToken[];
+
+        // if (userId != null) {
+        //     tokens = await this.expoPushTokenRepository.find({
+        //         where: { userId },
+        //     });
+        // } else {
+        //     tokens = await this.expoPushTokenRepository.find();
+        // }
+
+        // return tokens;
     }
 
     async deleteInvalidTokens(tokens: string[]): Promise<void> {
