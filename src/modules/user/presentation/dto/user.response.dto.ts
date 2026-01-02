@@ -27,6 +27,12 @@ export class UserResponseDto {
   @ApiProperty({ enum: UserRank })
   rank: UserRank;
 
+  @ApiProperty({ nullable: true })
+  email: string;
+
+  @ApiProperty({ nullable: true })
+  emailVerifiedAt: Date;
+
   @ApiProperty()
   createdAt: Date;
 
@@ -42,6 +48,8 @@ export class UserResponseDto {
     this.birth = user.birth;
     this.gender = user.gender;
     this.rank = user.rank;
+    this.email = user.email;
+    this.emailVerifiedAt = user.emailVerifiedAt;
     this.createdAt = user.createdAt;
     this.updatedAt = user.updatedAt;
   }

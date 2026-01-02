@@ -53,6 +53,19 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto): Promise<UserResponseDto> {
+    try {
+      const payload = this.jwtService.verify(dto.verificationToken, {
+        secret: process.env.JWT_SECRET,
+      });
+      
+      if (payload.type !== 'verification' || payload.email !== dto.email) {
+        throw new BadRequestException(ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_INVALID);
+      }
+    } catch (e) {
+      if (e instanceof BadRequestException) throw e;
+      throw new BadRequestException(ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_EXPIRED);
+    }
+
     const exists = await this.userService.findOneByUserId(dto.userId).catch(() => null);
     if (exists) {
       throw new BadRequestException(ERROR_MESSAGES.USER_ALREADY_EXISTS);
@@ -60,8 +73,17 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
     const newUser = await this.userService.create({
-      ...dto,
+      userId: dto.userId,
       password: hashedPassword,
+      name: dto.name,
+      group: dto.group,
+      phone: dto.phone,
+      email: dto.email,
+      emailVerifiedAt: new Date(),
+      updatedAt: new Date(),
+      birth: dto.birth,
+      gender: dto.gender,
+      rank: dto.rank,
     });
 
     return new UserResponseDto(newUser);

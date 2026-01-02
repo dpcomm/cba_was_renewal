@@ -22,7 +22,7 @@ export class FcmToken {
   @Index('FcmToken_token_key', { unique: true })
   token: string;
 
-  @Column({ default: Platform.Android, length: 191 })
+  @Column({ type: 'varchar', default: Platform.Android, length: 191 })
   platform: Platform;
 
   @ManyToOne(() => User, (user) => user.tokens, {

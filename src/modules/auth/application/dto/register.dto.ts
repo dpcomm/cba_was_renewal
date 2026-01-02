@@ -1,7 +1,5 @@
-import { UserGender } from '@modules/user/domain/enums/user-gender.enum';
-import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsOptional, IsString, IsNotEmpty, IsEnum } from 'class-validator';
+import { IsDateString, IsEmail, IsOptional, IsString, IsNotEmpty } from 'class-validator';
 
 export class RegisterDto {
   @ApiProperty({ example: 'testuser' })
@@ -28,6 +26,16 @@ export class RegisterDto {
   @IsString()
   @IsNotEmpty()
   phone: string;
+
+  @ApiProperty({ example: 'user@example.com', description: '인증된 이메일 주소' })
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty({ example: 'eyJhbGciOiJIUzI1...', description: '이메일 인증 후 발급받은 토큰' })
+  @IsString()
+  @IsNotEmpty()
+  verificationToken: string;
 
   @ApiProperty({ required: false, example: '1990-01-01' })
   @IsDateString()

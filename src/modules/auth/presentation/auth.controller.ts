@@ -14,6 +14,7 @@ import { UserResponseDto } from '@modules/user/presentation/dto/user.response.dt
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
+import { EmailVerificationResponseDto } from './dto/email-verification.response.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -35,6 +36,8 @@ export class AuthController {
   @ApiOperation({ summary: '회원가입' })
   @ApiSuccessResponse({ type: UserResponseDto })
   @ApiFailureResponse(400, ERROR_MESSAGES.USER_ALREADY_EXISTS)
+  @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_INVALID)
+  @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_EXPIRED)
   async register(@Body() dto: RegisterDto) {
     const user = await this.authService.register(dto);
     return ok(user, 'Register successful');
@@ -60,7 +63,7 @@ export class AuthController {
     return ok(result, 'Refresh successful');
   }
 
-  @Get('mail/:email')
+  @Get('email/:email')
   @ApiOperation({ summary: '이메일 인증 코드 발송' })
   @ApiSuccessResponse({})
   @ApiFailureResponse(500, ERROR_MESSAGES.FAILED_TO_SEND_EMAIL)
@@ -71,7 +74,7 @@ export class AuthController {
 
   @Post('email/verify')
   @ApiOperation({ summary: '이메일 인증 코드 확인' })
-  @ApiSuccessResponse({ type: Boolean })
+  @ApiSuccessResponse({ type: EmailVerificationResponseDto })
   @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_INVALID)
   @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_EXPIRED)
   @ApiBody({ type: VerifyEmailDto })

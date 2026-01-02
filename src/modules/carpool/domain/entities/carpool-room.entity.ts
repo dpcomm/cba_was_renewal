@@ -62,7 +62,7 @@ export class CarpoolRoom {
   @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
   destLng: number;
 
-  @Column({ default: CarpoolStatus.Before_Departure, length: 50 })
+  @Column({ type: 'varchar', default: CarpoolStatus.Before_Departure, length: 50 })
   status: CarpoolStatus;
 
   @Column({ default: false })
