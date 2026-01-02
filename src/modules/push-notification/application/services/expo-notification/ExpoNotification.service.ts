@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { NotificationDto } from "../../dto/notification.dto";
-import { NotificationType } from "@modules/notification/domain/notification-type.enum";
+import { NotificationType } from "@modules/push-notification/domain/notification-type.enum";
 import { ExpoNotificationSender } from "./ExpoNotification.sender";
 import { ExpoPushTokenService } from "@modules/expo-push-token/application/services/expo-push-token.service";
 import { CarpoolService } from "@modules/carpool/application/services/carpool.service";

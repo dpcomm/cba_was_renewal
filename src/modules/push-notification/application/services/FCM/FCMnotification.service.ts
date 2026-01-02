@@ -23,7 +23,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { NotificationDto } from "../../dto/notification.dto";
-import { NotificationType } from "@modules/notification/domain/notification-type.enum";
+import { NotificationType } from "@modules/push-notification/domain/notification-type.enum";
 import { FcmMessageSender } from "./FCMmessage.sender";
 import { FcmNotificationFactory } from "./FCMmessage.factory";
 import { NoticeNotificationDto } from "../../dto/notice-notification.dto";
