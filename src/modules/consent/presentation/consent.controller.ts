@@ -8,6 +8,8 @@ import {
   ParseIntPipe,
   Post,
 } from '@nestjs/common';
+import { RankGuard } from '@shared/decorators/rank-guard.decorator';
+import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
 import { ConsentService } from '../application/services/consent.service';
 import { CreateConsentDto } from '../application/dto/create-consent.dto';
 import { ok } from '@shared/responses/api-response';
@@ -34,6 +36,7 @@ export class ConsentController {
   ) {}
 
   @Get()
+  @RankGuard(UserRank.ADMIN)
   @ApiSuccessResponse({ type: ConsentResponseDto, isArray: true })
   @ApiFailureResponse(404, ERROR_MESSAGES.CONSENT_NOT_FOUND)
   async getAll() {

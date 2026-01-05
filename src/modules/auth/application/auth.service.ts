@@ -35,12 +35,12 @@ export class AuthService {
   }
 
   async login(user: User): Promise<AuthResponseDto> {
-    const payload = { id: user.id };
+    const payload = { id: user.id, rank: user.rank };
     const accessToken = this.jwtService.sign(payload);
     const expiresIn = parseInt(process.env.JWT_REFRESH_EXPIRENTTIME || '2592000');
 
     const refreshToken = this.jwtService.sign(
-      { id: user.id },
+      { id: user.id, rank: user.rank },
       { expiresIn },
     );
     await this.redis.set(String(user.id), refreshToken, { EX: expiresIn });
@@ -104,7 +104,7 @@ export class AuthService {
         throw new UnauthorizedException(ERROR_MESSAGES.INVAILD_REFRESH_TOKEN);
       }
 
-      const accessToken = this.jwtService.sign({ id: userId });
+      const accessToken = this.jwtService.sign({ id: userId, rank: payload.rank });
       return { access_token: accessToken };
     } catch (e) {
       throw new UnauthorizedException(ERROR_MESSAGES.INVAILD_REFRESH_TOKEN);
