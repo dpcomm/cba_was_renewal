@@ -11,6 +11,7 @@ import { User } from '@modules/user/domain/entities/user.entity';
     imports: [TypeOrmModule.forFeature([CarpoolMember, CarpoolRoom, User])],
     controllers: [CarpoolController],
     providers: [CarpoolService, CarpoolMapper],
+    exports: [CarpoolService],
 })
 
 export class CarpoolModule {}

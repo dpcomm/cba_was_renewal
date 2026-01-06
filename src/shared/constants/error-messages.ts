@@ -13,4 +13,5 @@ export const ERROR_MESSAGES = {
   CARPOOL_NO_SEAT: 'No seat left in carpool',
   FCM_TOKEN_NOT_FOUND: 'FCM Token not found',
   FCM_TOKEN_ALREADY_REGISTED: 'Token is already registered to another account.',
+  NOTICE_NOT_FOUND: 'Notice not found',
 } as const;

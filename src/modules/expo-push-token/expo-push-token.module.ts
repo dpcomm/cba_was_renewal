@@ -10,5 +10,6 @@ import { ExpoPushTokenMapper } from "./application/mappers/expo-push-token.mappe
     imports: [TypeOrmModule.forFeature([ExpoPushToken, User])],
     controllers: [ExpoPushTokenController],
     providers: [ExpoPushTokenService, ExpoPushTokenMapper],
+    exports: [ExpoPushTokenService],
 })
 export class ExpoPushTokenModule {}

@@ -12,6 +12,7 @@ import { MailModule } from '@infrastructure/mail/mail.module';
 import { UserModule } from '@modules/user/user.module';
 import { StatusModule } from '@modules/status/status.module';
 import { ExpoPushTokenModule } from '@modules/expo-push-token/expo-push-token.module';
+import { NoticeModule } from '@modules/notice/notice.module';
 
 @Module({
   imports: [
@@ -30,7 +31,8 @@ import { ExpoPushTokenModule } from '@modules/expo-push-token/expo-push-token.mo
     FirebaseModule,
     FcmTokenModule,
     MailModule,
-    ExpoPushTokenModule
+    ExpoPushTokenModule,
+    NoticeModule,
   ],
 })
 export class AppModule {}
