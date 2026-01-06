@@ -10,6 +10,7 @@ import {
 } from "../dto/fcm-token.request.dto";
 import { Platform } from "@modules/fcm/domain/platform.enum";
 import { User } from "@modules/user/domain/entities/user.entity";
+import { ERROR_MESSAGES } from "@shared/constants/error-messages";
 
 
 @Injectable()
@@ -29,7 +30,7 @@ export class FcmTokenService {
         });
 
         if (!user) {
-            throw new NotFoundException('User not found');
+            throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
         }
 
         // 현재 등록 요청한 token이 DB에 존재하는지 확인
@@ -66,7 +67,7 @@ export class FcmTokenService {
             // → 명백히 다른 계정의 토큰 → 에러
             // ───────────────────────────────────────────────
             throw new BadRequestException(
-                'Token is already registered to another account.',
+                ERROR_MESSAGES.FCM_TOKEN_ALREADY_REGISTED,
             );
         }
 
@@ -115,7 +116,7 @@ export class FcmTokenService {
                 // 2. 소유자 검증
                 if (existingOld.userId !== dto.userId) {
                     throw new BadRequestException(
-                    'Old token does not belong to this user',
+                        'Old token does not belong to this user',
                     );
                 }
 
@@ -133,7 +134,7 @@ export class FcmTokenService {
                     }
 
                     throw new BadRequestException(
-                    'New token already registered to another account',
+                        'New token already registered to another account',
                     );
                 }
 

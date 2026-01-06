@@ -11,4 +11,6 @@ export const ERROR_MESSAGES = {
   CARPOOL_ALREADY_JOINED: 'Carpool already joined',
   CARPOOL_NOT_MEMBER: 'Carpool not member',
   CARPOOL_NO_SEAT: 'No seat left in carpool',
+  FCM_TOKEN_NOT_FOUND: 'FCM Token not found',
+  FCM_TOKEN_ALREADY_REGISTED: 'Token is already registered to another account.',
 } as const;

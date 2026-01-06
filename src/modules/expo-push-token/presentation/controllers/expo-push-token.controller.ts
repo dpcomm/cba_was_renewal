@@ -21,6 +21,7 @@ import {
     ExpoPushTokenSingleResponse
 } from '../dto/expo-push-token.response.dto';
 import { ExpoPushTokenMapper } from '@modules/expo-push-token/application/mappers/expo-push-token.mapper';
+import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 @ApiTags('ExpoPushToken')
 @Controller('expoPushToken')
@@ -34,6 +35,7 @@ export class ExpoPushTokenController {
     @Post('regist')
     @JwtGuard()
     @ApiSuccessResponse({ type: ExpoPushTokenResponseDto})
+    @ApiFailureResponse(404, ERROR_MESSAGES.USER_NOT_FOUND)
     async regist(
         @Body() dto: registExpoPushTokenRequestDto,
     ) {

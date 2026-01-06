@@ -4,6 +4,7 @@ import { DeepPartial, Repository, DataSource, In } from "typeorm";
 import { ExpoPushToken } from "@modules/expo-push-token/domain/entities/expo-push-token.entity";
 import { registExpoPushTokenRequestDto } from "../dto/expo-push-token.request.dto";
 import { User } from "@modules/user/domain/entities/user.entity";
+import { ERROR_MESSAGES } from "@shared/constants/error-messages";
 
 @Injectable()
 export class ExpoPushTokenService {
@@ -20,7 +21,7 @@ export class ExpoPushTokenService {
         });
 
         if (!user) {
-            throw new NotFoundException('User not found');
+            throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
         }
 
         // 1. 이미 등록된 토큰인지 확인

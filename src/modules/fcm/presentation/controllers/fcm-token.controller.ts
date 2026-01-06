@@ -27,6 +27,7 @@ import {
   FcmTokenSingleResponse 
 } from '../dto/fcm-token.response.dto';
 import { FcmTokenMapper } from '@modules/fcm/application/mappers/fcm-token.mapper';
+import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 @ApiTags('FcmToken')
 @Controller('fcmToken')
@@ -40,6 +41,8 @@ export class FcmTokenController {
   @Post('regist')
   @JwtGuard()
   @ApiSuccessResponse({ type: FcmTokenResponseDto})
+  @ApiFailureResponse(404, ERROR_MESSAGES.USER_NOT_FOUND)
+  @ApiFailureResponse(409, ERROR_MESSAGES.FCM_TOKEN_ALREADY_REGISTED)
   async regist(
     @Body() dto: registFcmTokenRequestDto,
   ) {
@@ -64,6 +67,9 @@ export class FcmTokenController {
   @Put('refresh')
   @JwtGuard()
   @ApiSuccessResponse({ type: FcmTokenResponseDto})
+  @ApiFailureResponse(404, ERROR_MESSAGES.FCM_TOKEN_NOT_FOUND)
+  @ApiFailureResponse(409, 'Old token does not belong to this user')
+  @ApiFailureResponse(409, 'New token already registered to another account')
   async refresh(
     @Body() dto: refreshFcmTokenRequestDto
   ) {
