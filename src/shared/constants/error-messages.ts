@@ -7,4 +7,8 @@ export const ERROR_MESSAGES = {
   FAILED_TO_SEND_EMAIL: 'Failed to send email',
   EMAIL_VERIFICATION_CODE_EXPIRED: 'Email verification code expired',
   EMAIL_VERIFICATION_CODE_INVALID: 'Email verification code invalid',
+  CARPOOL_NOT_FOUND: 'Carpool not found',
+  CARPOOL_ALREADY_JOINED: 'Carpool already joined',
+  CARPOOL_NOT_MEMBER: 'Carpool not member',
+  CARPOOL_NO_SEAT: 'No seat left in carpool',
 } as const;

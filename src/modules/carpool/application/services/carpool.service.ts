@@ -11,6 +11,7 @@ import {
 } from '../dto/carpool.request.dto';
 import { User } from '@modules/user/domain/entities/user.entity';
 import { CarpoolStatus } from '@modules/carpool/domain/carpool-status.enum';
+import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 // fcmservice
 // redis
 
@@ -28,7 +29,7 @@ export class CarpoolService {
     ) {}
 
     async getAllCarpoolRooms(): Promise<CarpoolRoom[]> {
-        return await this.carpoolRoomRepository
+        const carpools = await this.carpoolRoomRepository
             .createQueryBuilder('carpool')
             .leftJoin('carpool.driver', 'driver')
             .select([
@@ -38,10 +39,15 @@ export class CarpoolService {
             ])
             .orderBy('carpool.createdAt', 'DESC')
             .getMany();
+        
+        if (!carpools.length) {
+            throw new NotFoundException(ERROR_MESSAGES.CARPOOL_NOT_FOUND);
+        }
+        return carpools;
     }
 
-    async getCarpoolRoomById( id: number ): Promise<CarpoolRoom | null> {
-        return await this.carpoolRoomRepository
+    async getCarpoolRoomById( id: number ): Promise<CarpoolRoom> {
+        const carpool = await this.carpoolRoomRepository
             .createQueryBuilder('carpool')    
 
             // driver
@@ -76,10 +82,16 @@ export class CarpoolService {
 
             .getOne();
 
+        if (!carpool) {
+            throw new NotFoundException(ERROR_MESSAGES.CARPOOL_NOT_FOUND);
+        }
+
+        return carpool;
+
     }
 
-    async getCarpoolRoomDetail( id: number ): Promise<CarpoolRoom | null> {
-        return await this.carpoolRoomRepository
+    async getCarpoolRoomDetail( id: number ): Promise<CarpoolRoom> {
+        const carpool = await this.carpoolRoomRepository
             .createQueryBuilder('carpool')
             .leftJoin('carpool.driver', 'driver')
             .leftJoin('carpool.members', 'member')
@@ -96,10 +108,16 @@ export class CarpoolService {
                 'memberUser.phone',
             ])
             .getOne()
+
+        if (!carpool) {
+            throw new NotFoundException(ERROR_MESSAGES.CARPOOL_NOT_FOUND);
+        }
+
+        return carpool;
     }
 
     async findMyCarpoolRooms( userId: number ): Promise<CarpoolRoom[]> {
-        return await this.carpoolRoomRepository
+        const carpools = await this.carpoolRoomRepository
             .createQueryBuilder('carpool')
             .innerJoin('carpool.members', 'memberFilter')
             .leftJoin('carpool.driver', 'driver')
@@ -118,6 +136,10 @@ export class CarpoolService {
                 'memberUser.phone',
             ])
             .getMany()
+        if (!carpools.length) {
+            throw new NotFoundException(ERROR_MESSAGES.CARPOOL_NOT_FOUND);
+        }
+        return carpools;
     }
 
     async createCarpoolRoom(dto: createCarpoolRequestDto ): Promise<CarpoolRoom> {
@@ -190,31 +212,46 @@ export class CarpoolService {
 
     }
 
-    async deleteCarpoolRoom(roomId: number): Promise<Boolean> {
-        return this.dataSource.transaction(async (manager) => {
+    async deleteCarpoolRoom(roomId: number): Promise<void> {
+        await this.dataSource.transaction(async (manager) => {
+            // 카풀 존재 여부 확인
+            const roomExists = await manager.exists(CarpoolRoom, {
+                where: { id: roomId },
+            });            
+            if (!roomExists) {
+                throw new NotFoundException(ERROR_MESSAGES.CARPOOL_NOT_FOUND);
+            }
             // 1. 방에 속한 모든 멤버 삭제
             await manager.delete(CarpoolMember, { roomId });
 
             // 2. 방 삭제 (PK 기준)
-            const result = await manager.delete(CarpoolRoom, roomId);
-
-            return (result.affected ?? 0) > 0;
+            await manager.delete(CarpoolRoom, { id: roomId});
         });
     }
 
-    async joinCarpoolRoom(dto: participationCarpoolRequestDto): Promise<Boolean> {
+    async joinCarpoolRoom(dto: participationCarpoolRequestDto): Promise<CarpoolRoom> {
         try {
             // transaction으로 처리
-            await this.dataSource.transaction(async (manager) => {
+            return await this.dataSource.transaction(async (manager) => {
+                // 카풀 존재 여부 확인
+                const room = await manager.findOne(CarpoolRoom, {
+                    where: { id: dto.roomId },
+                    select: ['id', 'seatsLeft'],
+                });
+
+                if (!room) {
+                    throw new NotFoundException(ERROR_MESSAGES.CARPOOL_NOT_FOUND);
+                }
+
                 //member에 있는지 확인
                 const isMember = await manager.exists(CarpoolMember, {
                     where: { 
                         userId: dto.userId, 
-                        roomId: dto.roomId }
-                    ,
+                        roomId: dto.roomId 
+                    },
                 });
                 if (isMember) {
-                    throw new Error('Already joined');
+                    throw new Error(ERROR_MESSAGES.CARPOOL_ALREADY_JOINED);
                 }
 
                 // 잔여석 조건부 감소. 잔여석이 음수가 되지 않도록.
@@ -230,7 +267,7 @@ export class CarpoolService {
 
 
                 if (result.affected === 0) {
-                    throw new Error('NO_SEAT');
+                    throw new Error(ERROR_MESSAGES.CARPOOL_NO_SEAT);
                 }
 
                 // 3. 멤버 추가
@@ -238,7 +275,12 @@ export class CarpoolService {
                     userId: dto.userId,
                     roomId: dto.roomId,
                 });           
+                // 최신 상태 조회
+                const updatedRoom = await manager.findOneOrFail(CarpoolRoom, {
+                    where: { id: dto.roomId },
+                });
 
+                return updatedRoom;
             });
 
             // redis에 member 추가 처리
@@ -250,22 +292,45 @@ export class CarpoolService {
             // fcm을 통한 join notice
             // fcm service 구현 이후 처리
 
-            return true;
         } catch (err) {
-            return false;
+            throw err;
         }
 
     }
 
-    async leaveCarpoolRoom(dto: participationCarpoolRequestDto): Promise<Boolean> {
+    async leaveCarpoolRoom(dto: participationCarpoolRequestDto): Promise<CarpoolRoom> {
         try {
-            await this.dataSource.transaction(async (manager) => {
+            return await this.dataSource.transaction(async (manager) => {
+                // 카풀 존재 여부 확인
+                const room = await manager.findOne(CarpoolRoom, {
+                    where: { id: dto.roomId },
+                    select: ['id'],
+                });
+
+                if (!room) {
+                    throw new NotFoundException(ERROR_MESSAGES.CARPOOL_NOT_FOUND);
+                }
+
+                // 멤버 여부 확인
+                const isMember = await manager.exists(CarpoolMember, {
+                    where: {
+                        userId: dto.userId,
+                        roomId: dto.roomId,
+                    },
+                });
+
+                if (!isMember) {
+                    throw new Error(ERROR_MESSAGES.CARPOOL_NOT_MEMBER);
+                }
+
+                // 멤버 삭제
                 await manager.delete(CarpoolMember, {
                     userId: dto.userId,
                     roomId: dto.roomId,
                 });
 
-                const result = await manager
+                // 좌석 증가
+                await manager
                     .createQueryBuilder()
                     .update(CarpoolRoom)
                     .set({
@@ -273,11 +338,13 @@ export class CarpoolService {
                         isArrived: false,
                     })
                     .where('id = :roomId', { roomId: dto.roomId })
-                    .execute();                
+                    .execute();
+                // 최신 상태 조회
+                const updatedRoom = await manager.findOneOrFail(CarpoolRoom, {
+                    where: { id: dto.roomId },
+                });
 
-                if ((result.affected ?? 0) === 0) {
-                    throw new Error('Carpool room not found');
-                }
+                return updatedRoom;                    
             });
 
             // TODO: redis에 member 제거 처리
@@ -289,28 +356,28 @@ export class CarpoolService {
             // TODO: fcm을 통한 leave notice
             // fcm service 구현 이후 처리
 
-            return true;
         } catch (err) {
-            return false;
+            throw err;
         }
     }
     
 
     async updateCarpoolStatus(dto: updateCarpoolstatusRequestDto): Promise<CarpoolRoom> {
-        await this.carpoolRoomRepository.update(
-            { id: dto.roomId },
-            { status: dto.newStatus },
-        );
+        return this.dataSource.transaction(async (manager) => {
+            const room = await manager.findOne(CarpoolRoom, {
+                where: { id: dto.roomId },
+            });
 
-        const carpool = await this.carpoolRoomRepository.findOne({
-            where: { id: dto.roomId },
+            if (!room) {
+                throw new NotFoundException(ERROR_MESSAGES.CARPOOL_NOT_FOUND);
+            }
+
+            room.status = dto.newStatus;
+
+            await manager.save(room);
+
+            return room;
         });
-
-        if(!carpool) {
-            throw new NotFoundException('Carpool not found');
-        }
-
-        return carpool;
     }
 
     async oldCarpoolArriveUpdate(currentTime: Date): Promise<void> {

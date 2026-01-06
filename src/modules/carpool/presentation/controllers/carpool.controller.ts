@@ -25,10 +25,15 @@ import {
 import { CarpoolMapper } from '@modules/carpool/application/mappers/carpool.mapper';
 import { CarpoolStatus } from '@modules/carpool/domain/carpool-status.enum';
 import { get } from 'http';
+import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
+import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
+import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
+import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 
 @ApiTags('Carpool')
 @Controller('carpool')
+@JwtGuard()
 export class CarpoolController {
     constructor(
         private readonly carpoolService: CarpoolService,
@@ -36,55 +41,59 @@ export class CarpoolController {
     ) {}
 
     @Get()
-    @ApiOkResponse({ type: CarpoolResponseDto, isArray: true })
+    @ApiSuccessResponse({ type: CarpoolResponseDto, isArray: true })
+    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
     async getAllCarpools() {
         const carpools = await this.carpoolService.getAllCarpoolRooms();
         return ok<CarpoolListResponse>(
             this.mapper.toResponseList(carpools),
-            'Success'
+            'Success get carpools'
         );
     }
 
     // Chat table이 없다고 뜸
     @Get(':id')
-    @ApiOkResponse({ type: CarpoolResponseDto })
+    @ApiSuccessResponse({ type: CarpoolResponseDto })
+    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
     async getCarpoolById(
         @Param('id', ParseIntPipe) id: number
     ) {
         const carpool = await this.carpoolService.getCarpoolRoomById(id);
         return ok<CarpoolSingleResponse>(
-            this.mapper.toResponseOrNull(carpool),
-            carpool ? 'Success' : 'Carpool not found'
+            this.mapper.toResponse(carpool),
+            'Success get carpool',
         );
     } 
 
     @Get('detail/:id')
-    @ApiOkResponse({ type: CarpoolResponseDto })
+    @ApiSuccessResponse({ type: CarpoolResponseDto })
+    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
     async getCarpoolDetail(
         @Param('id', ParseIntPipe) id: number,
     ) {
         const carpool = await this.carpoolService.getCarpoolRoomDetail(id);
         return ok<CarpoolSingleResponse>(
-            this.mapper.toResponseOrNull(carpool),
-            carpool ? 'Success' : 'Carpool not found'
+            this.mapper.toResponse(carpool),
+            'Success get carpool',
         );
     }
 
     @Get('my/:userId')
-    @ApiOkResponse({ type: CarpoolResponseDto, isArray: true })
+    @ApiSuccessResponse({ type: CarpoolResponseDto, isArray: true })
+    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
     async findMyCarpools(
         @Param('userId', ParseIntPipe) userId: number,
     ) {
         const carpools = await this.carpoolService.findMyCarpoolRooms(userId);
         return ok<CarpoolListResponse>(
             this.mapper.toResponseList(carpools),
-            'Success'
+            'Success get carpools'
         );
     }
 
     // updatedAt의 default 값이 없다는 이유로 실패중
     @Post()
-    @ApiOkResponse({ type: CarpoolResponseDto }) 
+    @ApiSuccessResponse({ type: CarpoolResponseDto }) 
     async createCarpool(
         @Body() dto: createCarpoolRequestDto
     ) {
@@ -98,7 +107,8 @@ export class CarpoolController {
     //
     // id parameter 삭제하고 싶음.
     @Post('update/:id')
-    @ApiOkResponse({ type: CarpoolResponseDto })
+    @ApiSuccessResponse({ type: CarpoolResponseDto })
+    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
     async updateCarpool(
         @Param('id', ParseIntPipe) id: number,
         @Body() dto: updateCarpoolRequestDto
@@ -111,45 +121,51 @@ export class CarpoolController {
     }
 
     @Post('join')
-    @ApiOkResponse({ type: Boolean })
+    @ApiSuccessResponse({ type: CarpoolResponseDto })
+    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
+    @ApiFailureResponse(409, ERROR_MESSAGES.CARPOOL_ALREADY_JOINED)
+    @ApiFailureResponse(409, ERROR_MESSAGES.CARPOOL_NO_SEAT)
     async joinCarpool(
         @Body() dto: participationCarpoolRequestDto
     ) {
-        const result = await this.carpoolService.joinCarpoolRoom(dto);
-        return ok<Boolean>( 
-            result,
+        const carpool = await this.carpoolService.joinCarpoolRoom(dto);
+        return ok<CarpoolResponseDto>( 
+            this.mapper.toResponse(carpool),
             'Success join carpool' 
         );
     }
 
     @Post('leave')
-    @ApiOkResponse({ type: Boolean })
+    @ApiSuccessResponse({ type: CarpoolResponseDto })
+    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
+    @ApiFailureResponse(409, ERROR_MESSAGES.CARPOOL_NOT_MEMBER)
     async leaveCarpool(
         @Body() dto: participationCarpoolRequestDto
     ) {
-        const result = await this.carpoolService.leaveCarpoolRoom(dto);
-        return ok<Boolean>( 
-            result,
+        const carpool = await this.carpoolService.leaveCarpoolRoom(dto);
+        return ok<CarpoolResponseDto>( 
+            this.mapper.toResponse(carpool),
             'Success leave carpool' 
         );
     }
 
     // 
     @Post('delete/:id')
-    @ApiOkResponse({ type: Boolean })
+    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
     async deleteCarpool(
         @Param('id', ParseIntPipe) id: number,
     ) {
-        const result = await this.carpoolService.deleteCarpoolRoom(id);
-        return ok<Boolean>( 
-            result,  
+        await this.carpoolService.deleteCarpoolRoom(id);
+        return ok<null>( 
+            null,  
             'Success delete carpool'
         );
     }
 
     //
     @Post('status')
-    @ApiOkResponse({ type: CarpoolResponseDto })
+    @ApiSuccessResponse({ type: CarpoolResponseDto })
+    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
     async updateCarpoolStatus(
         @Body() dto: updateCarpoolstatusRequestDto
     ) {
@@ -161,7 +177,7 @@ export class CarpoolController {
     }
 
     @Post('start/:id')
-    @ApiOkResponse({ type: Boolean })
+    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
     async sendCarpoolStartNotification(
         @Param('id', ParseIntPipe) id: number,
     ) {
