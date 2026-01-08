@@ -13,6 +13,7 @@ import { Youtube } from '../../modules/youtube/domain/entities/youtube.entity';
 import { FcmToken } from '../../modules/fcm/domain/entities/fcm-token.entity';
 import { Consent } from '../../modules/consent/domain/entities/consent.entity';
 import { ExpoPushToken } from '@modules/expo-push-token/domain/entities/expo-push-token.entity';
+import { Notice } from '@modules/notice/domain/entities/notice.entity';
 
 const envFile = process.env.NODE_ENV === 'prod' ? '.env.prod' : '.env.dev';
 dotenv.config({ path: envFile });
@@ -34,7 +35,8 @@ export const AppDataSource = new DataSource({
     Youtube,
     FcmToken,
     Consent,
-    ExpoPushToken
+    ExpoPushToken,
+    Notice
   ],
   migrations: [join(__dirname, 'migrations', '*{.ts,.js}')],
   subscribers: [],

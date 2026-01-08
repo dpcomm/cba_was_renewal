@@ -157,6 +157,15 @@ async getUser() { ... }
 ```bash
 npm run migration:generate --name=변경내용설명
 # 예시: npm run migration:generate --name=AddNicknameToUser
+#
+# 기존의 방법으로는 migration이름이 $npmConfig와 같은 값으로 설정되는 현상이 발생
+# package.json의 script에서
+# "migration:generate": "npm run typeorm migration:generate -- -d src/infrastructure/database/data-source.ts src/infrastructure/database/migrations/$npm_config_name",
+# 위 설정을 아래와 같이 수정.
+# "migration:generate": "npm run typeorm migration:generate -- -d src/infrastructure/database/data-source.ts",
+# npm run migration:generate -- src/infrastructure/database/migrations/CreateNotice
+# 위와 같은 형식으로 migration 생성
+
 ```
 
 ### 2. 마이그레이션 실행 (`migration:run`)
