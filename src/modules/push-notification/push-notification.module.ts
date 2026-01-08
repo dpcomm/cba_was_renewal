@@ -2,21 +2,13 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ExpoNotificationService } from "./application/services/expo-notification/ExpoNotification.service";
 import { FcmNotificationService } from "./application/services/FCM/FCMnotification.service";
-import { ExpoNotificationSender } from "./application/services/expo-notification/ExpoNotification.sender";
-import { ExpoPushTokenModule } from "@modules/expo-push-token/expo-push-token.module";
-import { CarpoolModule } from "@modules/carpool/carpool.module";
-import { UserModule } from "@modules/user/user.module";
+import { CarpoolRoom } from "@modules/carpool/domain/entities/carpool-room.entity";
+import { CarpoolMember } from "@modules/carpool/domain/entities/carpool-member.entity";
+import { User } from "@modules/user/domain/entities/user.entity";
+import { ExpoPushToken } from "@modules/expo-push-token/domain/entities/expo-push-token.entity";
 
 @Module({
-    imports: [
-        ExpoPushTokenModule,
-        CarpoolModule,
-        UserModule,
-    ],
-    providers: [
-        ExpoNotificationService, 
-        ExpoNotificationSender,
-    ],
+    providers: [ExpoNotificationService],
     exports: [ExpoNotificationService],
 })
 
