@@ -162,3 +162,11 @@ export class updateCarpoolstatusRequestDto {
     @IsEnum(CarpoolStatus)
     newStatus: CarpoolStatus;
 }
+
+export class findAvailableCarpoolsRequestDto {
+
+    @ApiProperty({example: 3})
+    @IsOptional()
+    @IsInt()
+    userId?: number;
+}

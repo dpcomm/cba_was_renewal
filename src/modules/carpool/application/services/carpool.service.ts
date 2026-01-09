@@ -142,6 +142,70 @@ export class CarpoolService {
         return carpools;
     }
 
+    async findAvailableCarpools(userId?: number): Promise<CarpoolRoom[]> {
+        const qb = this.carpoolRoomRepository
+            .createQueryBuilder('carpool')
+            .leftJoin('carpool.driver', 'driver')
+
+            // 활성 카풀 조건: arrived가 아님
+            .where('carpool.status != :arrived', {
+                arrived: CarpoolStatus.Arrived,
+            })
+
+            .select([
+                'carpool',
+                'driver.id',
+                'driver.name',
+                'driver.phone',
+            ])
+
+            .orderBy('carpool.departureTime', 'ASC');
+
+        //  유저가 이미 참여 중인 카풀 제외
+        if (userId != null) {
+            qb.leftJoin(
+                'carpool.members',
+                'myMember',
+                'myMember.userId = :userId',
+                { userId },
+            )
+            .andWhere('myMember.id IS NULL');
+        }
+
+        return qb.getMany();
+    }
+
+    async findParticipatingCarpools(userId: number): Promise<CarpoolRoom[]> {
+        return this.carpoolRoomRepository
+            .createQueryBuilder('carpool')
+
+            // 참여 중인 카풀 필터 (필터용 조인)
+            .innerJoin(
+                'carpool.members',
+                'myMember',
+                'myMember.userId = :userId',
+                { userId },
+            )
+
+            // driver만 결과로 필요
+            .leftJoin('carpool.driver', 'driver')
+
+            // 활성 카풀 조건
+            .where('carpool.status != :arrived', {
+                arrived: CarpoolStatus.Arrived,
+            })
+
+            .select([
+                'carpool',
+                'driver.id',
+                'driver.name',
+                'driver.phone',
+            ])
+
+            .orderBy('carpool.departureTime', 'DESC')
+            .getMany(); // 빈 배열 허용
+    }
+
     async createCarpoolRoom(dto: createCarpoolRequestDto ): Promise<CarpoolRoom> {
  
         

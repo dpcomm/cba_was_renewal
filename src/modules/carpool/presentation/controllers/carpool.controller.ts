@@ -7,6 +7,7 @@ import {
   ParseEnumPipe,
   ParseIntPipe,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ok } from '@shared/responses/api-response';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -15,7 +16,8 @@ import {
     updateCarpoolRequestDto,
     createCarpoolRequestDto,
     updateCarpoolstatusRequestDto,
-    participationCarpoolRequestDto, 
+    participationCarpoolRequestDto,
+    findAvailableCarpoolsRequestDto, 
 } from '@modules/carpool/application/dto/carpool.request.dto';
 import { 
     CarpoolResponseDto,
@@ -88,6 +90,30 @@ export class CarpoolController {
         return ok<CarpoolListResponse>(
             this.mapper.toResponseList(carpools),
             'Success get carpools'
+        );
+    }
+
+    @Get('available')
+    @ApiSuccessResponse({ type: CarpoolResponseDto, isArray: true })
+    async findAvailableCarpools(
+        @Body() dto: findAvailableCarpoolsRequestDto,
+    ) {
+        const carpools = await this.carpoolService.findAvailableCarpools(dto.userId);
+        return ok<CarpoolListResponse>(
+            this.mapper.toResponseList(carpools),
+            'Success get available carpools'
+        );
+    }
+
+    @Get('participating/:userId')
+    @ApiSuccessResponse({ type: CarpoolResponseDto, isArray: true })
+    async findParticipatingCarpools(
+        @Param('userId', ParseIntPipe) userId: number,
+    ) {
+        const carpools = await this.carpoolService.findParticipatingCarpools(userId);
+        return ok<CarpoolListResponse>(
+            this.mapper.toResponseList(carpools),
+            'Success get participating carpools'
         );
     }
 
