@@ -12,6 +12,9 @@ import {
 import { User } from '@modules/user/domain/entities/user.entity';
 import { CarpoolStatus } from '@modules/carpool/domain/carpool-status.enum';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
+import { ExpoNotificationService } from '@modules/push-notification/application/services/expo-notification/ExpoNotification.service';
+import { ExpoPushTokenService } from '@modules/expo-push-token/application/services/expo-push-token.service';
+import { CarpoolDeleteNotificationDto, CarpoolJoinNotificationDto, CarpoolLeaveNotificationDto, CarpoolStartNotificationDto, CarpoolUpdateNotificationDto } from '@modules/push-notification/application/dto/carpool-notification.dto';
 // fcmservice
 // redis
 
@@ -25,6 +28,8 @@ export class CarpoolService {
         private carpoolMemberRepository: Repository<CarpoolMember>,
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
+        private readonly expoMessageService: ExpoNotificationService,
+        private readonly expoTokenService: ExpoPushTokenService,
         private readonly dataSource: DataSource,
     ) {}
 
@@ -272,11 +277,45 @@ export class CarpoolService {
             }
         }
 
-        return this.carpoolRoomRepository.save(existing);
+        const result = await this.carpoolRoomRepository.save(existing);
+
+        // 카풀 수정 알림 전송
+        const members = await this.getCarpoolMembers(result.id);
+        const notificationTarget = members.filter(v => v != result.driverId);
+
+        const tokens = await this.expoTokenService.getTokens(notificationTarget);
+
+        const driverName = await this.getDriverName(result.id);
+        const notification = new CarpoolUpdateNotificationDto(driverName);
+
+        await this.expoMessageService.send(tokens, notification);
+
+
+        return result;
 
     }
 
     async deleteCarpoolRoom(roomId: number): Promise<void> {
+        const room = await this.carpoolRoomRepository.findOne({
+            where: { id: roomId },
+        });
+        if (!room) {
+            throw new NotFoundException(ERROR_MESSAGES.CARPOOL_NOT_FOUND);
+        }
+
+        // 카풀 멤버 조회
+        const members = await this.getCarpoolMembers(room.id);
+
+        // 알림 대상. 운전자 제외
+        const notificationTarget = members.filter(v => v != room.driverId);
+
+        // 토큰 조회
+        const tokens = await this.expoTokenService.getTokens(notificationTarget);
+
+        // 알림 생성
+        const driverName = await this.getDriverName(room.id);
+        const notification = new CarpoolDeleteNotificationDto(driverName);
+
         await this.dataSource.transaction(async (manager) => {
             // 카풀 존재 여부 확인
             const roomExists = await manager.exists(CarpoolRoom, {
@@ -291,12 +330,16 @@ export class CarpoolService {
             // 2. 방 삭제 (PK 기준)
             await manager.delete(CarpoolRoom, { id: roomId});
         });
+
+        // 카풀 삭제 알림 전송
+        await this.expoMessageService.send(tokens, notification);
+
     }
 
     async joinCarpoolRoom(dto: participationCarpoolRequestDto): Promise<CarpoolRoom> {
         try {
             // transaction으로 처리
-            return await this.dataSource.transaction(async (manager) => {
+            const joinedRoom = await this.dataSource.transaction(async (manager) => {
                 // 카풀 존재 여부 확인
                 const room = await manager.findOne(CarpoolRoom, {
                     where: { id: dto.roomId },
@@ -329,12 +372,11 @@ export class CarpoolService {
                     .andWhere('seatsLeft > 0')
                     .execute();
 
-
                 if (result.affected === 0) {
                     throw new Error(ERROR_MESSAGES.CARPOOL_NO_SEAT);
                 }
 
-                // 3. 멤버 추가
+                // 멤버 추가
                 await manager.insert(CarpoolMember, {
                     userId: dto.userId,
                     roomId: dto.roomId,
@@ -356,6 +398,34 @@ export class CarpoolService {
             // fcm을 통한 join notice
             // fcm service 구현 이후 처리
 
+            // 카풀 멤버 조회
+            const members = await this.getCarpoolMembers(joinedRoom.id);
+
+            // 알림 대상. 참여한 인원 제외
+            const notificationTarget = members.filter(v => v != dto.userId);
+
+            // 토큰 조회
+            const tokens = await this.expoTokenService.getTokens(notificationTarget);
+
+            // 참여자 이름 조회
+            const user = await this.userRepository.findOne({
+                where: { id: dto.userId },
+                select: ['name'],
+            });
+            if (!user) {
+                throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
+            }
+            const userName = user.name;
+            
+            // 알림 생성
+            const driverName = await this.getDriverName(joinedRoom.id);
+            const notification = new CarpoolJoinNotificationDto(userName ,driverName);
+
+            // 카풀 join 알림 전송
+            await this.expoMessageService.send(tokens, notification);
+
+            return joinedRoom;
+
         } catch (err) {
             throw err;
         }
@@ -364,7 +434,7 @@ export class CarpoolService {
 
     async leaveCarpoolRoom(dto: participationCarpoolRequestDto): Promise<CarpoolRoom> {
         try {
-            return await this.dataSource.transaction(async (manager) => {
+            const leavedRoom = await this.dataSource.transaction(async (manager) => {
                 // 카풀 존재 여부 확인
                 const room = await manager.findOne(CarpoolRoom, {
                     where: { id: dto.roomId },
@@ -420,6 +490,36 @@ export class CarpoolService {
             // TODO: fcm을 통한 leave notice
             // fcm service 구현 이후 처리
 
+
+            // 카풀 멤버 조회
+            const members = await this.getCarpoolMembers(leavedRoom.id);
+
+            // 알림 대상. 참여한 인원 제외
+            const notificationTarget = members.filter(v => v != dto.userId);
+
+            // 토큰 조회
+            const tokens = await this.expoTokenService.getTokens(notificationTarget);
+
+            // 이름 조회
+            const user = await this.userRepository.findOne({
+                where: { id: dto.userId },
+                select: ['name'],
+            });
+            if (!user) {
+                throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
+            }
+            const userName = user.name;
+            
+            // 알림 생성
+            const driverName = await this.getDriverName(leavedRoom.id);
+            const notification = new CarpoolLeaveNotificationDto(userName ,driverName);
+
+            // 카풀 leave 알림 전송
+            await this.expoMessageService.send(tokens, notification);
+
+
+            return leavedRoom;
+
         } catch (err) {
             throw err;
         }
@@ -458,6 +558,26 @@ export class CarpoolService {
             .where('departure_time <= :baseTime', { baseTime })
             .andWhere('is_arrived = false')
             .execute();       
+    }
+
+    // 카풀 운전자가 출발 했음.
+    async startCarpool(id: number): Promise<void> {
+        // carpool이 start 가능한 상황인지 검증 절차
+
+
+        // 카풀 상태 변경
+        const carpool = await this.updateCarpoolStatus({roomId: id, newStatus: CarpoolStatus.In_Transit});
+
+        // 카풀 출발 알림 전송
+        const members = await this.getCarpoolMembers(id);
+        const notificationTarget = members.filter(v => v != carpool.driverId);
+
+        const tokens = await this.expoTokenService.getTokens(notificationTarget);
+
+        const driverName = await this.getDriverName(id);
+        const notification = new CarpoolStartNotificationDto(driverName);
+
+        await this.expoMessageService.send(tokens, notification);
     }
 
     async getCarpoolMembers(roomId: number): Promise<number[]> {

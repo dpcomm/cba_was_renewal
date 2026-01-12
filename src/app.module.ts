@@ -13,6 +13,7 @@ import { UserModule } from '@modules/user/user.module';
 import { StatusModule } from '@modules/status/status.module';
 import { ExpoPushTokenModule } from '@modules/expo-push-token/expo-push-token.module';
 import { NoticeModule } from '@modules/notice/notice.module';
+import { PushNotificationModule } from '@modules/push-notification/push-notification.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { NoticeModule } from '@modules/notice/notice.module';
     FcmTokenModule,
     MailModule,
     ExpoPushTokenModule,
+    PushNotificationModule,
     NoticeModule,
   ],
 })
