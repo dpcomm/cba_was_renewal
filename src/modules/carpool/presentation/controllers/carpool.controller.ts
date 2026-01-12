@@ -93,7 +93,7 @@ export class CarpoolController {
         );
     }
 
-    @Get('available')
+    @Post('available')
     @ApiSuccessResponse({ type: CarpoolResponseDto, isArray: true })
     async findAvailableCarpools(
         @Body() dto: findAvailableCarpoolsRequestDto,
@@ -208,6 +208,11 @@ export class CarpoolController {
         @Param('id', ParseIntPipe) id: number,
     ) {
         // fcmservice의 send notification 동작 구현 후 작성 예정
+        await this.carpoolService.startCarpool(id);
+        return ok<null>(
+            null,
+            'Success start carpool'
+        )
 
     }
 
