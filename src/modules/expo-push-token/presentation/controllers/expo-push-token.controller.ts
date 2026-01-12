@@ -14,7 +14,7 @@ import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 import { ExpoPushTokenService } from '@modules/expo-push-token/application/services/expo-push-token.service';
-import { registExpoPushTokenRequestDto } from '@modules/expo-push-token/application/dto/expo-push-token.request.dto';
+import { deleteExpoPushTokenRequestDto, registExpoPushTokenRequestDto } from '@modules/expo-push-token/application/dto/expo-push-token.request.dto';
 import { 
     ExpoPushTokenResponseDto, 
     ExpoPushTokenListResponse,
@@ -44,6 +44,18 @@ export class ExpoPushTokenController {
             this.mapper.toResponse(expoPushToken),
             'Success regist ExpoPushToken',
         );
+    }
+
+    @Post('delete')
+    @JwtGuard()
+    async delete(
+        @Body() dto: deleteExpoPushTokenRequestDto,
+    ) {
+        await this.expoPushTokenService.deleteToken(dto.token);
+        return ok<null>(
+            null,
+            'Success delete ExpoPushToken',
+        )
     }
 
 }

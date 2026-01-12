@@ -50,8 +50,8 @@ export class ExpoPushTokenService {
         return await this.expoPushTokenRepository.save(newToken);
     }
 
-    async deleteToken() {
-        // 
+    async deleteToken(token: string): Promise<void> {
+        await this.expoPushTokenRepository.delete({token});
     }
 
     async getTokens(userIds?: number | number[] ): Promise<ExpoPushToken[]> {

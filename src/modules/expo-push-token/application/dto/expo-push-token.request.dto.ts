@@ -10,3 +10,9 @@ export class registExpoPushTokenRequestDto {
     @IsString()
     token: string;
 }
+
+export class deleteExpoPushTokenRequestDto {
+    @ApiProperty({example: 'expo token'})
+    @IsString()
+    token: string;
+}
