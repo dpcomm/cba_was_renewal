@@ -71,7 +71,7 @@ export class CarpoolRoom {
   @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
   createdAt: Date;
 
-  @Column({ type: 'datetime', precision: 3 })
+  @Column({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)', onUpdate: 'CURRENT_TIMESTAMP(3)'})
   updatedAt: Date;
 
   @ManyToOne(() => User, (user) => user.createdRooms, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
