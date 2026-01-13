@@ -2,7 +2,7 @@ import { NotificationDto } from "./notification.dto";
 
 export abstract class ScheduleNotificationDto extends NotificationDto {
     readonly title = '일정 알림';
-    readonly channelId = 'schedule_channel';
+    readonly channelId = 'schedule';
 }
 
 export class ScheduleReadyNotificationDto extends ScheduleNotificationDto {

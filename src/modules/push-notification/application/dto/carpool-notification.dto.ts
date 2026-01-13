@@ -2,7 +2,7 @@ import { NotificationDto } from "./notification.dto";
 
 export abstract class CarpoolNotificationDto extends NotificationDto {
     readonly title = '카풀 알림';
-    readonly channelId = 'carpool_channel';
+    readonly channelId = 'carpool';
 }
 
 export class CarpoolJoinNotificationDto extends CarpoolNotificationDto {

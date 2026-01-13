@@ -2,7 +2,7 @@ import { NotificationDto } from "./notification.dto";
 
 export class NoticeNotificationDto extends NotificationDto {
     readonly title = '공지 알림';
-    readonly channelId = 'notice_channel';
+    readonly channelId = 'notice';
     readonly body: string;
     
     constructor(body: string) {
