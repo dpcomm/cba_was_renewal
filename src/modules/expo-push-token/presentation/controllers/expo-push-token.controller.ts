@@ -9,7 +9,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ok } from '@shared/responses/api-response';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
@@ -34,6 +34,7 @@ export class ExpoPushTokenController {
 
     @Post('regist')
     @JwtGuard()
+    @ApiOperation({ summary: 'expo push notification 토큰 등록'})
     @ApiSuccessResponse({ type: ExpoPushTokenResponseDto})
     @ApiFailureResponse(404, ERROR_MESSAGES.USER_NOT_FOUND)
     async regist(
@@ -48,6 +49,8 @@ export class ExpoPushTokenController {
 
     @Post('delete')
     @JwtGuard()
+    @ApiOperation({ summary: 'expo push notification 토큰 삭제'})
+    @ApiSuccessResponse({})
     async delete(
         @Body() dto: deleteExpoPushTokenRequestDto,
     ) {

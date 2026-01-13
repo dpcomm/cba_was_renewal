@@ -10,7 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ok } from '@shared/responses/api-response';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
@@ -44,6 +44,7 @@ export class NoticeController {
     @Post()
     @JwtGuard()
     @RankGuard(UserRank.ADMIN)
+    @ApiOperation({ summary: '공지 등록'})
     @ApiSuccessResponse({ type: NoticeResponseDto })
     async createNotice(
         @Body() dto: createNoticeRequestDto
@@ -56,6 +57,7 @@ export class NoticeController {
     }
     
     @Get()
+    @ApiOperation({ summary: '공지 목록 조회'})
     @ApiSuccessResponse({ type: NoticeResponseDto, isArray: true})
     async getNoticeList(
         @Query() dto: getNoticeListRequestDto,
@@ -69,6 +71,7 @@ export class NoticeController {
     }
 
     @Get(':id')
+    @ApiOperation({ summary: '공지 조회'})
     @ApiSuccessResponse({ type: NoticeResponseDto })
     @ApiFailureResponse(404, ERROR_MESSAGES.NOTICE_NOT_FOUND)
     async getNoticeById(
@@ -84,6 +87,7 @@ export class NoticeController {
     @Post('update')
     @JwtGuard()
     @RankGuard(UserRank.ADMIN)
+    @ApiOperation({ summary: '공지 수정'})
     @ApiSuccessResponse({ type: NoticeResponseDto })
     @ApiFailureResponse(404, ERROR_MESSAGES.NOTICE_NOT_FOUND)
     async updateNotice(
@@ -99,6 +103,8 @@ export class NoticeController {
     @Delete(':id')
     @JwtGuard()
     @RankGuard(UserRank.ADMIN)
+    @ApiOperation({ summary: '공지 삭제'})
+    @ApiSuccessResponse({})
     @ApiFailureResponse(404, ERROR_MESSAGES.NOTICE_NOT_FOUND)
     async deleteNotice(
         @Param('id', ParseIntPipe) id: number,
