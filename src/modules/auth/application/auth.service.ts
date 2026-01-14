@@ -81,7 +81,7 @@ export class AuthService {
       email: dto.email,
       emailVerifiedAt: new Date(),
       updatedAt: new Date(),
-      birth: dto.birth,
+      birth: dto.birth ? new Date(dto.birth) : undefined,
       gender: dto.gender,
       rank: dto.rank,
     });
