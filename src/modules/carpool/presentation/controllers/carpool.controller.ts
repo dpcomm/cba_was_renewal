@@ -22,7 +22,8 @@ import {
 import { 
     CarpoolResponseDto,
     CarpoolListResponse,
-    CarpoolSingleResponse, 
+    CarpoolSingleResponse,
+    carpoolDetailSingleResponse, 
 } from '../dto/carpool.response.dto';
 import { CarpoolMapper } from '@modules/carpool/application/mappers/carpool.mapper';
 import { CarpoolStatus } from '@modules/carpool/domain/carpool-status.enum';
@@ -76,9 +77,9 @@ export class CarpoolController {
     async getCarpoolDetail(
         @Param('id', ParseIntPipe) id: number,
     ) {
-        const carpool = await this.carpoolService.getCarpoolRoomDetail(id);
-        return ok<CarpoolSingleResponse>(
-            this.mapper.toResponse(carpool),
+        const carpoolDetail = await this.carpoolService.getCarpoolRoomDetail(id);
+        return ok<carpoolDetailSingleResponse>(
+            carpoolDetail,
             'Success get carpool',
         );
     }

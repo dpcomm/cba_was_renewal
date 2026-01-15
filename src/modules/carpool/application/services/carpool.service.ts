@@ -15,6 +15,7 @@ import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 import { ExpoNotificationService } from '@modules/push-notification/application/services/expo-notification/ExpoNotification.service';
 import { ExpoPushTokenService } from '@modules/expo-push-token/application/services/expo-push-token.service';
 import { CarpoolDeleteNotificationDto, CarpoolJoinNotificationDto, CarpoolLeaveNotificationDto, CarpoolStartNotificationDto, CarpoolUpdateNotificationDto } from '@modules/push-notification/application/dto/carpool-notification.dto';
+import { CarpoolDetailResponseDto } from '@modules/carpool/presentation/dto/carpool.response.dto';
 // fcmservice
 // redis
 
@@ -95,7 +96,7 @@ export class CarpoolService {
 
     }
 
-    async getCarpoolRoomDetail( id: number ): Promise<CarpoolRoom> {
+    async getCarpoolRoomDetail( id: number ): Promise<CarpoolDetailResponseDto> {
         const carpool = await this.carpoolRoomRepository
             .createQueryBuilder('carpool')
             .leftJoin('carpool.driver', 'driver')
@@ -118,7 +119,37 @@ export class CarpoolService {
             throw new NotFoundException(ERROR_MESSAGES.CARPOOL_NOT_FOUND);
         }
 
-        return carpool;
+        return {
+            id: carpool.id,
+            driverId: carpool.driverId,
+            carInfo: carpool.carInfo,
+            departureTime: carpool.departureTime.toString(),
+            origin: carpool.origin,
+            originDetailed: carpool.originDetailed,
+            destination: carpool.destination,
+            destinationDetailed: carpool.destinationDetailed,
+            seatsTotal: carpool.seatsTotal,
+            seatsLeft: carpool.seatsLeft,
+            note: carpool.note,
+            originLat: carpool.originLat ?? null,
+            originLng: carpool.originLng ?? null,
+            destLat: carpool.destLat ?? null,
+            destLng: carpool.destLng ?? null,
+            isArrived: carpool.isArrived,
+            createdAt: carpool.createdAt.toString(),
+            updatedAt: carpool.updatedAt.toString(),
+            status: carpool.status,
+            driver: {
+                id: carpool.driver.id,
+                name: carpool.driver.name,
+                phone: carpool.driver.phone,
+            },
+            members: carpool.members.map(m => ({
+                id: m.user.id,
+                name: m.user.name,
+                phone: m.user.phone,
+            })),
+        };
     }
 
     async findMyCarpoolRooms( userId: number ): Promise<CarpoolRoom[]> {
