@@ -15,7 +15,7 @@ import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 import { ExpoNotificationService } from '@modules/push-notification/application/services/expo-notification/ExpoNotification.service';
 import { ExpoPushTokenService } from '@modules/expo-push-token/application/services/expo-push-token.service';
 import { CarpoolDeleteNotificationDto, CarpoolJoinNotificationDto, CarpoolLeaveNotificationDto, CarpoolStartNotificationDto, CarpoolUpdateNotificationDto } from '@modules/push-notification/application/dto/carpool-notification.dto';
-import { CarpoolDetailResponseDto } from '@modules/carpool/presentation/dto/carpool.response.dto';
+import { CarpoolDetailResponseDto, CarpoolWithDriverInfoResponseDto } from '@modules/carpool/presentation/dto/carpool.response.dto';
 // fcmservice
 // redis
 
@@ -178,7 +178,7 @@ export class CarpoolService {
         return carpools;
     }
 
-    async findAvailableCarpools(userId?: number): Promise<CarpoolRoom[]> {
+    async findAvailableCarpools(userId?: number): Promise<CarpoolWithDriverInfoResponseDto[]> {
         const qb = this.carpoolRoomRepository
             .createQueryBuilder('carpool')
             .leftJoin('carpool.driver', 'driver')
@@ -208,11 +208,39 @@ export class CarpoolService {
             .andWhere('myMember.userId IS NULL');
         }
 
-        return qb.getMany();
+        const { entities } = await qb.getRawAndEntities();
+        return entities.map(
+            (row) => ({
+                    id: row.id,
+                    driverId: row.driverId,
+                    carInfo: row.carInfo,
+                    departureTime: row.departureTime?.toString() ?? null,
+                    origin: row.origin,
+                    originDetailed: row.originDetailed,
+                    destination: row.destination,
+                    destinationDetailed: row.destinationDetailed,
+                    seatsTotal: row.seatsTotal,
+                    seatsLeft: row.seatsLeft,
+                    note: row.note,
+                    originLat: row.originLat ?? null,
+                    originLng: row.originLng ?? null,
+                    destLat: row.destLat ?? null,
+                    destLng: row.destLng ?? null,
+                    isArrived: row.isArrived,
+                    createdAt: row.createdAt?.toString() ?? null,
+                    updatedAt: row.updatedAt?.toString() ?? null,
+                    status: row.status,
+                    driver: {
+                        id: row.driver.id,
+                        name: row.driver.name,
+                        phone: row.driver.phone,
+                    }                  
+                })
+        );
     }
 
-    async findParticipatingCarpools(userId: number): Promise<CarpoolRoom[]> {
-        return this.carpoolRoomRepository
+    async findParticipatingCarpools(userId: number): Promise<CarpoolWithDriverInfoResponseDto[]> {
+        const qb = this.carpoolRoomRepository
             .createQueryBuilder('carpool')
 
             // 참여 중인 카풀 필터 (필터용 조인)
@@ -239,7 +267,38 @@ export class CarpoolService {
             ])
 
             .orderBy('carpool.departureTime', 'DESC')
-            .getMany(); // 빈 배열 허용
+            // .getMany(); // 빈 배열 허용
+            
+        const { entities } = await qb.getRawAndEntities();
+        return entities.map(
+            (row) => ({
+                    id: row.id,
+                    driverId: row.driverId,
+                    carInfo: row.carInfo,
+                    departureTime: row.departureTime?.toString() ?? null,
+                    origin: row.origin,
+                    originDetailed: row.originDetailed,
+                    destination: row.destination,
+                    destinationDetailed: row.destinationDetailed,
+                    seatsTotal: row.seatsTotal,
+                    seatsLeft: row.seatsLeft,
+                    note: row.note,
+                    originLat: row.originLat ?? null,
+                    originLng: row.originLng ?? null,
+                    destLat: row.destLat ?? null,
+                    destLng: row.destLng ?? null,
+                    isArrived: row.isArrived,
+                    createdAt: row.createdAt?.toString() ?? null,
+                    updatedAt: row.updatedAt?.toString() ?? null,
+                    status: row.status,
+                    driver: {
+                        id: row.driver.id,
+                        name: row.driver.name,
+                        phone: row.driver.phone,
+                    }                  
+                })
+        );
+        
     }
 
     async createCarpoolRoom(dto: createCarpoolRequestDto ): Promise<CarpoolRoom> {
