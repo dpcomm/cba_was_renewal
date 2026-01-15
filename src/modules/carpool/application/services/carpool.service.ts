@@ -174,7 +174,7 @@ export class CarpoolService {
                 'myMember.userId = :userId',
                 { userId },
             )
-            .andWhere('myMember.id IS NULL');
+            .andWhere('myMember.userId IS NULL');
         }
 
         return qb.getMany();
