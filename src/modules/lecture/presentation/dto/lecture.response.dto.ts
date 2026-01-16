@@ -42,7 +42,7 @@ export class LectureResponseDto {
             • ES1, ES2, ES3, ES4 = 추가학기 1,2,3,4
         `.trim(),
     })
-    semester: string;
+    semester: LectureSemester;
     
     @ApiProperty({example: '001', required: true})
     codeNumber: string;
@@ -107,7 +107,7 @@ export class LectureDetailResponseDto {
             • ES1, ES2, ES3, ES4 = 추가학기 1,2,3,4
         `.trim(),
     })
-    semester: string;
+    semester: LectureSemester;
 
     @ApiProperty({example: '001', required: true})
     codeNumber: string;

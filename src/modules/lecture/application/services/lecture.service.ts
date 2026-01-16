@@ -106,7 +106,7 @@ export class LectureService {
         if (existingLecture) {
             const maxCode = await this.lectureRepository
             .createQueryBuilder('lecture')
-            .select('MAX(CAST(lecture.codeNumber AS INT))', 'maxCode')
+            .select('MAX(CAST(lecture.codeNumber AS UNSIGNED))', 'maxCode')
             .where('lecture.year = :year', { year: dto.year })
             .andWhere('lecture.semester = :semester', { semester: dto.semester })
             .getRawOne();
@@ -117,7 +117,14 @@ export class LectureService {
 
         // DTO → Entity 변환 (codeNumber 자동 추가)
         const lecture = this.lectureRepository.create({
-            ...dto,
+            title: dto.title,
+            introduction: dto.introduction,
+            instructor: dto.instructor,
+            location: dto.location,
+            maxCapacity: dto.maxCapacity,
+            startTime: new Date(dto.startTime),
+            year: dto.year,
+            semester: dto.semester,            
             codeNumber,  // 자동 생성된 코드
         });
 
@@ -153,7 +160,11 @@ export class LectureService {
         // null/undefined 제외하고만 업데이트
         for (const key of updatableFields) {
             const value = dto[key];
-            if (value != null) {
+            if (value == null) continue;
+
+            if (key === 'startTime') {
+                existing.startTime = new Date(value as any);
+            } else {
                 (existing as any)[key] = value;
             }
         }
@@ -168,7 +179,7 @@ export class LectureService {
 
     // lecture 신청
     async enrollLecture(dto: enrollLectureRequestDto): Promise<void> {
-        
+
     }
 
     // lecture 신청 취소

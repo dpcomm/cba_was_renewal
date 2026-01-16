@@ -55,7 +55,7 @@ export class Lecture {
     year: number;
 
     @Column({ length: 10 })
-    semester: string;
+    semester: LectureSemester;
 
     @Column({ length: 10 })
     codeNumber: string;
