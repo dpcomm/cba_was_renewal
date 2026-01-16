@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsEnum, IsInt, IsString, IsNumber, IsOptional, IsDateString } from 'class-validator';
 import { NoticeAuthorGroup } from '@modules/notice/domain/notice-author.enum';
 
@@ -24,7 +24,7 @@ export class createNoticeRequestDto {
 // }
 
 export class getNoticeListRequestDto {
-    @ApiProperty({example: NoticeAuthorGroup.DEVELOPMENT, enum: NoticeAuthorGroup})
+    @ApiPropertyOptional({example: NoticeAuthorGroup.DEVELOPMENT, enum: NoticeAuthorGroup, description: '미입력 시 전체 공지 조회'})
     @IsOptional()
     @IsEnum(NoticeAuthorGroup)
     author?: NoticeAuthorGroup;
@@ -51,10 +51,3 @@ export class updateNoticeRequestDto {
     @IsString()
     body?: string;    
 }
-
-// export class deleteNoticeRequestDto {
-//     @ApiProperty({example: 4, required: true})
-//     @IsInt()
-//     id: number;
-// }
-
