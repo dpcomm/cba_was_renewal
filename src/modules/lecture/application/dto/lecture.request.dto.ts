@@ -121,16 +121,20 @@ export class updateLectureRequestDto {
 
 export class enrollLectureRequestDto{
     @ApiProperty({example: 1, required: true})
+    @IsInt()
     userId: number;
     
     @ApiProperty({example: 1, required: true})
+    @IsInt()
     lectureId: number;
 }
 
 export class dropLectureRequestDto {
     @ApiProperty({example: 1, required: true})
+    @IsInt()
     userId: number;
 
     @ApiProperty({example: 1, required: true})
+    @IsInt()
     lectureId: number;
 }
