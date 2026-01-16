@@ -96,7 +96,9 @@ describe('Auth Registration Flow (e2e)', () => {
     it('5. 중복 회원가입 시도 시 실패', async () => {
       // 새로운 이메일 인증 처리
       const newEmail = `test_dup_${Date.now()}@example.com`;
-      await request(app.getHttpServer()).get(`/auth/email/${newEmail}?type=REGISTER`);
+      await request(app.getHttpServer()).get(
+        `/auth/email/${newEmail}?type=REGISTER`,
+      );
       const code = await redis.get(`email_verification:${newEmail}`);
 
       const verifyResponse = await request(app.getHttpServer())
