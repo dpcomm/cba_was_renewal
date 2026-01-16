@@ -22,7 +22,9 @@ import {
 import { 
     CarpoolResponseDto,
     CarpoolListResponse,
-    CarpoolSingleResponse, 
+    CarpoolSingleResponse,
+    carpoolDetailSingleResponse,
+    CarpoolWithDriverInfoListResponse, 
 } from '../dto/carpool.response.dto';
 import { CarpoolMapper } from '@modules/carpool/application/mappers/carpool.mapper';
 import { CarpoolStatus } from '@modules/carpool/domain/carpool-status.enum';
@@ -76,9 +78,9 @@ export class CarpoolController {
     async getCarpoolDetail(
         @Param('id', ParseIntPipe) id: number,
     ) {
-        const carpool = await this.carpoolService.getCarpoolRoomDetail(id);
-        return ok<CarpoolSingleResponse>(
-            this.mapper.toResponse(carpool),
+        const carpoolDetail = await this.carpoolService.getCarpoolRoomDetail(id);
+        return ok<carpoolDetailSingleResponse>(
+            carpoolDetail,
             'Success get carpool',
         );
     }
@@ -104,8 +106,8 @@ export class CarpoolController {
         @Body() dto: findAvailableCarpoolsRequestDto,
     ) {
         const carpools = await this.carpoolService.findAvailableCarpools(dto.userId);
-        return ok<CarpoolListResponse>(
-            this.mapper.toResponseList(carpools),
+        return ok<CarpoolWithDriverInfoListResponse>(
+            carpools,
             'Success get available carpools'
         );
     }
@@ -117,8 +119,8 @@ export class CarpoolController {
         @Param('userId', ParseIntPipe) userId: number,
     ) {
         const carpools = await this.carpoolService.findParticipatingCarpools(userId);
-        return ok<CarpoolListResponse>(
-            this.mapper.toResponseList(carpools),
+        return ok<CarpoolWithDriverInfoListResponse>(
+            carpools,
             'Success get participating carpools'
         );
     }
