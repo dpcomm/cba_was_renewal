@@ -15,6 +15,7 @@ import { RegisterDto } from './dto/register.dto';
 import { AuthResponseDto } from '../presentation/dto/auth.response.dto';
 import { UserResponseDto } from '@modules/user/presentation/dto/user.response.dto';
 import { ResetPasswordDto } from '../presentation/dto/reset-password.dto';
+import { EmailVerificationType } from '../domain/enums/email-verification-type.enum';
 
 @Injectable()
 export class AuthService {
@@ -133,7 +134,27 @@ export class AuthService {
     }
   }
 
-  async sendEmail(email: string): Promise<void> {
+  async sendEmail(email: string, type: EmailVerificationType): Promise<void> {
+    const existingUser = await this.userService
+      .findOneByEmail(email)
+      .catch(() => null);
+
+    // 회원가입, 이메일 변경: 이미 등록된 이메일이면 에러
+    if (
+      type === EmailVerificationType.REGISTER ||
+      type === EmailVerificationType.UPDATE
+    ) {
+      if (existingUser) {
+        throw new BadRequestException(ERROR_MESSAGES.EMAIL_ALREADY_EXISTS);
+      }
+    }
+    // 비밀번호 재설정: 등록되지 않은 이메일이면 에러
+    else if (type === EmailVerificationType.RESET_PASSWORD) {
+      if (!existingUser) {
+        throw new BadRequestException(ERROR_MESSAGES.EMAIL_NOT_REGISTERED);
+      }
+    }
+
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const redisKey = `email_verification:${email}`;
     console.log(

@@ -37,7 +37,7 @@ describe('Auth Registration Flow (e2e)', () => {
 
     it('1. 이메일 인증 코드 발송 요청', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/auth/email/${testEmail}`)
+        .get(`/auth/email/${testEmail}?type=REGISTER`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -96,7 +96,7 @@ describe('Auth Registration Flow (e2e)', () => {
     it('5. 중복 회원가입 시도 시 실패', async () => {
       // 새로운 이메일 인증 처리
       const newEmail = `test_dup_${Date.now()}@example.com`;
-      await request(app.getHttpServer()).get(`/auth/email/${newEmail}`);
+      await request(app.getHttpServer()).get(`/auth/email/${newEmail}?type=REGISTER`);
       const code = await redis.get(`email_verification:${newEmail}`);
 
       const verifyResponse = await request(app.getHttpServer())
@@ -139,28 +139,10 @@ describe('Auth Registration Flow (e2e)', () => {
       expect(response.body.message).toBeDefined();
     });
 
-    it('7. 중복 이메일로 회원가입 시도 시 실패', async () => {
-      // 이미 가입된 이메일(testEmail)에 대한 새로운 인증 토큰 발급
-      await request(app.getHttpServer()).get(`/auth/email/${testEmail}`);
-      const code = await redis.get(`email_verification:${testEmail}`);
-
-      const verifyResponse = await request(app.getHttpServer())
-        .post('/auth/email/verify')
-        .send({ email: testEmail, code });
-
-      const newToken = verifyResponse.body.data.verificationToken;
-
+    it('7. 중복 이메일로 인증 시도 시 실패', async () => {
+      // 이미 가입된 이메일(testEmail)로 REGISTER 타입으로 인증 요청
       const response = await request(app.getHttpServer())
-        .post('/auth/register')
-        .send({
-          userId: `another_user_${Date.now()}`, // 새로운 userId
-          password: 'Test1234!',
-          name: '중복이메일유저',
-          group: '테스트그룹',
-          phone: '010-7777-7777',
-          email: testEmail, // 이미 가입된 이메일
-          verificationToken: newToken,
-        })
+        .get(`/auth/email/${testEmail}?type=REGISTER`)
         .expect(400);
 
       expect(response.body.message).toBe('Email already exists');
@@ -194,7 +176,7 @@ describe('Auth Registration Flow (e2e)', () => {
     it('1. 비밀번호 재설정을 위한 이메일 인증', async () => {
       // 이메일 인증 코드 발송
       await request(app.getHttpServer())
-        .get(`/auth/email/${testEmail}`)
+        .get(`/auth/email/${testEmail}?type=RESET_PASSWORD`)
         .expect(200);
 
       // Redis에서 코드 조회
