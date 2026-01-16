@@ -179,7 +179,43 @@ export class LectureService {
 
     // lecture 신청
     async enrollLecture(dto: enrollLectureRequestDto): Promise<void> {
+        await this.dataSource.transaction(async (manager) => {
+            const lecture = await manager.findOne(Lecture, {
+                where: { id: dto.lectureId },
+                lock: { mode: 'pessimistic_write' },
+            });
 
+            if (!lecture) {
+                throw new NotFoundException(ERROR_MESSAGES.LECTURE_NOT_FOUND);
+            }
+
+            // 이미 신청했는지 체크
+            const existing = await manager.findOne(LectureEnrollment, {
+                where: {
+                    lecture: { id: dto.lectureId },
+                    user: { id: dto.userId },
+                },
+            });
+
+            if (existing) {
+                throw new BadRequestException(ERROR_MESSAGES.ALREADY_ENROLLED);
+            }
+
+            // 정원 체크
+            if (lecture.currentCount >= lecture.maxCapacity) {
+                throw new BadRequestException(ERROR_MESSAGES.LECTURE_FULL);
+            }
+
+            // enrollment 생성
+            const enrollment = manager.create(LectureEnrollment, {
+                lecture: { id: dto.lectureId },
+                user: { id: dto.userId },
+            });
+            await manager.save(LectureEnrollment, enrollment);
+
+            // currentCount 증가 (원자적)
+            await manager.increment(Lecture, { id: dto.lectureId }, 'currentCount', 1);
+        });
     }
 
     // lecture 신청 취소

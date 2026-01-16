@@ -18,4 +18,6 @@ export const ERROR_MESSAGES = {
   EMAIL_NOT_REGISTERED: 'Email not registered',
   LECTURE_NOT_FOUND: 'Lecture not found',
   ENROLLMENT_NOT_FOUND: 'Enrollment not found',
+  ALREADY_ENROLLED: 'Already enrolled lecture',
+  LECTURE_FULL: 'Lecture is full',
 } as const;

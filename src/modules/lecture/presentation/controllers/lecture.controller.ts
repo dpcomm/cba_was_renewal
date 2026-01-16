@@ -146,9 +146,17 @@ export class LectureController {
     @Post('enroll')
     @ApiOperation({ summary: '수강 신청' })
     @ApiSuccessResponse({})
+    @ApiFailureResponse(400, ERROR_MESSAGES.ALREADY_ENROLLED)
+    @ApiFailureResponse(400, ERROR_MESSAGES.LECTURE_FULL)
     @ApiFailureResponse(404, ERROR_MESSAGES.LECTURE_NOT_FOUND)
-    async enrollLecture() {
-
+    async enrollLecture(
+        @Body() dto: enrollLectureRequestDto,
+    ) {
+        await this.lectureService.enrollLecture(dto);
+        return ok<null>(
+            null,
+            'Success enroll lecture',
+        );
     }
 
     // 강의 수강 취소
