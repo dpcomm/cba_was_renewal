@@ -1,4 +1,13 @@
-import { Controller, Post, UseGuards, Req, Body, Get, Param, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseGuards,
+  Req,
+  Body,
+  Get,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { RefreshToken } from './decorators/refresh-token.decorator';
@@ -15,6 +24,8 @@ import { ApiSuccessResponse } from '@shared/decorators/api-success-response.deco
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
 import { EmailVerificationResponseDto } from './dto/email-verification.response.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { EmailVerificationType } from '../domain/enums/email-verification-type.enum';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -66,9 +77,14 @@ export class AuthController {
   @Get('email/:email')
   @ApiOperation({ summary: '이메일 인증 코드 발송' })
   @ApiSuccessResponse({})
+  @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_ALREADY_EXISTS)
+  @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_NOT_REGISTERED)
   @ApiFailureResponse(500, ERROR_MESSAGES.FAILED_TO_SEND_EMAIL)
-  async sendEmail(@Param('email') email: string) {
-    await this.authService.sendEmail(email);
+  async sendEmail(
+    @Param('email') email: string,
+    @Query('type') type: EmailVerificationType,
+  ) {
+    await this.authService.sendEmail(email, type);
     return ok(null, 'Email verification code sent successfully');
   }
 
@@ -81,5 +97,24 @@ export class AuthController {
   async verifyEmail(@Body() dto: VerifyEmailDto) {
     const result = await this.authService.verifyEmail(dto.email, dto.code);
     return ok(result, 'Email verification successful');
+  }
+
+  @Get('check-id/:id')
+  @ApiOperation({ summary: '아이디 중복 확인' })
+  @ApiSuccessResponse({})
+  async checkIdDuplicate(@Param('id') id: string) {
+    const isDuplicate = await this.authService.checkIdDuplicate(id);
+    return ok({ isDuplicate }, 'Check id duplicate successful');
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: '비밀번호 재설정' })
+  @ApiSuccessResponse({})
+  @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_INVALID)
+  @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_EXPIRED)
+  @ApiBody({ type: ResetPasswordDto })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    await this.authService.resetPassword(dto);
+    return ok(null, 'Password reset successful');
   }
 }

@@ -5,8 +5,8 @@ import {
   Inject,
 } from '@nestjs/common';
 import { MailService } from '@infrastructure/mail/mail.service';
-import { UserService } from "@modules/user/application/user.service";
-import { User } from "@modules/user/domain/entities/user.entity";
+import { UserService } from '@modules/user/application/user.service';
+import { User } from '@modules/user/domain/entities/user.entity';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { RedisClientType } from 'redis';
@@ -14,6 +14,8 @@ import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
 import { RegisterDto } from './dto/register.dto';
 import { AuthResponseDto } from '../presentation/dto/auth.response.dto';
 import { UserResponseDto } from '@modules/user/presentation/dto/user.response.dto';
+import { ResetPasswordDto } from '../presentation/dto/reset-password.dto';
+import { EmailVerificationType } from '../domain/enums/email-verification-type.enum';
 
 @Injectable()
 export class AuthService {
@@ -25,19 +27,23 @@ export class AuthService {
   ) {}
 
   async validateUser(userId: string, password: string): Promise<User> {
-    const user = await this.userService.findOneByUserId(userId).catch(() => null);
-    
+    const user = await this.userService
+      .findOneByUserId(userId)
+      .catch(() => null);
+
     if (!user || !(await bcrypt.compare(password, user.password))) {
       throw new UnauthorizedException(ERROR_MESSAGES.INVALID_CREDENTIALS);
     }
-    
+
     return user;
   }
 
   async login(user: User): Promise<AuthResponseDto> {
     const payload = { id: user.id, rank: user.rank };
     const accessToken = this.jwtService.sign(payload);
-    const expiresIn = parseInt(process.env.JWT_REFRESH_EXPIRENTTIME || '2592000');
+    const expiresIn = parseInt(
+      process.env.JWT_REFRESH_EXPIRENTTIME || '2592000',
+    );
 
     const refreshToken = this.jwtService.sign(
       { id: user.id, rank: user.rank },
@@ -57,16 +63,29 @@ export class AuthService {
       const payload = this.jwtService.verify(dto.verificationToken, {
         secret: process.env.JWT_SECRET,
       });
-      
+
       if (payload.type !== 'verification' || payload.email !== dto.email) {
-        throw new BadRequestException(ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_INVALID);
+        throw new BadRequestException(
+          ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_INVALID,
+        );
       }
     } catch (e) {
       if (e instanceof BadRequestException) throw e;
-      throw new BadRequestException(ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_EXPIRED);
+      throw new BadRequestException(
+        ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_EXPIRED,
+      );
     }
 
-    const exists = await this.userService.findOneByUserId(dto.userId).catch(() => null);
+    const emailExists = await this.userService
+      .findOneByEmail(dto.email)
+      .catch(() => null);
+    if (emailExists) {
+      throw new BadRequestException(ERROR_MESSAGES.EMAIL_ALREADY_EXISTS);
+    }
+
+    const exists = await this.userService
+      .findOneByUserId(dto.userId)
+      .catch(() => null);
     if (exists) {
       throw new BadRequestException(ERROR_MESSAGES.USER_ALREADY_EXISTS);
     }
@@ -98,55 +117,119 @@ export class AuthService {
     try {
       const payload = this.jwtService.verify(refreshToken);
       const userId = payload.id;
-      
+
       const storedRefreshToken = await this.redis.get(String(userId));
       if (storedRefreshToken !== refreshToken) {
         throw new UnauthorizedException(ERROR_MESSAGES.INVAILD_REFRESH_TOKEN);
       }
 
-      const accessToken = this.jwtService.sign({ id: userId, rank: payload.rank });
+      const accessToken = this.jwtService.sign({
+        id: userId,
+        rank: payload.rank,
+      });
       return { access_token: accessToken };
     } catch (e) {
+      if (e instanceof BadRequestException) throw e;
       throw new UnauthorizedException(ERROR_MESSAGES.INVAILD_REFRESH_TOKEN);
     }
   }
 
-  async sendEmail(email: string): Promise<void> {
+  async sendEmail(email: string, type: EmailVerificationType): Promise<void> {
+    const existingUser = await this.userService
+      .findOneByEmail(email)
+      .catch(() => null);
+
+    // 회원가입, 이메일 변경: 이미 등록된 이메일이면 에러
+    if (
+      type === EmailVerificationType.REGISTER ||
+      type === EmailVerificationType.UPDATE
+    ) {
+      if (existingUser) {
+        throw new BadRequestException(ERROR_MESSAGES.EMAIL_ALREADY_EXISTS);
+      }
+    }
+    // 비밀번호 재설정: 등록되지 않은 이메일이면 에러
+    else if (type === EmailVerificationType.RESET_PASSWORD) {
+      if (!existingUser) {
+        throw new BadRequestException(ERROR_MESSAGES.EMAIL_NOT_REGISTERED);
+      }
+    }
+
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const redisKey = `email_verification:${email}`;
-    console.log(`[AuthService] Generating verification code for ${email}: ${code}`);
-    
+    console.log(
+      `[AuthService] Generating verification code for ${email}: ${code}`,
+    );
+
     // 3분(180초) 유효
     await this.redis.set(redisKey, code, { EX: 180 });
     await this.mailService.sendVerificationEmail(email, code);
   }
 
-  async verifyEmail(email: string, code: string): Promise<{ verificationToken: string }> {
+  async verifyEmail(
+    email: string,
+    code: string,
+  ): Promise<{ verificationToken: string }> {
     const redisKey = `email_verification:${email}`;
     const storedCode = await this.redis.get(redisKey);
 
     if (!storedCode) {
-      throw new BadRequestException(ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_EXPIRED);
+      throw new BadRequestException(
+        ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_EXPIRED,
+      );
     }
-    
+
     if (storedCode !== code) {
-      throw new BadRequestException(ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_INVALID);
+      throw new BadRequestException(
+        ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_INVALID,
+      );
     }
 
     await this.redis.del(redisKey);
 
     // 비밀번호 재설정과 같은 기타 동작에 필요한 임시 토큰 발급
     const verificationToken = this.jwtService.sign(
-      { 
-        email, 
+      {
+        email,
         type: 'verification',
       },
-      { 
-        expiresIn: '5m', 
-        secret: process.env.JWT_SECRET
-      }
+      {
+        expiresIn: '5m',
+        secret: process.env.JWT_SECRET,
+      },
     );
 
     return { verificationToken };
+  }
+
+  async checkIdDuplicate(userId: string): Promise<boolean> {
+    const user = await this.userService
+      .findOneByUserId(userId)
+      .catch(() => null);
+    return !!user;
+  }
+
+  async resetPassword(dto: ResetPasswordDto): Promise<void> {
+    try {
+      const payload = this.jwtService.verify(dto.verificationToken, {
+        secret: process.env.JWT_SECRET,
+      });
+
+      if (payload.type !== 'verification' || payload.email !== dto.email) {
+        throw new BadRequestException(
+          ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_INVALID,
+        );
+      }
+    } catch (e) {
+      if (e instanceof BadRequestException) throw e;
+      throw new BadRequestException(
+        ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_EXPIRED,
+      );
+    }
+
+    const user = await this.userService.findOneByEmail(dto.email);
+    await this.userService.updateUser(user.id, {
+      password: dto.newPassword,
+    });
   }
 }

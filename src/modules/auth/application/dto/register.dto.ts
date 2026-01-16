@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDateString, IsEmail, IsOptional, IsString, IsNotEmpty } from 'class-validator';
+import {
+  IsDateString,
+  IsEmail,
+  IsOptional,
+  IsString,
+  IsNotEmpty,
+} from 'class-validator';
 
 export class RegisterDto {
   @ApiProperty({ example: 'testuser' })
@@ -27,12 +33,18 @@ export class RegisterDto {
   @IsNotEmpty()
   phone: string;
 
-  @ApiProperty({ example: 'user@example.com', description: '인증된 이메일 주소' })
+  @ApiProperty({
+    example: 'user@example.com',
+    description: '인증된 이메일 주소',
+  })
   @IsEmail()
   @IsNotEmpty()
   email: string;
 
-  @ApiProperty({ example: 'eyJhbGciOiJIUzI1...', description: '이메일 인증 후 발급받은 토큰' })
+  @ApiProperty({
+    example: 'eyJhbGciOiJIUzI1...',
+    description: '이메일 인증 후 발급받은 토큰',
+  })
   @IsString()
   @IsNotEmpty()
   verificationToken: string;

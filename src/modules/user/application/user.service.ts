@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { User } from '../domain/entities/user.entity';
 import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
 import { UpdateUserDto } from './dto/update-user.dto';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UserService {
@@ -14,6 +15,14 @@ export class UserService {
 
   async findOneByUserId(userId: string): Promise<User> {
     const user = await this.userRepository.findOne({ where: { userId } });
+    if (!user) {
+      throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
+    }
+    return user;
+  }
+
+  async findOneByEmail(email: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { email } });
     if (!user) {
       throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
     }
@@ -35,6 +44,17 @@ export class UserService {
   
   async updateUser(userId: number, dto: UpdateUserDto): Promise<User> {
     const user = await this.findOneById(userId);
+
+    if (dto.password) {
+      user.password = await bcrypt.hash(dto.password, 10);
+      delete dto.password; // DTO에서 평문 비밀번호 제거
+    }
+
+    if (dto.birth) {
+      user.birth = new Date(dto.birth);
+      delete dto.birth;
+    }
+
     Object.assign(user, dto);
     return this.userRepository.save(user);
   }
