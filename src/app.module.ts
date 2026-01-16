@@ -14,6 +14,7 @@ import { StatusModule } from '@modules/status/status.module';
 import { ExpoPushTokenModule } from '@modules/expo-push-token/expo-push-token.module';
 import { NoticeModule } from '@modules/notice/notice.module';
 import { PushNotificationModule } from '@modules/push-notification/push-notification.module';
+import { LectureModule } from '@modules/lecture/lecture.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { PushNotificationModule } from '@modules/push-notification/push-notifica
     ExpoPushTokenModule,
     PushNotificationModule,
     NoticeModule,
+    LectureModule,
   ],
 })
 export class AppModule {}

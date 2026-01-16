@@ -15,7 +15,7 @@ import { Chat } from '@modules/chat/domain/entities/chat.entity';
 import { FcmToken } from '@modules/fcm/domain/entities/fcm-token.entity';
 import { ChatReport } from '@modules/chat/domain/entities/chat-report.entity';
 import { Consent } from '@modules/consent/domain/entities/consent.entity';
-
+import { LectureEnrollment } from '@modules/lecture/domain/entities/lectureEnrollment.entity';
 @Entity('User')
 export class User {
   @PrimaryGeneratedColumn()
@@ -88,4 +88,8 @@ export class User {
 
   @OneToMany(() => Consent, (consent) => consent.user)
   consents: Consent[];
+
+  @OneToMany(() => LectureEnrollment, enrollment => enrollment.user)
+  enrollments: LectureEnrollment[];
+
 }
