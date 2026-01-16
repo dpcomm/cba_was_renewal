@@ -26,15 +26,16 @@ export class ExpoPushTokenService {
 
         // 1. 이미 등록된 토큰인지 확인
         const existingToken = await this.expoPushTokenRepository.findOne({
-            where: {
-            token: dto.token,
-            user: { id: user.id },
-            },
+            where: { token: dto.token },
             relations: ['user'],
         });
 
-        // 2. 이미 있으면 lastUsedAt만 갱신
+        // 2. 이미 있으면 user교체, lastUsedAt 갱신
         if (existingToken) {
+            if (existingToken.userId !== user.id){
+                existingToken.user = user;
+            }
+
             existingToken.lastUsedAt = new Date();
             return await this.expoPushTokenRepository.save(existingToken);
         }

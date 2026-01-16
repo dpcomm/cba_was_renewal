@@ -5,6 +5,7 @@ import {
     ManyToOne,
     CreateDateColumn,
     Index,
+    JoinColumn,
 } from "typeorm";
 import { User } from "@modules/user/domain/entities/user.entity";
 
@@ -25,6 +26,7 @@ export class ExpoPushToken {
     provider: 'expo';
 
     @ManyToOne(() => User, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'userId'})
     user: User;
 
     @Column({ type: 'timestamp', nullable: true })
