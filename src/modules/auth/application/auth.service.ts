@@ -14,6 +14,7 @@ import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
 import { RegisterDto } from './dto/register.dto';
 import { AuthResponseDto } from '../presentation/dto/auth.response.dto';
 import { UserResponseDto } from '@modules/user/presentation/dto/user.response.dto';
+import { ResetPasswordDto } from "../presentation/dto/reset-password.dto";
 
 @Injectable()
 export class AuthService {
@@ -148,5 +149,30 @@ export class AuthService {
     );
 
     return { verificationToken };
+  }
+
+  async checkIdDuplicate(userId: string): Promise<boolean> {
+    const user = await this.userService.findOneByUserId(userId).catch(() => null);
+    return !!user;
+  }
+
+  async resetPassword(dto: ResetPasswordDto): Promise<void> {
+    try {
+      const payload = this.jwtService.verify(dto.verificationToken, {
+        secret: process.env.JWT_SECRET,
+      });
+
+      if (payload.type !== 'verification' || payload.email !== dto.email) {
+        throw new BadRequestException(ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_INVALID);
+      }
+    } catch (e) {
+      if (e instanceof BadRequestException) throw e;
+      throw new BadRequestException(ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_EXPIRED);
+    }
+
+    const user = await this.userService.findOneByEmail(dto.email);
+    await this.userService.updateUser(user.id, {
+      password: dto.newPassword
+    });
   }
 }

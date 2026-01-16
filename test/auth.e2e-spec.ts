@@ -139,4 +139,92 @@ describe('Auth Registration Flow (e2e)', () => {
       expect(response.body.message).toBeDefined();
     });
   });
+
+  describe('ID Duplicate Check', () => {
+    it('1. 존재하는 아이디 중복 확인', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/auth/check-id/${testUserId}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.isDuplicate).toBe(true);
+    });
+
+    it('2. 존재하지 않는 아이디 중복 확인', async () => {
+      const nonExistentId = `nonexistent_${Date.now()}`;
+      const response = await request(app.getHttpServer())
+        .get(`/auth/check-id/${nonExistentId}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.isDuplicate).toBe(false);
+    });
+  });
+
+  describe('Password Reset', () => {
+    let resetVerificationToken: string;
+
+    it('1. 비밀번호 재설정을 위한 이메일 인증', async () => {
+      // 이메일 인증 코드 발송
+      await request(app.getHttpServer())
+        .get(`/auth/email/${testEmail}`)
+        .expect(200);
+
+      // Redis에서 코드 조회
+      const code = await redis.get(`email_verification:${testEmail}`);
+      expect(code).toBeDefined();
+
+      // 이메일 인증 코드 확인 및 토큰 발급
+      const verifyResponse = await request(app.getHttpServer())
+        .post('/auth/email/verify')
+        .send({ email: testEmail, code })
+        .expect(201);
+
+      resetVerificationToken = verifyResponse.body.data.verificationToken;
+      expect(resetVerificationToken).toBeDefined();
+    });
+
+    it('2. 비밀번호 재설정 성공', async () => {
+      const newPassword = 'NewPassword123!';
+
+      const response = await request(app.getHttpServer())
+        .post('/auth/reset-password')
+        .send({
+          email: testEmail,
+          verificationToken: resetVerificationToken,
+          newPassword: newPassword,
+        })
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toContain('Password reset successful');
+    });
+
+    it('3. 변경된 비밀번호로 로그인 성공', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          userId: testUserId,
+          password: 'NewPassword123!',
+        })
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.access_token).toBeDefined();
+    });
+
+    it('4. 잘못된 토큰으로 비밀번호 재설정 시도 시 실패', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/reset-password')
+        .send({
+          email: testEmail,
+          verificationToken: 'invalid_token',
+          newPassword: 'AnotherPassword123!',
+        })
+        .expect(400);
+
+      expect(response.body.message).toBeDefined();
+    });
+  });
 });
+

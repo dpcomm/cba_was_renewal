@@ -21,10 +21,15 @@ export class UpdateUserDto {
   @ApiProperty({ required: false, example: '1990-01-01' })
   @IsDateString()
   @IsOptional()
-  birth?: Date;
+  birth?: string;
 
   @ApiProperty({ required: false, enum: UserGender, example: UserGender.MALE })
   @IsEnum(UserGender)
   @IsOptional()
   gender?: UserGender;
+
+  @ApiProperty({ required: false, example: 'newPassword123', description: '새 비밀번호' })
+  @IsString()
+  @IsOptional()
+  password?: string;
 }

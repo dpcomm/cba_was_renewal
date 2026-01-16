@@ -15,6 +15,7 @@ import { ApiSuccessResponse } from '@shared/decorators/api-success-response.deco
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
 import { EmailVerificationResponseDto } from './dto/email-verification.response.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -81,5 +82,24 @@ export class AuthController {
   async verifyEmail(@Body() dto: VerifyEmailDto) {
     const result = await this.authService.verifyEmail(dto.email, dto.code);
     return ok(result, 'Email verification successful');
+  }
+
+  @Get('check-id/:id')
+  @ApiOperation({ summary: '아이디 중복 확인' })
+  @ApiSuccessResponse({})
+  async checkIdDuplicate(@Param('id') id: string) {
+    const isDuplicate = await this.authService.checkIdDuplicate(id);
+    return ok({ isDuplicate }, 'Check id duplicate successful');
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: '비밀번호 재설정' })
+  @ApiSuccessResponse({})
+  @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_INVALID)
+  @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_EXPIRED)
+  @ApiBody({ type: ResetPasswordDto })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    await this.authService.resetPassword(dto);
+    return ok(null, 'Password reset successful');
   }
 }
