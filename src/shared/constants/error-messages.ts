@@ -14,4 +14,5 @@ export const ERROR_MESSAGES = {
   FCM_TOKEN_NOT_FOUND: 'FCM Token not found',
   FCM_TOKEN_ALREADY_REGISTED: 'Token is already registered to another account.',
   NOTICE_NOT_FOUND: 'Notice not found',
+  EMAIL_ALREADY_EXISTS: 'Email already exists',
 } as const;

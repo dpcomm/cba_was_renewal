@@ -8,7 +8,7 @@ import { createClient, RedisClientType } from 'redis';
 describe('Auth Registration Flow (e2e)', () => {
   let app: INestApplication<App>;
   let redis: RedisClientType;
-  
+
   const testEmail = `test_${Date.now()}@example.com`;
   const testUserId = `testuser_${Date.now()}`;
 
@@ -47,17 +47,17 @@ describe('Auth Registration Flow (e2e)', () => {
     it('2. Redis에서 인증 코드 조회 (테스트용)', async () => {
       const redisKey = `email_verification:${testEmail}`;
       const code = await redis.get(redisKey);
-      
+
       expect(code).toBeDefined();
       expect(code).toHaveLength(6); // 6자리 코드
-      
+
       // 다음 테스트에서 사용하기 위해 전역 변수에 저장
       (global as any).testVerificationCode = code;
     });
 
     it('3. 이메일 인증 코드 확인 및 토큰 발급', async () => {
       const code = (global as any).testVerificationCode;
-      
+
       const response = await request(app.getHttpServer())
         .post('/auth/email/verify')
         .send({ email: testEmail, code })
@@ -65,7 +65,7 @@ describe('Auth Registration Flow (e2e)', () => {
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.verificationToken).toBeDefined();
-      
+
       verificationToken = response.body.data.verificationToken;
     });
 
@@ -98,11 +98,11 @@ describe('Auth Registration Flow (e2e)', () => {
       const newEmail = `test_dup_${Date.now()}@example.com`;
       await request(app.getHttpServer()).get(`/auth/email/${newEmail}`);
       const code = await redis.get(`email_verification:${newEmail}`);
-      
+
       const verifyResponse = await request(app.getHttpServer())
         .post('/auth/email/verify')
         .send({ email: newEmail, code });
-      
+
       const newToken = verifyResponse.body.data.verificationToken;
 
       // 같은 userId로 다시 회원가입 시도
@@ -138,6 +138,33 @@ describe('Auth Registration Flow (e2e)', () => {
 
       expect(response.body.message).toBeDefined();
     });
+
+    it('7. 중복 이메일로 회원가입 시도 시 실패', async () => {
+      // 이미 가입된 이메일(testEmail)에 대한 새로운 인증 토큰 발급
+      await request(app.getHttpServer()).get(`/auth/email/${testEmail}`);
+      const code = await redis.get(`email_verification:${testEmail}`);
+
+      const verifyResponse = await request(app.getHttpServer())
+        .post('/auth/email/verify')
+        .send({ email: testEmail, code });
+
+      const newToken = verifyResponse.body.data.verificationToken;
+
+      const response = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          userId: `another_user_${Date.now()}`, // 새로운 userId
+          password: 'Test1234!',
+          name: '중복이메일유저',
+          group: '테스트그룹',
+          phone: '010-7777-7777',
+          email: testEmail, // 이미 가입된 이메일
+          verificationToken: newToken,
+        })
+        .expect(400);
+
+      expect(response.body.message).toBe('Email already exists');
+    }, 30000);
   });
 
   describe('ID Duplicate Check', () => {
@@ -227,4 +254,3 @@ describe('Auth Registration Flow (e2e)', () => {
     });
   });
 });
-
