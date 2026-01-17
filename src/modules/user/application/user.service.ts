@@ -64,4 +64,12 @@ export class UserService {
     user.isDeleted = true;
     await this.userRepository.save(user);
   }
+
+  async findOneByNameAndPhone(name: string, phone: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { name, phone } });
+    if (!user) {
+      throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
+    }
+    return user;
+  }
 }

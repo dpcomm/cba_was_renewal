@@ -15,6 +15,7 @@ import { AuthService } from '../application/auth.service';
 import { ok } from '@shared/responses/api-response';
 import { LoginDto } from '../application/dto/login.dto';
 import { RegisterDto } from '../application/dto/register.dto';
+import { FindIdDto } from '../application/dto/find-id.dto';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { ApiTags, ApiOperation, ApiBody, ApiHeader } from '@nestjs/swagger';
 import { AuthResponseDto } from './dto/auth.response.dto';
@@ -79,12 +80,14 @@ export class AuthController {
   @ApiSuccessResponse({})
   @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_ALREADY_EXISTS)
   @ApiFailureResponse(400, ERROR_MESSAGES.EMAIL_NOT_REGISTERED)
+  @ApiFailureResponse(400, ERROR_MESSAGES.USER_EMAIL_MISMATCH)
   @ApiFailureResponse(500, ERROR_MESSAGES.FAILED_TO_SEND_EMAIL)
   async sendEmail(
     @Param('email') email: string,
     @Query('type') type: EmailVerificationType,
+    @Query('userId') userId?: string,
   ) {
-    await this.authService.sendEmail(email, type);
+    await this.authService.sendEmail(email, type, userId);
     return ok(null, 'Email verification code sent successfully');
   }
 
@@ -116,5 +119,15 @@ export class AuthController {
   async resetPassword(@Body() dto: ResetPasswordDto) {
     await this.authService.resetPassword(dto);
     return ok(null, 'Password reset successful');
+  }
+
+  @Post('find-id')
+  @ApiOperation({ summary: '아이디 찾기 (이름 + 전화번호)' })
+  @ApiSuccessResponse({})
+  @ApiFailureResponse(404, ERROR_MESSAGES.USER_NOT_FOUND)
+  @ApiBody({ type: FindIdDto })
+  async findId(@Body() dto: FindIdDto) {
+    const result = await this.authService.findId(dto.name, dto.phone);
+    return ok(result, 'User ID found');
   }
 }

@@ -20,4 +20,5 @@ export const ERROR_MESSAGES = {
   ENROLLMENT_NOT_FOUND: 'Enrollment not found',
   ALREADY_ENROLLED: 'Already enrolled lecture',
   LECTURE_FULL: 'Lecture is full',
+  USER_EMAIL_MISMATCH: 'User ID and email do not match',
 } as const;

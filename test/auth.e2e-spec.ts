@@ -6,6 +6,7 @@ import { AppModule } from '../src/app.module';
 import { createClient, RedisClientType } from 'redis';
 
 describe('Auth Registration Flow (e2e)', () => {
+  jest.setTimeout(60000);
   let app: INestApplication<App>;
   let redis: RedisClientType;
 
@@ -235,6 +236,32 @@ describe('Auth Registration Flow (e2e)', () => {
         .expect(400);
 
       expect(response.body.message).toBeDefined();
+    });
+  });
+
+  describe('Find ID', () => {
+    it('1. 이름과 전화번호로 아이디 찾기 성공 (마스킹 확인)', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/find-id')
+        .send({
+          name: '테스트유저',
+          phone: '010-1234-5678',
+        })
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.userId).toBeDefined();
+      expect(response.body.data.userId).toMatch(/\*/); // 마스킹 포함 여부 확인
+    });
+
+    it('2. 존재하지 않는 사용자로 아이디 찾기 실패', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/find-id')
+        .send({
+          name: '존재하지않음',
+          phone: '010-0000-0000',
+        })
+        .expect(404);
     });
   });
 });

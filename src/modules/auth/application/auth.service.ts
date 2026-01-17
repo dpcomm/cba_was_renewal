@@ -16,6 +16,7 @@ import { AuthResponseDto } from '../presentation/dto/auth.response.dto';
 import { UserResponseDto } from '@modules/user/presentation/dto/user.response.dto';
 import { ResetPasswordDto } from '../presentation/dto/reset-password.dto';
 import { EmailVerificationType } from '../domain/enums/email-verification-type.enum';
+import { maskString } from '../../../shared/utils/mask.util';
 
 @Injectable()
 export class AuthService {
@@ -134,7 +135,11 @@ export class AuthService {
     }
   }
 
-  async sendEmail(email: string, type: EmailVerificationType): Promise<void> {
+  async sendEmail(
+    email: string,
+    type: EmailVerificationType,
+    userId?: string,
+  ): Promise<void> {
     const existingUser = await this.userService
       .findOneByEmail(email)
       .catch(() => null);
@@ -148,10 +153,13 @@ export class AuthService {
         throw new BadRequestException(ERROR_MESSAGES.EMAIL_ALREADY_EXISTS);
       }
     }
-    // 비밀번호 재설정: 등록되지 않은 이메일이면 에러
+    // 비밀번호 재설정: 등록되지 않은 이메일이면 에러, userId와 email이 불일치하면 에러
     else if (type === EmailVerificationType.RESET_PASSWORD) {
       if (!existingUser) {
         throw new BadRequestException(ERROR_MESSAGES.EMAIL_NOT_REGISTERED);
+      }
+      if (userId && existingUser.userId !== userId) {
+        throw new BadRequestException(ERROR_MESSAGES.USER_EMAIL_MISMATCH);
       }
     }
 
@@ -231,5 +239,10 @@ export class AuthService {
     await this.userService.updateUser(user.id, {
       password: dto.newPassword,
     });
+  }
+
+  async findId(name: string, phone: string): Promise<{ userId: string }> {
+    const user = await this.userService.findOneByNameAndPhone(name, phone);
+    return { userId: maskString(user.userId) };
   }
 }
