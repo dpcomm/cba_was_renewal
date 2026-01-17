@@ -21,6 +21,7 @@ import { ApiTags, ApiOperation, ApiBody, ApiHeader } from '@nestjs/swagger';
 import { AuthResponseDto } from './dto/auth.response.dto';
 import { RefreshResponseDto } from './dto/refresh.response.dto';
 import { UserResponseDto } from '@modules/user/presentation/dto/user.response.dto';
+import { FindIdResponseDto } from './dto/find-id.response.dto';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
@@ -121,9 +122,11 @@ export class AuthController {
     return ok(null, 'Password reset successful');
   }
 
+
+
   @Post('find-id')
   @ApiOperation({ summary: '아이디 찾기 (이름 + 전화번호)' })
-  @ApiSuccessResponse({})
+  @ApiSuccessResponse({ type: FindIdResponseDto })
   @ApiFailureResponse(404, ERROR_MESSAGES.USER_NOT_FOUND)
   @ApiBody({ type: FindIdDto })
   async findId(@Body() dto: FindIdDto) {
