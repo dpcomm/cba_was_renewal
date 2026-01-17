@@ -362,7 +362,11 @@ export class CarpoolService {
 
         for (const key of updatableFields) {
             const value = dto[key];
-            if (value != null) { // null & undefined 제외 → 기존 값 유지
+            if (value == null) continue;
+
+            if (key === 'departureTime') {
+                existing.departureTime = new Date(value as any);
+            } else {
                 (existing as any)[key] = value;
             }
         }
