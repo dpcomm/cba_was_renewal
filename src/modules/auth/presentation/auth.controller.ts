@@ -122,8 +122,6 @@ export class AuthController {
     return ok(null, 'Password reset successful');
   }
 
-
-
   @Post('find-id')
   @ApiOperation({ summary: '아이디 찾기 (이름 + 전화번호)' })
   @ApiSuccessResponse({ type: FindIdResponseDto })

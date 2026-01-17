@@ -41,7 +41,7 @@ export class UserService {
     }
     return user;
   }
-  
+
   async updateUser(userId: number, dto: UpdateUserDto): Promise<User> {
     const user = await this.findOneById(userId);
 
@@ -65,11 +65,11 @@ export class UserService {
     await this.userRepository.save(user);
   }
 
-  async findOneByNameAndPhone(name: string, phone: string): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { name, phone } });
-    if (!user) {
+  async findUsersByNameAndPhone(name: string, phone: string): Promise<User[]> {
+    const users = await this.userRepository.find({ where: { name, phone } });
+    if (!users || users.length === 0) {
       throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
     }
-    return user;
+    return users;
   }
 }

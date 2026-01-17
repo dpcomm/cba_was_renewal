@@ -241,8 +241,10 @@ export class AuthService {
     });
   }
 
-  async findId(name: string, phone: string): Promise<{ userId: string }> {
-    const user = await this.userService.findOneByNameAndPhone(name, phone);
-    return { userId: maskString(user.userId) };
+  async findId(name: string, phone: string): Promise<{ userIds: string[] }> {
+    const users = await this.userService.findUsersByNameAndPhone(name, phone);
+    return {
+      userIds: users.map((user) => maskString(user.userId)),
+    };
   }
 }

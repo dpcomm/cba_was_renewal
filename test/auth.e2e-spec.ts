@@ -250,8 +250,10 @@ describe('Auth Registration Flow (e2e)', () => {
         .expect(201);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.data.userId).toBeDefined();
-      expect(response.body.data.userId).toMatch(/\*/); // 마스킹 포함 여부 확인
+      expect(response.body.data.userIds).toBeDefined();
+      expect(Array.isArray(response.body.data.userIds)).toBe(true);
+      expect(response.body.data.userIds.length).toBeGreaterThan(0);
+      expect(response.body.data.userIds[0]).toMatch(/\*/); // 마스킹 포함 여부 확인
     });
 
     it('2. 존재하지 않는 사용자로 아이디 찾기 실패', async () => {
