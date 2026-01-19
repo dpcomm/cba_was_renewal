@@ -7,45 +7,47 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
+  Index,
 } from 'typeorm';
 import { User } from '@modules/user/domain/entities/user.entity';
 import { CarpoolMember } from './carpool-member.entity';
 import { Chat } from '@modules/chat/domain/entities/chat.entity';
 import { ChatReport } from '@modules/chat/domain/entities/chat-report.entity';
+import { CarpoolStatus } from '../../domain/carpool-status.enum';
 
-@Entity()
+@Entity('CarpoolRoom')
 export class CarpoolRoom {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ update: false })
   driverId: number;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, length: 191 })
   carInfo: string;
 
-  @Column({ default: () => 'CURRENT_TIMESTAMP' })
+  @Column({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
   departureTime: Date;
 
-  @Column()
+  @Column({ length: 191 })
   origin: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, length: 191 })
   originDetailed: string;
 
-  @Column()
+  @Column({ length: 191 })
   destination: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, length: 191 })
   destinationDetailed: string;
 
-  @Column()
+  @Column({ name: 'seatsTotal' })
   seatsTotal: number;
 
-  @Column()
+  @Column({ name: 'seatsLeft' })
   seatsLeft: number;
 
-  @Column()
+  @Column({ length: 191 })
   note: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
@@ -60,20 +62,23 @@ export class CarpoolRoom {
   @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
   destLng: number;
 
-  @Column({ default: 'before_departure' })
-  status: string;
+  @Column({ type: 'varchar', default: CarpoolStatus.Before_Departure, length: 50 })
+  status: CarpoolStatus;
 
   @Column({ default: false })
   isArrived: boolean;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @Column({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)', onUpdate: 'CURRENT_TIMESTAMP(3)'})
   updatedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.createdRooms)
-  @JoinColumn({ name: 'driverId' })
+  @ManyToOne(() => User, (user) => user.createdRooms, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
+  @JoinColumn({
+    name: 'driverId',
+    foreignKeyConstraintName: 'CarpoolRoom_driverId_fkey',
+  })
   driver: User;
 
   @OneToMany(() => CarpoolMember, (member) => member.room)

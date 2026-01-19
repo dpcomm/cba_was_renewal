@@ -10,11 +10,7 @@ import { join } from 'path';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'mysql',
-        host: configService.get<string>('DOMAIN_LOCAL'),
-        port: 3306,
-        username: 'root',
-        password: configService.get<string>('MYSQL_ROOT_PASSWORD'),
-        database: configService.get<string>('MYSQL_DATABASE'),
+        url: configService.get<string>('DATABASE_URL'),
         entities: [
           join(__dirname, '..', '..', 'modules', '**', '*.entity{.ts,.js}'),
         ],

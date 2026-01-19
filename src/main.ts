@@ -6,7 +6,8 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api');
+  // renew 백엔드 서버 프리픽스 임시 적용
+  app.setGlobalPrefix('api/v2');
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -18,12 +19,13 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('CBA Renewal API')
-    .setDescription('API reference for CBA renewal project')
+    .setTitle('CBA Connect Renewal API')
+    .setDescription('API reference for CBA Connect renewal project')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, swaggerDocument);
+  SwaggerModule.setup('api-docs', app, swaggerDocument);
 
   await app.listen(process.env.PORT ?? 3000);
 }

@@ -31,6 +31,14 @@
   - 핵심 비즈니스 규칙이나 상태 변경 로직을 포함할 수 있습니다.
 - **주요 파일**: `Entity`
 
+### 🔄 계층 간 의존성 규칙 (Dependency Rule)
+**Presentation ➡️ Application ➡️ Domain**
+- 상위 계층은 하위 계층을 의존(Import)할 수 있습니다.
+- **하위 계층은 상위 계층을 의존할 수 없습니다.** (역참조 금지 🚫)
+  - 예: `Service`가 `Controller`의 코드를 가져다 쓰면 안 됩니다.
+  - 예: `Entity`가 `DTO`를 알면 안 됩니다.
+- 같은 계층 간의 참조는 가능합니다. (예: `AuthService` -> `UserService`)
+
 ---
 
 ## 폴더 구조 예시 (Consent 모듈)
@@ -102,8 +110,78 @@ npm run start:prod
 3. **API Response interface 사용**:
    - 성공 시: `return ok(data)`
    - 실패 시: `throw new NotFoundException()` (Nest 내장 에러 사용 시 필터가 자동 처리)
-4. **Swagger 확인**: 개발하면서 `http://localhost:3000/docs` 에서 문서가 잘 나오는지 체크
+4. **Swagger 확인**: 개발하면서 `http://localhost:3000/api/docs` 에서 문서가 잘 나오는지 체크
+
+## 📖 API 문서화 가이드 (Swagger)
+
+Swagger 문서가 실제 응답 포맷(`{ success, statusCode, data/error }`)과 일치하도록 **전용 데코레이터**를 사용합니다.
+
+### 1. 성공 응답 (`@ApiSuccessResponse`)
+성공했을 때 반환되는 데이터의 DTO 타입을 지정합니다. 자동으로 표준 성공 응답 구조로 감싸서 보여줍니다.
+
+```typescript
+// 사용 예시
+@ApiSuccessResponse({ type: UserResponseDto })
+async getUser() { ... }
+
+// 리스트인 경우
+@ApiSuccessResponse({ type: UserResponseDto, isArray: true })
+async getAllUsers() { ... }
+```
+
+### 2. 실패 응답 (`@ApiFailureResponse`)
+발생할 수 있는 에러 상황을 명시합니다.
+**중요**: 문서와 코드의 메시지 일치성을 위해 반드시 `src/shared/constants/error-messages.ts`에 정의된 상수를 사용합니다.
+
+```typescript
+import { ERROR_MESSAGES } from '@shared/constants/error-messages';
+
+// 사용 예시
+@ApiFailureResponse(401, ERROR_MESSAGES.INVALID_PASSWORD)
+@ApiFailureResponse(404, ERROR_MESSAGES.USER_NOT_FOUND)
+async getUser() { ... }
+```
+
+> **Note**: 서비스 코드에서도 동일한 상수를 사용하여 에러를 던져야 합니다 (`throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND)`).
 
 ## 참고
-- **Swagger UI**: [http://localhost:3000/docs](http://localhost:3000/docs)
+- **Swagger UI**: [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
 - **레거시 코드**: `_LEGACY/` 폴더 (참고용)
+
+## 🗄️ 데이터베이스 마이그레이션 (TypeORM)
+
+개발 흐름에 따라 가장 자주 사용하는 마이그레이션 명령어입니다.
+
+### 1. 마이그레이션 생성 (`migration:generate`)
+엔티티(`*.entity.ts`)를 수정한 후, 변경 사항을 DB에 반영할 SQL 파일을 자동으로 생성합니다.
+```bash
+npm run migration:generate --name=변경내용설명
+# 예시: npm run migration:generate --name=AddNicknameToUser
+#
+# 기존의 방법으로는 migration이름이 $npmConfig와 같은 값으로 설정되는 현상이 발생
+# package.json의 script에서
+# "migration:generate": "npm run typeorm migration:generate -- -d src/infrastructure/database/data-source.ts src/infrastructure/database/migrations/$npm_config_name",
+# 위 설정을 아래와 같이 수정.
+# "migration:generate": "npm run typeorm migration:generate -- -d src/infrastructure/database/data-source.ts",
+# npm run migration:generate -- src/infrastructure/database/migrations/CreateNotice
+# 위와 같은 형식으로 migration 생성
+
+```
+
+### 2. 마이그레이션 실행 (`migration:run`)
+생성된 마이그레이션 파일(SQL)을 실제 데이터베이스에 적용합니다.
+```bash
+npm run migration:run
+```
+
+### 3. 마이그레이션 롤백 (`migration:revert`)
+가장 최근에 적용된 마이그레이션을 취소(롤백)합니다.
+```bash
+npm run migration:revert
+```
+
+### 4. 마이그레이션 수동 생성 (`migration:create`)
+엔티티 변경 없이 직접 SQL을 작성해야 할 때 빈 마이그레이션 파일을 생성합니다.
+```bash
+npm run migration:create --name=작업내용설명
+```

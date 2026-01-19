@@ -5,6 +5,8 @@
     "test",
     "dist",
     "**/*spec.ts",
-    "_LEGACY"
+    "_LEGACY",
+    "check_migration_status.ts",
+    "check_tables.ts"
   ]
 }

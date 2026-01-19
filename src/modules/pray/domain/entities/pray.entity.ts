@@ -8,21 +8,21 @@ import {
 } from 'typeorm';
 import { User } from '@modules/user/domain/entities/user.entity';
 
-@Entity()
+@Entity('Pray')
 export class Pray {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ length: 191 })
   content: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
   createdAt: Date;
 
   @Column()
   userId: number;
 
-  @ManyToOne(() => User, (user) => user.prays)
-  @JoinColumn({ name: 'userId' })
+  @ManyToOne(() => User, (user) => user.prays, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
+  @JoinColumn({ name: 'userId', foreignKeyConstraintName: 'Pray_userId_fkey' })
   user: User;
 }

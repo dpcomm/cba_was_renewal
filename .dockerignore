@@ -1,0 +1,12 @@
+_LEGACY
+node_modules
+dist
+coverage
+test
+.git
+.github
+.env.*
+README.md
+task.md
+implementation_plan.md
+walkthrough.md

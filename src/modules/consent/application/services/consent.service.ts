@@ -2,9 +2,10 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Consent } from '../../domain/entities/consent.entity';
-import { CreateConsentRequestDto } from '../../presentation/dto/create-consent.request.dto';
+import { CreateConsentDto } from '../dto/create-consent.dto';
 import { User } from '@modules/user/domain/entities/user.entity';
 import { ConsentType } from '../../domain/consent-type.enum';
+import { ERROR_MESSAGES } from '../../../../shared/constants/error-messages';
 
 @Injectable()
 export class ConsentService {
@@ -16,22 +17,39 @@ export class ConsentService {
   ) {}
 
   async findAll(): Promise<Consent[]> {
-    return this.consentRepository.find({ order: { consentedAt: 'DESC' } });
+    const consents = await this.consentRepository.find({
+      order: { consentedAt: 'DESC' },
+    });
+
+    if (!consents.length) {
+      throw new NotFoundException(ERROR_MESSAGES.CONSENT_NOT_FOUND);
+    }
+
+    return consents;
   }
 
   async findOne(
     userId: number,
     consentType: ConsentType,
-  ): Promise<Consent | null> {
-    return this.consentRepository.findOne({ where: { userId, consentType } });
+  ): Promise<Consent> {
+    const consent = await this.consentRepository.findOne({
+      where: { userId, consentType },
+    });
+
+    if (!consent) {
+      throw new NotFoundException(ERROR_MESSAGES.CONSENT_NOT_FOUND);
+    }
+
+    return consent;
   }
 
-  async create(dto: CreateConsentRequestDto): Promise<Consent> {
+  async create(userId: number, dto: CreateConsentDto): Promise<Consent> {
     const user = await this.userRepository.findOne({
-      where: { id: dto.userId },
+      where: { id: userId },
     });
+
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
     }
 
     const consent = this.consentRepository.create({
@@ -40,13 +58,14 @@ export class ConsentService {
       value: dto.value,
       user,
     });
+    
     return this.consentRepository.save(consent);
   }
 
   async remove(userId: number, consentType: ConsentType): Promise<void> {
     const result = await this.consentRepository.delete({ userId, consentType });
     if (!result.affected) {
-      throw new NotFoundException('Consent not found');
+      throw new NotFoundException(ERROR_MESSAGES.CONSENT_NOT_FOUND);
     }
   }
 }

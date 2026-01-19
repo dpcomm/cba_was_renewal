@@ -1,0 +1,24 @@
+{
+  "application": {
+    "name": "카풀 서비스",
+    "versionName": "1.1.0",
+    "versionCode": 1,
+    "description": "CBA Connect의 카풀 서비스는 교회 행사나 모임에 참여하는 성도들을 위한 편리한 카풀 기능을 제공합니다. 이 앱을 통해 성도들은 서로의 차량을 공유하고, 효율적으로 이동할 수 있습니다. 카풀 서비스를 통해 환경 보호와 비용 절감에도 기여할 수 있습니다.",
+    "releaseDate": "2025-06-22",
+    "author": "CBA 개기자 (개발 & 기획자 팀)",
+    "updateNotes": [
+      "1.1.0: 코드베이스 개선, 레이아웃 전면 수정",
+      "1.0.1: 기능 개선 및 버그 수정",
+      "1.0.0: 어플리케이션 출시"
+    ],
+    "updateUrl": "https://recba.me/carpool-download"
+  },
+  "consents": {
+    "privacyPolicy": {
+      "title": "개인정보 처리방침",
+      "url": "https://sites.google.com/view/cba-connect",
+      "version": 2,
+      "updatedAt": "2026-01-19"
+    }
+  }
+}

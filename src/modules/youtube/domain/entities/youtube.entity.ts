@@ -8,7 +8,7 @@ import {
 } from 'typeorm';
 import { Retreat } from '@modules/retreat/domain/entities/retreat.entity';
 
-@Entity()
+@Entity('Youtube')
 export class Youtube {
   @PrimaryGeneratedColumn()
   id: number;
@@ -16,16 +16,16 @@ export class Youtube {
   @Column()
   retreatId: number;
 
-  @Column()
+  @Column({ length: 191 })
   title: string;
 
   @Column({ length: 255 })
   link: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
   createdAt: Date;
 
-  @ManyToOne(() => Retreat, (retreat) => retreat.youtubes)
-  @JoinColumn({ name: 'retreatId' })
+  @ManyToOne(() => Retreat, (retreat) => retreat.youtubes, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
+  @JoinColumn({ name: 'retreatId', foreignKeyConstraintName: 'Youtube_retreatId_fkey' })
   retreat: Retreat;
 }

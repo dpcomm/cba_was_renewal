@@ -5,6 +5,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  Index,
 } from 'typeorm';
 import { Application } from '@modules/application/domain/entities/application.entity';
 import { Pray } from '@modules/pray/domain/entities/pray.entity';
@@ -14,43 +15,51 @@ import { Chat } from '@modules/chat/domain/entities/chat.entity';
 import { FcmToken } from '@modules/fcm/domain/entities/fcm-token.entity';
 import { ChatReport } from '@modules/chat/domain/entities/chat-report.entity';
 import { Consent } from '@modules/consent/domain/entities/consent.entity';
-
+import { LectureEnrollment } from '@modules/lecture/domain/entities/lectureEnrollment.entity';
 @Entity('User')
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ default: 'M' })
+  @Column({ default: 'M', length: 191 })
   rank: string;
 
-  @Column({ unique: true })
+  @Column({ length: 191 })
+  @Index('User_userId_key', { unique: true })
   userId: string;
 
-  @Column()
+  @Column({ length: 191 })
   password: string;
 
-  @Column()
+  @Column({ length: 191 })
   name: string;
 
-  @Column()
+  @Column({ length: 191 })
   group: string;
 
-  @Column()
+  @Column({ length: 191 })
   phone: string;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'datetime', nullable: true, precision: 3 })
   birth: Date;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, length: 191 })
   gender: string;
 
   @Column({ default: false })
   isDeleted: boolean;
 
-  @CreateDateColumn()
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  @Index('IDX_User_email', { unique: true })
+  email: string;
+
+  @Column({ type: 'datetime', precision: 3, nullable: true })
+  emailVerifiedAt: Date;
+
+  @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @Column({ type: 'datetime', precision: 3 })
   updatedAt: Date;
 
   @OneToMany(() => Application, (application) => application.user)
@@ -79,4 +88,8 @@ export class User {
 
   @OneToMany(() => Consent, (consent) => consent.user)
   consents: Consent[];
+
+  @OneToMany(() => LectureEnrollment, enrollment => enrollment.user)
+  enrollments: LectureEnrollment[];
+
 }
