@@ -43,9 +43,9 @@ export class ConsentService {
     return consent;
   }
 
-  async create(dto: CreateConsentDto): Promise<Consent> {
+  async create(userId: number, dto: CreateConsentDto): Promise<Consent> {
     const user = await this.userRepository.findOne({
-      where: { id: dto.userId },
+      where: { id: userId },
     });
 
     if (!user) {

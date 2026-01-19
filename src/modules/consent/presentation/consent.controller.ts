@@ -25,6 +25,7 @@ import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
+import { User } from '@shared/decorators/user.decorator';
 
 @ApiTags('Consent')
 @Controller('consent')
@@ -65,8 +66,8 @@ export class ConsentController {
   @Post()
   @JwtGuard()
   @ApiSuccessResponse({ type: ConsentResponseDto })
-  async create(@Body() dto: CreateConsentDto) {
-    const consent = await this.consentService.create(dto);
+  async create(@User() user: any, @Body() dto: CreateConsentDto) {
+    const consent = await this.consentService.create(user.id, dto);
     return ok<ConsentResponseDto>(
       this.mapper.toResponse(consent),
       'Success create consent',
