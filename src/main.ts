@@ -6,7 +6,8 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('api');
+  // renew 백엔드 서버 프리픽스 임시 적용
+  app.setGlobalPrefix('api/v2');
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
