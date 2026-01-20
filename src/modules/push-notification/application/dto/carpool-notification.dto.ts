@@ -44,9 +44,9 @@ export class CarpoolDeleteNotificationDto extends CarpoolNotificationDto {
 export class CarpoolReadyNotificationDto extends CarpoolNotificationDto {
     readonly body: string;
 
-    constructor(hostName: string) {
+    constructor() {
         super();
-        this.body = `${hostName}님의 카풀이 준비되었습니다.`;
+        this.body = '카풀시작이 활성화되었습니다. 출발할 때 카풀 시작버튼을 눌러주세요.';
     }
 }
 

@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository, DataSource } from 'typeorm';
+import { DeepPartial, Repository, DataSource, Between } from 'typeorm';
 import { CarpoolRoom } from '../../domain/entities/carpool-room.entity';
 import { CarpoolMember } from '@modules/carpool/domain/entities/carpool-member.entity';
 import { 
@@ -14,7 +14,7 @@ import { CarpoolStatus } from '@modules/carpool/domain/carpool-status.enum';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 import { ExpoNotificationService } from '@modules/push-notification/application/services/expo-notification/ExpoNotification.service';
 import { ExpoPushTokenService } from '@modules/expo-push-token/application/services/expo-push-token.service';
-import { CarpoolDeleteNotificationDto, CarpoolJoinNotificationDto, CarpoolLeaveNotificationDto, CarpoolStartNotificationDto, CarpoolUpdateNotificationDto } from '@modules/push-notification/application/dto/carpool-notification.dto';
+import { CarpoolDeleteNotificationDto, CarpoolJoinNotificationDto, CarpoolLeaveNotificationDto, CarpoolReadyNotificationDto, CarpoolStartNotificationDto, CarpoolUpdateNotificationDto } from '@modules/push-notification/application/dto/carpool-notification.dto';
 import { CarpoolDetailResponseDto, CarpoolWithDriverInfoResponseDto } from '@modules/carpool/presentation/dto/carpool.response.dto';
 // fcmservice
 // redis
@@ -22,6 +22,7 @@ import { CarpoolDetailResponseDto, CarpoolWithDriverInfoResponseDto } from '@mod
 
 @Injectable() 
 export class CarpoolService {
+    private readonly logger = new Logger(CarpoolService.name);
     constructor(
         @InjectRepository(CarpoolRoom)
         private carpoolRoomRepository: Repository<CarpoolRoom>,
@@ -638,6 +639,43 @@ export class CarpoolService {
         });
     }
 
+    async checkCarpoolReady(currentTime: Date): Promise<void> {
+        this.logger.log('start check carpool ready');
+
+        const baseTime = new Date(currentTime);
+        baseTime.setHours(baseTime.getHours() + 1, baseTime.getMinutes(), 0, 0);
+
+        const targetTime = new Date(baseTime);
+        targetTime.setMinutes(baseTime.getMinutes() + 5);
+
+
+        const baseTimeStr = baseTime.toISOString().slice(0, 19).replace('T', ' ');
+        const targetTimeStr = targetTime.toISOString().slice(0, 19).replace('T', ' ');
+
+        // Repository를 통해 출발 1시간~1시간 5분 전 카풀 조회
+        const readyCarpoolList = await this.carpoolRoomRepository
+            .createQueryBuilder('carpool')
+            .where('carpool.departureTime >= :baseTime', { baseTime: baseTimeStr })
+            .andWhere('carpool.departureTime < :targetTime', { targetTime: targetTimeStr })
+            .andWhere('carpool.isArrived = false')
+            .getMany(); 
+
+        this.logger.log(readyCarpoolList);
+        for (const carpool of readyCarpoolList) {
+            try {
+                const driverId = carpool.driverId;
+                const tokens = await this.expoTokenService.getTokens(driverId);
+                const notification = new CarpoolReadyNotificationDto();
+
+                await this.expoMessageService.send(tokens, notification);
+                this.logger.log(`Notification sent to driverId: ${driverId}`);
+            } catch (err) {
+                this.logger.error(`Failed to send notification for carpoolId: ${carpool.id}`, err);
+            }
+        }
+
+    }
+
     async oldCarpoolArriveUpdate(currentTime: Date): Promise<void> {
         const baseTime = new Date(currentTime);
         baseTime.setDate(baseTime.getDate() - 1);
@@ -649,8 +687,8 @@ export class CarpoolService {
                 isArrived: true,
                 status: CarpoolStatus.Arrived,
             })
-            .where('departure_time <= :baseTime', { baseTime })
-            .andWhere('is_arrived = false')
+            .where('departureTime <= :baseTime', { baseTime })
+            .andWhere('isArrived = false')
             .execute();       
     }
 
