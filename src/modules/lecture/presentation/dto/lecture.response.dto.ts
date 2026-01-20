@@ -1,4 +1,3 @@
-import { LectureSemester } from "@modules/lecture/domain/lecture-semester.enum";
 import { ApiProperty } from "@nestjs/swagger";
 
 export class LectureResponseDto {  
@@ -27,22 +26,8 @@ export class LectureResponseDto {
     @ApiProperty({example: 2026, required: true})
     year: number;
 
-    @ApiProperty({
-        enum: LectureSemester, 
-        example: LectureSemester.WINTER_RETREAT, 
-        required: true,
-        description: `
-            약어 설명:
-            • WIR = 겨울수련회
-            • SUR = 여름수련회  
-            • SPG = 봄 GBS
-            • SUG = 여름 GBS
-            • AUG = 가을 GBS
-            • WIG = 겨울 GBS
-            • ES1, ES2, ES3, ES4 = 추가학기 1,2,3,4
-        `.trim(),
-    })
-    semester: LectureSemester;
+    @ApiProperty({ example: 'winter reterat', required: true })
+    termType: string;
     
     @ApiProperty({example: '001', required: true})
     codeNumber: string;
@@ -92,22 +77,8 @@ export class LectureDetailResponseDto {
     @ApiProperty({example: 2026, required: true})
     year: number;
 
-    @ApiProperty({
-        enum: LectureSemester, 
-        example: LectureSemester.WINTER_RETREAT, 
-        required: true,
-        description: `
-            약어 설명:
-            • WIR = 겨울수련회
-            • SUR = 여름수련회  
-            • SPG = 봄 GBS
-            • SUG = 여름 GBS
-            • AUG = 가을 GBS
-            • WIG = 겨울 GBS
-            • ES1, ES2, ES3, ES4 = 추가학기 1,2,3,4
-        `.trim(),
-    })
-    semester: LectureSemester;
+    @ApiProperty({ example: 'winter reterat', required: true })
+    termType: string;
 
     @ApiProperty({example: '001', required: true})
     codeNumber: string;

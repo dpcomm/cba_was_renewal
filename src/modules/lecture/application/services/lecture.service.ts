@@ -5,13 +5,11 @@ import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 import { Lecture } from '@modules/lecture/domain/entities/lecture.entity';
 import { LectureEnrollment } from '@modules/lecture/domain/entities/lectureEnrollment.entity';
-import { LectureSemester } from '@modules/lecture/domain/lecture-semester.enum';
 import { 
     createLectureRequestDto,
     updateLectureRequestDto,
     enrollLectureRequestDto,
     dropLectureRequestDto,
-    getLectureFilterDto,
 } from '../dto/lecture.request.dto';
 import { 
     LectureResponseDto,
@@ -33,25 +31,13 @@ export class LectureService {
     ) {}
 
     // filter조건에 따른 lecture 목록 조회
-    async getLectures(filter: getLectureFilterDto): Promise<Lecture[]> {
-        const queryBuilder = this.lectureRepository.createQueryBuilder('lecture');
-
-        if (filter.year) {
-            queryBuilder.andWhere('lecture.year=:year',{ year:filter.year });
-        }
-        if (filter.semester) {
-            queryBuilder.andWhere('lecture.semester=:semester',{ semester:filter.semester });
-        }
-        if (filter.codeNumber) {
-            queryBuilder.andWhere('lecture.codeNumber=:codeNumber',{ codeNumber:filter.codeNumber });
-        }
-
-        return await queryBuilder.orderBy('lecture.year','DESC').getMany();            
-    }
 
     // id에 따른 lecture 정보 조회
     async getLectureById(lectureId: number): Promise<Lecture> {
-        const lecture = await this.lectureRepository.findOne({where:{id:lectureId}});
+        const lecture = await this.lectureRepository.findOne({
+            where:{id:lectureId},
+            relations: ['term', 'term.termType'],
+        });
 
         if (!lecture) {
             throw new NotFoundException(ERROR_MESSAGES.LECTURE_NOT_FOUND)
@@ -64,7 +50,12 @@ export class LectureService {
     async getLectureDetailById(lectureId: number): Promise<LectureDetailResponseDto> {
         const lecture = await this.lectureRepository.findOne({
             where: { id: lectureId },
-            relations: ['enrollments', 'enrollments.user']
+            relations: [
+                'term',
+                'term.termType',
+                'enrollments', 
+                'enrollments.user',
+            ],
         });        
 
         if (!lecture) {
@@ -79,8 +70,8 @@ export class LectureService {
             startTime: lecture.startTime.toISOString(),
             currentCount: lecture.currentCount,
             maxCapacity: lecture.maxCapacity,
-            year: lecture.year,
-            semester: lecture.semester,
+            year: lecture.term.year,
+            termType: lecture.term.termType.name,
             codeNumber: lecture.codeNumber,
             introduction: lecture.introduction,
             enrollees: lecture.enrollments.map(enrollment => ({
@@ -93,29 +84,19 @@ export class LectureService {
 
     // lecture 생성
     async createLecture(dto: createLectureRequestDto): Promise<Lecture> {
-        // 중복 체크 (year + semester)
-        const existingLecture = await this.lectureRepository.findOne({
-            where: {
-                year: dto.year,
-                semester: dto.semester,
-            },
-        });
-
-        // codeNumber 자동 생성 (3자리, 001부터 시작)
-        let codeNumber = '001';
-        if (existingLecture) {
-            const maxCode = await this.lectureRepository
+        // 같은 term 내에서 마지막 codeNumber 조회
+        const maxCode = await this.lectureRepository
             .createQueryBuilder('lecture')
             .select('MAX(CAST(lecture.codeNumber AS UNSIGNED))', 'maxCode')
-            .where('lecture.year = :year', { year: dto.year })
-            .andWhere('lecture.semester = :semester', { semester: dto.semester })
+            .where('lecture.term_id = :termId', { termId: dto.termId })
             .getRawOne();
-            
-            const nextNumber = (parseInt(maxCode.maxCode || '0') + 1).toString().padStart(3, '0');
-            codeNumber = nextNumber;
-        }
 
-        // DTO → Entity 변환 (codeNumber 자동 추가)
+        const nextCodeNumber = (
+            parseInt(maxCode?.maxCode ?? '0') + 1
+        )
+            .toString()
+            .padStart(3, '0');
+
         const lecture = this.lectureRepository.create({
             title: dto.title,
             introduction: dto.introduction,
@@ -123,27 +104,39 @@ export class LectureService {
             location: dto.location,
             maxCapacity: dto.maxCapacity,
             startTime: new Date(dto.startTime),
-            year: dto.year,
-            semester: dto.semester,            
-            codeNumber,  // 자동 생성된 코드
+            codeNumber: nextCodeNumber,
+            term: { id: dto.termId },
         });
 
         const savedLecture = await this.lectureRepository.save(lecture);
-        return savedLecture;        
+
+        const lectureWithRelations = await this.lectureRepository.findOne({
+            where: { id: savedLecture.id },
+            relations: ['term', 'term.termType'], 
+        });
+
+        if (!lectureWithRelations) {
+            throw new NotFoundException('Lecture not found after save');
+        }
+
+        return lectureWithRelations;
     }
 
     // lecture 수정
     async updateLecture(dto: updateLectureRequestDto): Promise<Lecture> {
-        const existing = await this.lectureRepository.findOne({where: {id: dto.id}});
+        const lecture = await this.lectureRepository.findOne({where: {id: dto.id}});
 
-        if (!existing) {
+        if (!lecture) {
             throw new NotFoundException(ERROR_MESSAGES.LECTURE_NOT_FOUND);
         }
 
         // maxCapacity 검증 (수정 시에만)
-        if (dto.maxCapacity !== undefined && dto.maxCapacity < existing.currentCount) {
+        if (
+            dto.maxCapacity !== undefined && 
+            dto.maxCapacity < lecture.currentCount
+        ) {
             throw new BadRequestException(
-                `maxCapacity(${dto.maxCapacity})는 현재 인원(${existing.currentCount})보다 클 수 없습니다`
+                `maxCapacity(${dto.maxCapacity})는 현재 인원(${lecture.currentCount})보다 작을 수 없습니다`
             );
         }
 
@@ -163,13 +156,24 @@ export class LectureService {
             if (value == null) continue;
 
             if (key === 'startTime') {
-                existing.startTime = new Date(value as any);
+                lecture.startTime = new Date(value as any);
             } else {
-                (existing as any)[key] = value;
+                (lecture as any)[key] = value;
             }
         }
 
-        return await this.lectureRepository.save(existing);   
+        const savedLecture = await this.lectureRepository.save(lecture);
+
+        const lectureWithRelations = await this.lectureRepository.findOne({
+            where: { id: savedLecture.id },
+            relations: ['term', 'term.termType'], 
+        });
+
+        if (!lectureWithRelations) {
+            throw new NotFoundException('Lecture not found after save');
+        }
+
+        return lectureWithRelations;
     }
 
     // lecture 삭제

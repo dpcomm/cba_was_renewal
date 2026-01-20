@@ -24,7 +24,6 @@ import {
     updateLectureRequestDto,
     enrollLectureRequestDto,
     dropLectureRequestDto,
-    getLectureFilterDto, 
 } from '@modules/lecture/application/dto/lecture.request.dto';
 import { 
     LectureResponseDto,
@@ -34,8 +33,6 @@ import {
     LectureDetailListResponse,
     LectureDetailSingleResponse, 
 } from '../dto/lecture.response.dto';
-import { LectureSemester } from '@modules/lecture/domain/lecture-semester.enum';
-import { User } from '@modules/user/domain/entities/user.entity';
 import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
 
 @ApiTags('Lecture')
@@ -48,20 +45,6 @@ export class LectureController {
     ) {}
 
     // 강의 목록 조회
-    // 조건에 따라 filtering
-    // 조건이 없다면 모두 조회
-    @Get()
-    @ApiOperation({ summary: '강의 목록 조회'})
-    @ApiSuccessResponse({ type: LectureResponseDto, isArray: true })
-    async getLectures(
-        @Query() filter: getLectureFilterDto
-    ) {
-        const lectures = await this.lectureService.getLectures(filter);
-        return ok<LectureListResponse>(
-            this.mapper.toResponseList(lectures),
-            'Success get filtered lectures',
-        );
-    }
 
     // 강의 조회
     // id를 통해 강의에 대한 정보 조회
@@ -97,7 +80,7 @@ export class LectureController {
 
     // 강의 생성
     @Post()
-    @RankGuard(UserRank.ADMIN)
+    // @RankGuard(UserRank.ADMIN)
     @ApiOperation({ summary: '강의 생성' })
     @ApiSuccessResponse({ type: LectureResponseDto })
     async createLecture(
@@ -112,7 +95,7 @@ export class LectureController {
 
     // 강의 수정
     @Post('update')
-    @RankGuard(UserRank.ADMIN)
+    // @RankGuard(UserRank.ADMIN)
     @ApiOperation({ summary: '강의 수정' })
     @ApiSuccessResponse({ type: LectureResponseDto })
     @ApiFailureResponse(404, ERROR_MESSAGES.LECTURE_NOT_FOUND)
@@ -128,7 +111,7 @@ export class LectureController {
 
     // 강의 삭제
     @Delete(':id')
-    @RankGuard(UserRank.ADMIN)
+    // @RankGuard(UserRank.ADMIN)
     @ApiOperation({ summary: '강의 삭제' })
     @ApiSuccessResponse({})
     @ApiFailureResponse(404, ERROR_MESSAGES.LECTURE_NOT_FOUND)

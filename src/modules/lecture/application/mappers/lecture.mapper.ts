@@ -17,8 +17,8 @@ export class LectureMapper {
             startTime: lecture.startTime.toISOString(),
             currentCount: lecture.currentCount,
             maxCapacity: lecture.maxCapacity,
-            year: lecture.year,
-            semester: lecture.semester,
+            year: lecture.term.year,
+            termType: lecture.term.termType.name,
             codeNumber: lecture.codeNumber,
             introduction: lecture.introduction,
         };
