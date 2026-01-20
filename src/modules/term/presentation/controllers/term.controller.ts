@@ -46,7 +46,7 @@ export class TermController {
 
     // term 생성
     @Post()
-    // @RankGuard(UserRank.ADMIN)
+    @RankGuard(UserRank.ADMIN)
     @ApiOperation({ summary: 'term 생성' })
     @ApiSuccessResponse({ type: TermResponseDto })
     @ApiFailureResponse(404, ERROR_MESSAGES.TERM_TYPE_NOT_FOUND)
@@ -92,7 +92,7 @@ export class TermController {
 
     // term 수정
     @Post('update')
-    // @RankGuard(UserRank.ADMIN)
+    @RankGuard(UserRank.ADMIN)
     @ApiOperation({ summary: 'term 수정' })
     @ApiSuccessResponse({ type: TermResponseDto })
     @ApiFailureResponse(404, ERROR_MESSAGES.TERM_NOT_FOUND)

@@ -80,7 +80,7 @@ export class LectureController {
 
     // 강의 생성
     @Post()
-    // @RankGuard(UserRank.ADMIN)
+    @RankGuard(UserRank.ADMIN)
     @ApiOperation({ summary: '강의 생성' })
     @ApiSuccessResponse({ type: LectureResponseDto })
     async createLecture(
@@ -95,7 +95,7 @@ export class LectureController {
 
     // 강의 수정
     @Post('update')
-    // @RankGuard(UserRank.ADMIN)
+    @RankGuard(UserRank.ADMIN)
     @ApiOperation({ summary: '강의 수정' })
     @ApiSuccessResponse({ type: LectureResponseDto })
     @ApiFailureResponse(404, ERROR_MESSAGES.LECTURE_NOT_FOUND)
@@ -111,7 +111,7 @@ export class LectureController {
 
     // 강의 삭제
     @Delete(':id')
-    // @RankGuard(UserRank.ADMIN)
+    @RankGuard(UserRank.ADMIN)
     @ApiOperation({ summary: '강의 삭제' })
     @ApiSuccessResponse({})
     @ApiFailureResponse(404, ERROR_MESSAGES.LECTURE_NOT_FOUND)

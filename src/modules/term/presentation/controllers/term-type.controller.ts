@@ -63,7 +63,7 @@ export class TermTypeController {
     }
 
     @Post()
-    // @RankGuard(UserRank.ADMIN)
+    @RankGuard(UserRank.ADMIN)
     @ApiOperation({ summary: 'term type 생성' })
     @ApiSuccessResponse({ type: TermResponseDto })
     async createTermType(
