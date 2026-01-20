@@ -33,7 +33,7 @@ export class NoticeService {
         const savedNotice = await this.noticeRepository.save(notice);        
 
         const tokens = await this.expoTokenService.getTokens();
-        const notification = new NoticeNotificationDto(dto.body);
+        const notification = new NoticeNotificationDto(dto.title);
 
         await this.expoMessageService.send(tokens, notification);
 
