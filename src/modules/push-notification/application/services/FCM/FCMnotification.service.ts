@@ -83,7 +83,7 @@ export class FcmNotificationService {
     }
 
     async noticeCarpoolReady(hostName:string, roomId: number) {
-        const dto = new CarpoolReadyNotificationDto(hostName);
+        const dto = new CarpoolReadyNotificationDto();
         const message = await this.factory.createNotificationMessage(dto, 'carpool' + roomId);
         await this.sender.send(message);
     }

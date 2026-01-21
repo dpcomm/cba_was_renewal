@@ -16,6 +16,8 @@ import { ExpoPushToken } from '@modules/expo-push-token/domain/entities/expo-pus
 import { Notice } from '@modules/notice/domain/entities/notice.entity';
 import { Lecture } from '@modules/lecture/domain/entities/lecture.entity';
 import { LectureEnrollment } from '@modules/lecture/domain/entities/lectureEnrollment.entity';
+import { Term } from '@modules/term/domain/entities/term.entity';
+import { TermType } from '@modules/term/domain/entities/term-type.entity';
 
 const envFile = process.env.NODE_ENV === 'prod' ? '.env.prod' : '.env.dev';
 dotenv.config({ path: envFile });
@@ -41,6 +43,8 @@ export const AppDataSource = new DataSource({
     Notice,
     Lecture,
     LectureEnrollment,
+    Term,
+    TermType,
   ],
   migrations: [join(__dirname, 'migrations', '*{.ts,.js}')],
   subscribers: [],
