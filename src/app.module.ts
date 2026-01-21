@@ -16,7 +16,6 @@ import { NoticeModule } from '@modules/notice/notice.module';
 import { PushNotificationModule } from '@modules/push-notification/push-notification.module';
 import { LectureModule } from '@modules/lecture/lecture.module';
 import { TermModule } from '@modules/term/term.module';
-import { TermTypeModule } from '@modules/term/term-type.module';
 
 @Module({
   imports: [
@@ -40,7 +39,6 @@ import { TermTypeModule } from '@modules/term/term-type.module';
     NoticeModule,
     LectureModule,
     TermModule,
-    TermTypeModule,
   ],
 })
 export class AppModule {}

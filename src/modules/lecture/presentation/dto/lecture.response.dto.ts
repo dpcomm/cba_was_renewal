@@ -23,11 +23,8 @@ export class LectureResponseDto {
     @ApiProperty({example: 30, required: true})
     maxCapacity: number;
 
-    @ApiProperty({example: 2026, required: true})
-    year: number;
-
-    @ApiProperty({ example: 'winter reterat', required: true })
-    termType: string;
+    @ApiProperty({example: '2026 겨울 수련회', required: true})
+    termName: string;
     
     @ApiProperty({example: '001', required: true})
     codeNumber: string;
@@ -74,11 +71,8 @@ export class LectureDetailResponseDto {
     @ApiProperty({example: 30, required: true})
     maxCapacity: number;
 
-    @ApiProperty({example: 2026, required: true})
-    year: number;
-
-    @ApiProperty({ example: 'winter reterat', required: true })
-    termType: string;
+    @ApiProperty({example: '2026 겨울 수련회', required: true})
+    termName: string;
 
     @ApiProperty({example: '001', required: true})
     codeNumber: string;

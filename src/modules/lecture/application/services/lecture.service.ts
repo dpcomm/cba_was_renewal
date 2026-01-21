@@ -36,7 +36,7 @@ export class LectureService {
     async getLectureById(lectureId: number): Promise<Lecture> {
         const lecture = await this.lectureRepository.findOne({
             where:{id:lectureId},
-            relations: ['term', 'term.termType'],
+            relations: ['term'],
         });
 
         if (!lecture) {
@@ -52,7 +52,6 @@ export class LectureService {
             where: { id: lectureId },
             relations: [
                 'term',
-                'term.termType',
                 'enrollments', 
                 'enrollments.user',
             ],
@@ -70,8 +69,7 @@ export class LectureService {
             startTime: lecture.startTime.toISOString(),
             currentCount: lecture.currentCount,
             maxCapacity: lecture.maxCapacity,
-            year: lecture.term.year,
-            termType: lecture.term.termType.name,
+            termName: lecture.term.name,
             codeNumber: lecture.codeNumber,
             introduction: lecture.introduction,
             enrollees: lecture.enrollments.map(enrollment => ({
@@ -112,7 +110,7 @@ export class LectureService {
 
         const lectureWithRelations = await this.lectureRepository.findOne({
             where: { id: savedLecture.id },
-            relations: ['term', 'term.termType'], 
+            relations: ['term'], 
         });
 
         if (!lectureWithRelations) {
@@ -166,7 +164,7 @@ export class LectureService {
 
         const lectureWithRelations = await this.lectureRepository.findOne({
             where: { id: savedLecture.id },
-            relations: ['term', 'term.termType'], 
+            relations: ['term'], 
         });
 
         if (!lectureWithRelations) {

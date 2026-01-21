@@ -1,4 +1,3 @@
-import { LectureSemester } from '@modules/lecture/domain/lecture-semester.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsBoolean, IsEnum, IsInt, IsString, IsNumber, IsOptional, IsDateString } from 'class-validator';
 
