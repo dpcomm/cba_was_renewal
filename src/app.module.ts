@@ -15,6 +15,7 @@ import { ExpoPushTokenModule } from '@modules/expo-push-token/expo-push-token.mo
 import { NoticeModule } from '@modules/notice/notice.module';
 import { PushNotificationModule } from '@modules/push-notification/push-notification.module';
 import { LectureModule } from '@modules/lecture/lecture.module';
+import { DashboardModule } from '@modules/dashboard/dashboard.module';
 import { TermModule } from '@modules/term/term.module';
 import { TermTypeModule } from '@modules/term/term-type.module';
 
@@ -39,8 +40,6 @@ import { TermTypeModule } from '@modules/term/term-type.module';
     PushNotificationModule,
     NoticeModule,
     LectureModule,
-    TermModule,
-    TermTypeModule,
   ],
 })
 export class AppModule {}
