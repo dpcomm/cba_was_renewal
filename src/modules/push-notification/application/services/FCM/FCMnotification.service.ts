@@ -59,25 +59,25 @@ export class FcmNotificationService {
     }
 
     async noticeCarpoolJoin(userName: string, hostName: string, roomId: number) {
-        const dto = new CarpoolJoinNotificationDto(userName, hostName);
+        const dto = new CarpoolJoinNotificationDto(userName);
         const message = await this.factory.createNotificationMessage(dto, 'carpool' + roomId);
         await this.sender.send(message);
     }
 
     async noticeCarpoolLeave(userName: string, hostName:string, roomId: number) {
-        const dto = new CarpoolLeaveNotificationDto(userName, hostName);
+        const dto = new CarpoolLeaveNotificationDto(userName);
         const message = await this.factory.createNotificationMessage(dto, 'carpool' + roomId);
         await this.sender.send(message);
     }
 
     async noticeCarpoolupdate(hostName:string, roomId: number) {
-        const dto = new CarpoolUpdateNotificationDto(hostName);
+        const dto = new CarpoolUpdateNotificationDto();
         const message = await this.factory.createNotificationMessage(dto, 'carpool' + roomId);
         await this.sender.send(message);
     }
 
     async noticeCarpoolDelete(hostName:string, roomId: number) {
-        const dto = new CarpoolDeleteNotificationDto(hostName);
+        const dto = new CarpoolDeleteNotificationDto();
         const message = await this.factory.createNotificationMessage(dto, 'carpool' + roomId);
         await this.sender.send(message);
     }
