@@ -42,6 +42,7 @@ async function seedData() {
       {
         title: '쓸데없는 참견',
         instructor: '송경호',
+        instructorBio: '푸르른지역아동센터장, 꿈쟁이주식회사 운영',
         introduction:
           '아동복지의 현실 그리고 교회사회사업으로서의 가치와 방향 등으로 나눌 예정입니다. 또한 현장에 대한 실제 사례들을 중심으로 진정으로 기독교인이 추구해야 할 복지적 가치, 그 중에서 아동이라는 세대가 주는 중요성을 나누도록 하겠습니다',
         location: '미정',
@@ -51,6 +52,7 @@ async function seedData() {
       {
         title: '예수와 여제자들',
         instructor: '김성희',
+        instructorBio: '연세대학교 신약학 겸임교수, 기독연구원 느헤미야 연구위원',
         introduction:
           '예수 그리스도의 하나님나라 사역이 여성 제자들과 함께하고 있음을 알리며, 연대와 긍휼이라는 진정한 제자도의 모습을 보여주고 있는 여제자들의 모습을 통해 제자의 의미를 되살리고 우리의 모델로 삼고자 한다.',
         location: '미정',
@@ -61,6 +63,7 @@ async function seedData() {
         title:
           "'교회의 선교'(미시오 에클레시아)에서 '하나님의 선교'(미시오 데이)로 나아가자",
         instructor: '백종호',
+        instructorBio: 'CBA 대학청년부 목사',
         introduction:
           '선교는 교회의 여러가지 기능 중에 하나가 아니라 교회 전체의 방향과 사명을 담아내는 최우선의 역할이다. 선교의 주체는 교회가 아니라, 하나님이시다. 성경 전체는 세상을 향한, 세상을 위한 하나님의 선교(Missio Dei)를 증언한다.',
         location: '미정',
@@ -71,6 +74,7 @@ async function seedData() {
         title:
           "아직 정해지지 않은 인생은 실패일까?-성경이 말하는 '방향 없는 시기'",
         instructor: '한세리',
+        instructorBio: 'CBA 대학청년부 선교사',
         introduction:
           "혼란과 불안함에 대해 성경은 정답을 줄까? 아니면 읽을 수 있는 관점을 줄까? '꿈이 없다'는 상태를 실패로 보지 않고, 성경이 이 시기를 어떻게 다르게 해석하는지 함께 생각해보는 시간.",
         location: '미정',
@@ -91,6 +95,7 @@ async function seedData() {
         existing.startTime = lectureTime;
         existing.title = data.title;
         existing.instructor = data.instructor;
+        existing.instructorBio = data.instructorBio;
         existing.introduction = data.introduction;
         existing.maxCapacity = data.maxCapacity;
         await lectureRepo.save(existing);

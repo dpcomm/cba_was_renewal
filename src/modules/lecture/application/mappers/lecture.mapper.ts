@@ -13,6 +13,7 @@ export class LectureMapper {
             id: lecture.id,
             title: lecture.title,
             instructorName: lecture.instructor,
+            instructorBio: lecture.instructorBio,
             location: lecture.location,
             startTime: lecture.startTime.toISOString(),
             currentCount: lecture.currentCount,

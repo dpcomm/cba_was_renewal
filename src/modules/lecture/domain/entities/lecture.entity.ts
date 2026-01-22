@@ -28,6 +28,9 @@ export class Lecture {
     @Column()
     instructor: string;
 
+    @Column({ length: 255, default: 'CBA 대학청년부 선교사' })
+    instructorBio: string;
+
     @Column()
     location: string;
 

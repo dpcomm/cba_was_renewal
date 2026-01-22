@@ -15,6 +15,11 @@ export class createLectureRequestDto {
     @IsString()
     instructor: string;
 
+    @ApiProperty({example: 'test lecture instructor bio', required: false})
+    @IsOptional()
+    @IsString()
+    instructorBio?: string;
+
     @ApiProperty({example: 'test lecture location', required: true})
     @IsString()
     location: string;
@@ -51,6 +56,11 @@ export class updateLectureRequestDto {
     @IsOptional()
     @IsString()
     instructor?: string;
+
+    @ApiProperty({example: 'test lecture instructor bio', required: false})
+    @IsOptional()
+    @IsString()
+    instructorBio?: string;
 
     @ApiProperty({example: 'test lecture location', required: false})
     @IsOptional()

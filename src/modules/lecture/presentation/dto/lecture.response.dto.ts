@@ -10,6 +10,9 @@ export class LectureResponseDto {
     
     @ApiProperty({example: 'test lecture instructor name', required: true})
     instructorName: string;
+
+    @ApiProperty({example: 'test lecture instructor bio', required: true})
+    instructorBio: string;
     
     @ApiProperty({example: 'test lecture location', required: true})
     location: string;
@@ -58,6 +61,9 @@ export class LectureDetailResponseDto {
     
     @ApiProperty({example: 'test lecture instructor name', required: true})
     instructorName: string;
+
+    @ApiProperty({example: 'test lecture instructor bio', required: true})
+    instructorBio: string;
     
     @ApiProperty({example: 'test lecture location', required: true})
     location: string;
