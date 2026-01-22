@@ -8,36 +8,36 @@ export abstract class CarpoolNotificationDto extends NotificationDto {
 export class CarpoolJoinNotificationDto extends CarpoolNotificationDto {
     readonly body: string;
 
-    constructor(userName: string, hostName: string) {
+    constructor(userName: string) {
         super();
-        this.body = `[${userName}]님이 [${hostName}]님의 카풀을 신청했습니다.`;
+        this.body = `[${userName}]님이 카풀을 신청했습니다.`;
     }
 }
 
 export class CarpoolLeaveNotificationDto extends CarpoolNotificationDto {
     readonly body: string;
 
-    constructor(userName: string, hostName: string) {
+    constructor(userName: string) {
         super();
-        this.body = `카풀 신청자 [${userName}]님이 [${hostName}]님의 카풀 신청을 취소했습니다.`;
+        this.body = `카풀 신청자 [${userName}]님이 신청을 취소했습니다.`;
     }
 }
 
 export class CarpoolUpdateNotificationDto extends CarpoolNotificationDto {
     readonly body: string;
 
-    constructor(hostName: string) {
+    constructor() {
         super();
-        this.body = `중요!! [${hostName}]님의 카풀 정보가 수정되었습니다. 앱에 접속하여 확인해주세요.`;
+        this.body = `중요!! 신청한 카풀 정보가 수정되었습니다. 앱에 접속하여 확인해주세요.`;
     }
 }
 
 export class CarpoolDeleteNotificationDto extends CarpoolNotificationDto {
     readonly body: string;
 
-    constructor(hostName: string) {
+    constructor() {
         super();
-        this.body = `중요!! 신청한 [${hostName}]님의 카풀이 삭제되었습니다. 다른 카풀을 확인 및 신청해주세요.`;
+        this.body = `중요!! 신청한 카풀이 삭제되었습니다. 다른 카풀을 확인 및 신청해주세요.`;
     }
 }
 

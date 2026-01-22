@@ -380,7 +380,7 @@ export class CarpoolService {
 
         const tokens = await this.expoTokenService.getTokens(notificationTarget);
 
-        const notification = new CarpoolUpdateNotificationDto(result.driver.name);
+        const notification = new CarpoolUpdateNotificationDto();
 
         await this.expoMessageService.send(tokens, notification);
 
@@ -407,7 +407,7 @@ export class CarpoolService {
         const tokens = await this.expoTokenService.getTokens(notificationTarget);
 
         // 알림 생성
-        const notification = new CarpoolDeleteNotificationDto(room.driver.name);
+        const notification = new CarpoolDeleteNotificationDto();
 
         await this.dataSource.transaction(async (manager) => {
             // 카풀 존재 여부 확인
@@ -497,7 +497,7 @@ export class CarpoolService {
             const userName = user.name;
             
             // 알림 생성
-            const notification = new CarpoolJoinNotificationDto(userName, joinedRoom.driver.name);
+            const notification = new CarpoolJoinNotificationDto(userName);
 
             // 카풀 join 알림 전송
             await this.expoMessageService.send(tokens, notification);
@@ -574,7 +574,7 @@ export class CarpoolService {
             const userName = user.name;
             
             // 알림 생성
-            const notification = new CarpoolLeaveNotificationDto(userName, leavedRoom.driver.name);
+            const notification = new CarpoolLeaveNotificationDto(userName);
 
             // 카풀 leave 알림 전송
             await this.expoMessageService.send(tokens, notification);
