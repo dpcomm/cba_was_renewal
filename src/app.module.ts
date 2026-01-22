@@ -40,6 +40,7 @@ import { TermModule } from '@modules/term/term.module';
     NoticeModule,
     LectureModule,
     TermModule,
+    DashboardModule,
   ],
 })
 export class AppModule {}
