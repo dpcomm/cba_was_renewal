@@ -18,7 +18,8 @@ async function seedData() {
     if (!term) {
       term = termRepo.create({
         name: '2026 겨울수련회 선택식강의',
-        description: '2026년 겨울 수련회 선택식 강의입니다. 신청 기간: 1월 25일(일) ~ 2월 1일(토)',
+        description:
+          '2026년 겨울 수련회 선택식 강의입니다. 신청 기간: 1월 25일(일) ~ 2월 1일(토)',
         startDate: new Date('2026-01-22T04:00:00Z'), // 13:00 KST
         endDate: new Date('2026-02-01T09:00:00Z'), // 18:00 KST (assuming 18:00, or keep original logic)
       });
@@ -30,10 +31,12 @@ async function seedData() {
       term.startDate = new Date('2026-01-22T04:00:00Z'); // 13:00 KST
       term.endDate = new Date('2026-02-01T09:00:00Z');
       await termRepo.save(term);
-      console.log(`Term updated: [${term.id}] Start Date -> 2026-01-22 04:00 UTC (13:00 KST)`);
+      console.log(
+        `Term updated: [${term.id}] Start Date -> 2026-01-22 04:00 UTC (13:00 KST)`,
+      );
     }
 
-    const lectureTime = new Date('2026-01-31T04:30:00+09:00'); // Store as 04:30 (UTC) for 13:30 KST
+    const lectureTime = new Date('2026-01-31T04:30:00Z'); // 04:30 UTC = 13:30 KST
 
     const lecturesData = [
       {
@@ -55,16 +58,18 @@ async function seedData() {
         codeNumber: '002',
       },
       {
-        title: "'교회의 선교'(미시오 에클레시아)에서 '하나님의 선교'(미시오 데이)로 나아가자",
+        title:
+          "'교회의 선교'(미시오 에클레시아)에서 '하나님의 선교'(미시오 데이)로 나아가자",
         instructor: '백종호',
         introduction:
-          "선교는 교회의 여러가지 기능 중에 하나가 아니라 교회 전체의 방향과 사명을 담아내는 최우선의 역할이다. 선교의 주체는 교회가 아니라, 하나님이시다. 성경 전체는 세상을 향한, 세상을 위한 하나님의 선교(Missio Dei)를 증언한다.",
+          '선교는 교회의 여러가지 기능 중에 하나가 아니라 교회 전체의 방향과 사명을 담아내는 최우선의 역할이다. 선교의 주체는 교회가 아니라, 하나님이시다. 성경 전체는 세상을 향한, 세상을 위한 하나님의 선교(Missio Dei)를 증언한다.',
         location: '미정',
         maxCapacity: 1,
         codeNumber: '003',
       },
       {
-        title: '아직 정해지지 않은 인생은 실패일까?-성경이 말하는 \'방향 없는 시기\'',
+        title:
+          "아직 정해지지 않은 인생은 실패일까?-성경이 말하는 '방향 없는 시기'",
         instructor: '한세리',
         introduction:
           "혼란과 불안함에 대해 성경은 정답을 줄까? 아니면 읽을 수 있는 관점을 줄까? '꿈이 없다'는 상태를 실패로 보지 않고, 성경이 이 시기를 어떻게 다르게 해석하는지 함께 생각해보는 시간.",
@@ -80,7 +85,9 @@ async function seedData() {
       });
 
       if (existing) {
-        console.log(`Updating existing lecture: [${data.codeNumber}] ${data.title}`);
+        console.log(
+          `Updating existing lecture: [${data.codeNumber}] ${data.title}`,
+        );
         existing.startTime = lectureTime;
         existing.title = data.title;
         existing.instructor = data.instructor;
