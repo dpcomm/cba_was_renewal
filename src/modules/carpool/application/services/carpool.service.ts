@@ -16,6 +16,7 @@ import { ExpoNotificationService } from '@modules/push-notification/application/
 import { ExpoPushTokenService } from '@modules/expo-push-token/application/services/expo-push-token.service';
 import { CarpoolDeleteNotificationDto, CarpoolJoinNotificationDto, CarpoolLeaveNotificationDto, CarpoolReadyNotificationDto, CarpoolStartNotificationDto, CarpoolUpdateNotificationDto } from '@modules/push-notification/application/dto/carpool-notification.dto';
 import { CarpoolDetailResponseDto, CarpoolWithDriverInfoResponseDto } from '@modules/carpool/presentation/dto/carpool.response.dto';
+import { maskPhone } from '@shared/utils/maskPhone.util';
 // fcmservice
 // redis
 
@@ -148,7 +149,7 @@ export class CarpoolService {
             members: carpool.members.map(m => ({
                 id: m.user.id,
                 name: m.user.name,
-                phone: m.user.phone,
+                phone: maskPhone(m.user.phone),
             })),
         };
     }
