@@ -11,9 +11,8 @@ export class TermMapper {
     toResponse(term: Term): TermResponseDto {
         return {
             id: term.id,
-            year: term.year,
-            termTypeId: term.termType.id,
-            termTypeName: term.termType.name,
+            name: term.name,
+            description: term.description,
             startDate: term.startDate.toISOString(),
             endDate: term.endDate.toISOString(),
         };

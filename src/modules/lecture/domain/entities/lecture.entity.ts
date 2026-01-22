@@ -12,50 +12,61 @@ import {
 import { LectureEnrollment } from './lectureEnrollment.entity';
 import { Term } from '@modules/term/domain/entities/term.entity';
 
-
 @Entity('Lecture')
 @Index('uq_lecture_term_code', ['term', 'codeNumber'], { unique: true })
 export class Lecture {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    title: string;
+  @Column()
+  title: string;
 
-    @Column()
-    introduction: string;
+  @Column()
+  introduction: string;
 
-    @Column()
-    instructor: string;
+  @Column()
+  instructor: string;
 
-    @Column()
-    location: string;
+  @Column({ length: 255, default: 'CBA 대학청년부 선교사' })
+  instructorBio: string;
 
-    @Column({ default: 0 })
-    currentCount: number;
+  @Column()
+  location: string;
 
-    @Column()
-    maxCapacity: number;
+  @Column({ default: 0 })
+  currentCount: number;
 
-    @Column({ type: 'datetime', precision: 3 })
-    startTime: Date;
+  @Column()
+  maxCapacity: number;
 
-    @ManyToOne(() => Term, {
-      nullable: false,
-      onDelete: 'RESTRICT',
-    })
-    @JoinColumn({ name: 'term_id' })
-    term: Term;
+  @Column({ type: 'datetime', precision: 3 })
+  startTime: Date;
 
-    @Column({ length: 10 })
-    codeNumber: string;
+  @ManyToOne(() => Term, {
+    nullable: false,
+    onDelete: 'RESTRICT',
+  })
+  @JoinColumn({ name: 'term_id' })
+  term: Term;
 
-    @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
-    createdAt: Date;
+  @Column({ length: 10 })
+  codeNumber: string;
 
-    @Column({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)', onUpdate: 'CURRENT_TIMESTAMP(3)', })
-    updatedAt: Date;
+  @CreateDateColumn({
+    type: 'datetime',
+    precision: 3,
+    default: () => 'CURRENT_TIMESTAMP(3)',
+  })
+  createdAt: Date;
 
-    @OneToMany(() => LectureEnrollment, enrollment => enrollment.lecture)
-    enrollments: LectureEnrollment[];
+  @Column({
+    type: 'datetime',
+    precision: 3,
+    default: () => 'CURRENT_TIMESTAMP(3)',
+    onUpdate: 'CURRENT_TIMESTAMP(3)',
+  })
+  updatedAt: Date;
+
+  @OneToMany(() => LectureEnrollment, (enrollment) => enrollment.lecture)
+  enrollments: LectureEnrollment[];
 }

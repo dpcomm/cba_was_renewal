@@ -23,7 +23,6 @@ import { TermMapper } from '@modules/term/application/mappers/term.mapper';
 import { 
     createTermRequestDto,
     updateTermRequestDto,
-    getTermFilterDto, 
 } from '@modules/term/application/dto/term.request.dto';
 import { 
     TermResponseDto,
@@ -49,7 +48,6 @@ export class TermController {
     @RankGuard(UserRank.ADMIN)
     @ApiOperation({ summary: 'term 생성' })
     @ApiSuccessResponse({ type: TermResponseDto })
-    @ApiFailureResponse(404, ERROR_MESSAGES.TERM_TYPE_NOT_FOUND)
     @ApiFailureResponse(409, ERROR_MESSAGES.TERM_ALREADY_EXISTS)
     async createTerm(
         @Body() dto: createTermRequestDto,
@@ -63,12 +61,10 @@ export class TermController {
 
     // term 목록 조회 (필터 기반)
     @Get()
-    @ApiOperation({ summary: 'term 목록 조회 (필터 기반)' })
+    @ApiOperation({ summary: 'term 목록 조회' })
     @ApiSuccessResponse({ type: TermResponseDto, isArray: true })
-    async getTerms(
-        @Query() filter: getTermFilterDto,
-    ) {
-        const terms = await this.termService.getTerms(filter);
+    async getTerms() {
+        const terms = await this.termService.getTerms();
         return ok<TermListResponse>(
             this.mapper.toReponseList(terms),
             'Success get terms',

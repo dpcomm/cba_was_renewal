@@ -9,29 +9,18 @@ import {
   Unique,
   Index,
 } from 'typeorm';
-import { TermType } from './term-type.entity';
 import { Lecture } from '@modules/lecture/domain/entities/lecture.entity';
 
 @Entity('Term')
-@Unique(['year', 'termType'])
 export class Term {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({ type: 'int' })
-    year: number;
+    @Column()
+    name: string;
 
-    @ManyToOne(() => TermType, {
-        nullable: false,
-        onDelete: 'RESTRICT',
-    })
-    @JoinColumn({ name: 'term_type_id' })
-    @Index()
-    termType: TermType;
-
-    @Column({ name: 'term_type_id' })
-    termTypeId: number;
-
+    @Column({ type: 'varchar', length: 255, default: '' })
+    description: string;
 
     @Column()
     startDate: Date;

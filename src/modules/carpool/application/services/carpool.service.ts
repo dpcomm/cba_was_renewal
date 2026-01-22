@@ -16,6 +16,7 @@ import { ExpoNotificationService } from '@modules/push-notification/application/
 import { ExpoPushTokenService } from '@modules/expo-push-token/application/services/expo-push-token.service';
 import { CarpoolDeleteNotificationDto, CarpoolJoinNotificationDto, CarpoolLeaveNotificationDto, CarpoolReadyNotificationDto, CarpoolStartNotificationDto, CarpoolUpdateNotificationDto } from '@modules/push-notification/application/dto/carpool-notification.dto';
 import { CarpoolDetailResponseDto, CarpoolWithDriverInfoResponseDto } from '@modules/carpool/presentation/dto/carpool.response.dto';
+import { maskPhone } from '@shared/utils/maskPhone.util';
 // fcmservice
 // redis
 
@@ -148,7 +149,7 @@ export class CarpoolService {
             members: carpool.members.map(m => ({
                 id: m.user.id,
                 name: m.user.name,
-                phone: m.user.phone,
+                phone: maskPhone(m.user.phone),
             })),
         };
     }
@@ -380,8 +381,7 @@ export class CarpoolService {
 
         const tokens = await this.expoTokenService.getTokens(notificationTarget);
 
-        const driverName = await this.getDriverName(result.id);
-        const notification = new CarpoolUpdateNotificationDto(driverName);
+        const notification = new CarpoolUpdateNotificationDto();
 
         await this.expoMessageService.send(tokens, notification);
 
@@ -408,8 +408,7 @@ export class CarpoolService {
         const tokens = await this.expoTokenService.getTokens(notificationTarget);
 
         // 알림 생성
-        const driverName = await this.getDriverName(room.id);
-        const notification = new CarpoolDeleteNotificationDto(driverName);
+        const notification = new CarpoolDeleteNotificationDto();
 
         await this.dataSource.transaction(async (manager) => {
             // 카풀 존재 여부 확인
@@ -484,23 +483,9 @@ export class CarpoolService {
                 return updatedRoom;
             });
 
-            // redis에 member 추가 처리
-            // redis 관련 정리되면 작업
-
-            // socket room join 처리
-            // 추후 채팅방의 동작이 구현될 때 처리
-
-            // fcm을 통한 join notice
-            // fcm service 구현 이후 처리
-
-            // 카풀 멤버 조회
-            const members = await this.getCarpoolMembers(joinedRoom.id);
-
-            // 알림 대상. 참여한 인원 제외
-            const notificationTarget = members.filter(v => v != dto.userId);
 
             // 토큰 조회
-            const tokens = await this.expoTokenService.getTokens(notificationTarget);
+            const tokens = await this.expoTokenService.getTokens(joinedRoom.driverId);
 
             // 참여자 이름 조회
             const user = await this.userRepository.findOne({
@@ -513,8 +498,7 @@ export class CarpoolService {
             const userName = user.name;
             
             // 알림 생성
-            const driverName = await this.getDriverName(joinedRoom.id);
-            const notification = new CarpoolJoinNotificationDto(userName ,driverName);
+            const notification = new CarpoolJoinNotificationDto(userName);
 
             // 카풀 join 알림 전송
             await this.expoMessageService.send(tokens, notification);
@@ -576,24 +560,9 @@ export class CarpoolService {
                 return updatedRoom;                    
             });
 
-            // TODO: redis에 member 제거 처리
-            // redis 관련 정리되면 작업
-
-            // TODO: socket room leave 처리
-            // 추후 채팅방의 동작이 구현될 때 처리
-
-            // TODO: fcm을 통한 leave notice
-            // fcm service 구현 이후 처리
-
-
-            // 카풀 멤버 조회
-            const members = await this.getCarpoolMembers(leavedRoom.id);
-
-            // 알림 대상. 참여한 인원 제외
-            const notificationTarget = members.filter(v => v != dto.userId);
 
             // 토큰 조회
-            const tokens = await this.expoTokenService.getTokens(notificationTarget);
+            const tokens = await this.expoTokenService.getTokens(leavedRoom.driverId);
 
             // 이름 조회
             const user = await this.userRepository.findOne({
@@ -606,8 +575,7 @@ export class CarpoolService {
             const userName = user.name;
             
             // 알림 생성
-            const driverName = await this.getDriverName(leavedRoom.id);
-            const notification = new CarpoolLeaveNotificationDto(userName ,driverName);
+            const notification = new CarpoolLeaveNotificationDto(userName);
 
             // 카풀 leave 알림 전송
             await this.expoMessageService.send(tokens, notification);

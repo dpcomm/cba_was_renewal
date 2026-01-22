@@ -4,14 +4,11 @@ export class TermResponseDto {
     @ApiProperty({ example: 1 })
     id: number;
 
-    @ApiProperty({ example: 2026 })
-    year: number;
+    @ApiProperty({ example: '2026 겨울 수련회'})
+    name: string;
 
-    @ApiProperty({ example: 1 })
-    termTypeId: number;
-
-    @ApiProperty({ example: '겨울수련회' })
-    termTypeName: string;
+    @ApiProperty({ example: '2026년도 겨울 수련회 설명'})
+    description: string;
 
     @ApiProperty({ example: '2026-01-01' })
     startDate: string;
