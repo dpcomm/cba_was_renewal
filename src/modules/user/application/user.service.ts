@@ -1,16 +1,23 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../domain/entities/user.entity';
 import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateEmailDto } from './dto/update-email.dto';
 import * as bcrypt from 'bcryptjs';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async findOneByUserId(userId: string): Promise<User> {
@@ -63,6 +70,31 @@ export class UserService {
     const user = await this.findOneById(userId);
     user.isDeleted = true;
     await this.userRepository.save(user);
+  }
+
+  async updateEmail(userId: number, dto: UpdateEmailDto): Promise<User> {
+    // 토큰 검증
+    try {
+      const payload = this.jwtService.verify(dto.verificationToken, {
+        secret: process.env.JWT_SECRET,
+      });
+
+      if (payload.type !== 'verification' || payload.email !== dto.email) {
+        throw new BadRequestException(
+          ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_INVALID,
+        );
+      }
+    } catch (e) {
+      if (e instanceof BadRequestException) throw e;
+      throw new BadRequestException(
+        ERROR_MESSAGES.EMAIL_VERIFICATION_CODE_EXPIRED,
+      );
+    }
+
+    const user = await this.findOneById(userId);
+    user.email = dto.email;
+    user.emailVerifiedAt = new Date();
+    return this.userRepository.save(user);
   }
 
   async findUsersByNameAndPhone(name: string, phone: string): Promise<User[]> {
