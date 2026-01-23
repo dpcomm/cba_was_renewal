@@ -17,6 +17,7 @@ import { PushNotificationModule } from '@modules/push-notification/push-notifica
 import { LectureModule } from '@modules/lecture/lecture.module';
 import { DashboardModule } from '@modules/dashboard/dashboard.module';
 import { TermModule } from '@modules/term/term.module';
+import { ApplicationModule } from '@modules/application/application.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { TermModule } from '@modules/term/term.module';
     LectureModule,
     TermModule,
     DashboardModule,
+    ApplicationModule,
   ],
 })
 export class AppModule {}
