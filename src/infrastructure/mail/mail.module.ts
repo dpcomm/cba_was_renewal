@@ -13,6 +13,9 @@ import { MailService } from './mail.service';
           host: configService.get<string>('MAIL_HOST'),
           port: configService.get<number>('MAIL_PORT'),
           secure: true,
+          pool: true, // 연결 풀링 활성화
+          maxConnections: 5, // 동시 연결 수 제한
+          rateLimit: 10, // 초당 발송 제한
           auth: {
             user: configService.get<string>('MAIL_USER'),
             pass: configService.get<string>('MAIL_APP_KEY'),
