@@ -23,4 +23,5 @@ export const ERROR_MESSAGES = {
   USER_EMAIL_MISMATCH: 'User ID and email do not match',
   TERM_ALREADY_EXISTS: 'Term with same year and termType already exists',
   TERM_NOT_FOUND: 'Term not found',
+  APPLICATION_NOT_FOUND: 'Application not found',
 } as const;
