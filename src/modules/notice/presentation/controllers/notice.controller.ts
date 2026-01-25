@@ -22,6 +22,7 @@ import {
     createNoticeRequestDto,
     getNoticeListRequestDto,
     updateNoticeRequestDto,
+    noticePushRequestDto,
 } from '@modules/notice/application/dto/notice.request.dto';
 import { 
     NoticeResponseDto, 
@@ -114,6 +115,24 @@ export class NoticeController {
         return ok<null>(
             null,
             'Success delete notice',
+        );
+    }
+
+    @Post(':id/push')
+    @JwtGuard()
+    @RankGuard(UserRank.ADMIN)
+    @ApiOperation({ summary: '공지 푸시 발송/예약'})
+    @ApiSuccessResponse({})
+    @ApiFailureResponse(404, ERROR_MESSAGES.NOTICE_NOT_FOUND)
+    async sendNoticePush(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() dto: noticePushRequestDto,
+    ) {
+        await this.noticeService.sendNoticePush(id, dto);
+
+        return ok<null>(
+            null,
+            'Success send notice push',
         );
     }
 
