@@ -159,8 +159,20 @@ export class ApplicationService {
         throw new ConflictException('이미 이벤트에 참여하셨습니다.');
       }
 
-      const isWin = Math.random() < 0.3;
-      const result = isWin ? EventResult.WIN : EventResult.LOSE;
+      let result = EventResult.LOSE;
+      const winnerCount = await manager.count(Application, {
+        where: {
+          retreatId,
+          eventResult: EventResult.WIN,
+        },
+      });
+
+      if (winnerCount < 10) {
+        const isWin = Math.random() < 0.1;
+        if (isWin) {
+          result = EventResult.WIN;
+        }
+      }
 
       await manager.update(
         Application,
