@@ -17,6 +17,7 @@ import { Notice } from '@modules/notice/domain/entities/notice.entity';
 import { Lecture } from '@modules/lecture/domain/entities/lecture.entity';
 import { LectureEnrollment } from '@modules/lecture/domain/entities/lectureEnrollment.entity';
 import { Term } from '@modules/term/domain/entities/term.entity';
+import { SystemConfig } from '@modules/system/domain/entities/system-config.entity';
 
 const envFile = process.env.NODE_ENV === 'prod' ? '.env.prod' : '.env.dev';
 dotenv.config({ path: envFile });
@@ -43,6 +44,7 @@ export const AppDataSource = new DataSource({
     Lecture,
     LectureEnrollment,
     Term,
+    SystemConfig,
   ],
   migrations: [join(__dirname, 'migrations', '*{.ts,.js}')],
   subscribers: [],
