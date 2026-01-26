@@ -11,6 +11,8 @@ import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 import { Application } from '@modules/application/domain/entities/application.entity';
 import { EventResult } from '@modules/application/domain/enum/application.enum';
+import { AdminApplicationListDto } from '@modules/application/presentation/dto/admin-application-list.dto';
+import { AdminApplicationListResponseDto } from '@modules/application/presentation/dto/admin-application-list.response.dto';
 
 @Injectable()
 export class ApplicationService {
@@ -187,5 +189,44 @@ export class ApplicationService {
 
       return { eventResult: result };
     });
+  }
+
+  /**
+   * 관리자: 신청자 목록 조회 (검색/필터)
+   */
+  async getApplicationList(
+    dto: AdminApplicationListDto,
+  ): Promise<AdminApplicationListResponseDto[]> {
+    const query = this.applicationRepository
+      .createQueryBuilder('app')
+      .leftJoinAndSelect('app.user', 'user')
+      .where('app.retreatId = :retreatId', { retreatId: dto.retreatId })
+      .orderBy('user.name', 'ASC');
+
+    // 검색 (이름 or 번호)
+    if (dto.search) {
+      query.andWhere('(user.name LIKE :search OR user.phone LIKE :search)', {
+        search: `%${dto.search}%`,
+      });
+    }
+
+    // 필터
+    if (dto.filter === 'NOT_CHECKED_IN') {
+      query.andWhere('app.checkedInAt IS NULL');
+    } else if (dto.filter === 'ISSUES') {
+      // 예: 회비 미납이거나, 정보가 부족하거나 등등 (현재는 회비 미납만)
+      query.andWhere('app.feePaid = false');
+    }
+
+    const applications = await query.getMany();
+
+    return applications.map((app) => ({
+      userId: app.userId,
+      name: app.user.name,
+      phone: app.user.phone,
+      group: app.user.group,
+      feePaid: app.feePaid,
+      checkedInAt: app.checkedInAt,
+    }));
   }
 }

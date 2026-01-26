@@ -29,6 +29,9 @@ import {
 import { ApplicationHistoryResponseDto } from '../dto/application-history.response.dto';
 import { CheckInResponseDto } from '../dto/check-in.response.dto';
 import { PlayEventResponseDto } from '../dto/play-event.response.dto';
+import { AdminApplicationListDto } from '../dto/admin-application-list.dto';
+import { AdminApplicationListResponseDto } from '../dto/admin-application-list.response.dto';
+import { Query } from '@nestjs/common';
 
 @ApiTags('Application')
 @Controller('application')
@@ -110,6 +113,18 @@ export class ApplicationController {
   ) {
     const result = await this.applicationService.adminScan(userId, retreatId);
     return ok<AdminScanResponseDto>(result, 'Success admin scan');
+  }
+
+  @Get('admin/list')
+  @RankGuard(UserRank.ADMIN)
+  @ApiOperation({ summary: '[관리자] 수련회 신청자 목록 조회 (검색/필터)' })
+  @ApiSuccessResponse({ type: AdminApplicationListResponseDto, isArray: true })
+  async getApplicationList(@Query() query: AdminApplicationListDto) {
+    const list = await this.applicationService.getApplicationList(query);
+    return ok<AdminApplicationListResponseDto[]>(
+      list,
+      'Success get application list',
+    );
   }
 
   @Post('admin/check-in')
