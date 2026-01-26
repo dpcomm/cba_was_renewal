@@ -7,6 +7,7 @@ import { SystemService } from '@modules/system/application/services/system.servi
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { RankGuard } from '@shared/decorators/rank-guard.decorator';
 import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
+import { SystemConfigResponseDto } from '../dto/system-config.response.dto';
 
 @ApiTags('System')
 @Controller('system')
@@ -15,7 +16,7 @@ export class SystemController {
 
   @Get()
   @ApiOperation({ summary: '시스템 설정 조회 (버전, 현재 학기/수련회 ID)' })
-  @ApiSuccessResponse({})
+  @ApiSuccessResponse({ type: SystemConfigResponseDto })
   async getSystemConfig() {
     const config = await this.systemService.getConfig();
     if (!config) {
