@@ -22,10 +22,20 @@ export class Youtube {
   @Column({ length: 255 })
   link: string;
 
-  @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
+  @CreateDateColumn({
+    type: 'datetime',
+    precision: 3,
+    default: () => 'CURRENT_TIMESTAMP(3)',
+  })
   createdAt: Date;
 
-  @ManyToOne(() => Retreat, (retreat) => retreat.youtubes, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
-  @JoinColumn({ name: 'retreatId', foreignKeyConstraintName: 'Youtube_retreatId_fkey' })
+  @ManyToOne(() => Retreat, (retreat) => retreat.youtubes, {
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'retreatId',
+    foreignKeyConstraintName: 'Youtube_retreatId_fkey',
+  })
   retreat: Retreat;
 }

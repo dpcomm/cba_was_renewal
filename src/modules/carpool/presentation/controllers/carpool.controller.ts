@@ -12,19 +12,19 @@ import {
 import { ok } from '@shared/responses/api-response';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CarpoolService } from '@modules/carpool/application/services/carpool.service';
-import { 
-    updateCarpoolRequestDto,
-    createCarpoolRequestDto,
-    updateCarpoolstatusRequestDto,
-    participationCarpoolRequestDto,
-    findAvailableCarpoolsRequestDto, 
+import {
+  updateCarpoolRequestDto,
+  createCarpoolRequestDto,
+  updateCarpoolstatusRequestDto,
+  participationCarpoolRequestDto,
+  findAvailableCarpoolsRequestDto,
 } from '@modules/carpool/application/dto/carpool.request.dto';
-import { 
-    CarpoolResponseDto,
-    CarpoolListResponse,
-    CarpoolSingleResponse,
-    carpoolDetailSingleResponse,
-    CarpoolWithDriverInfoListResponse, 
+import {
+  CarpoolResponseDto,
+  CarpoolListResponse,
+  CarpoolSingleResponse,
+  carpoolDetailSingleResponse,
+  CarpoolWithDriverInfoListResponse,
 } from '../dto/carpool.response.dto';
 import { CarpoolMapper } from '@modules/carpool/application/mappers/carpool.mapper';
 import { CarpoolStatus } from '@modules/carpool/domain/carpool-status.enum';
@@ -34,203 +34,177 @@ import { ApiSuccessResponse } from '@shared/decorators/api-success-response.deco
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
-
 @ApiTags('Carpool')
 @Controller('carpool')
 @JwtGuard()
 export class CarpoolController {
-    constructor(
-        private readonly carpoolService: CarpoolService,
-        private readonly mapper : CarpoolMapper,
-    ) {}
+  constructor(
+    private readonly carpoolService: CarpoolService,
+    private readonly mapper: CarpoolMapper,
+  ) {}
 
-    @Get()
-    @ApiOperation({ summary: '카풀 목록 조회' })
-    @ApiSuccessResponse({ type: CarpoolResponseDto, isArray: true })
-    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
-    async getAllCarpools() {
-        const carpools = await this.carpoolService.getAllCarpoolRooms();
-        return ok<CarpoolListResponse>(
-            this.mapper.toResponseList(carpools),
-            'Success get carpools'
-        );
-    }
+  @Get()
+  @ApiOperation({ summary: '카풀 목록 조회' })
+  @ApiSuccessResponse({ type: CarpoolResponseDto, isArray: true })
+  @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
+  async getAllCarpools() {
+    const carpools = await this.carpoolService.getAllCarpoolRooms();
+    return ok<CarpoolListResponse>(
+      this.mapper.toResponseList(carpools),
+      'Success get carpools',
+    );
+  }
 
-    // Chat table이 없다고 뜸
-    @Get(':id')
-    @ApiOperation({ summary: '카풀 조회' })
-    @ApiSuccessResponse({ type: CarpoolResponseDto })
-    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
-    async getCarpoolById(
-        @Param('id', ParseIntPipe) id: number
-    ) {
-        const carpool = await this.carpoolService.getCarpoolRoomById(id);
-        return ok<CarpoolSingleResponse>(
-            this.mapper.toResponse(carpool),
-            'Success get carpool',
-        );
-    } 
+  // Chat table이 없다고 뜸
+  @Get(':id')
+  @ApiOperation({ summary: '카풀 조회' })
+  @ApiSuccessResponse({ type: CarpoolResponseDto })
+  @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
+  async getCarpoolById(@Param('id', ParseIntPipe) id: number) {
+    const carpool = await this.carpoolService.getCarpoolRoomById(id);
+    return ok<CarpoolSingleResponse>(
+      this.mapper.toResponse(carpool),
+      'Success get carpool',
+    );
+  }
 
-    @Get('detail/:id')
-    @ApiOperation({ summary: '카풀 상세 조회' })
-    @ApiSuccessResponse({ type: CarpoolResponseDto })
-    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
-    async getCarpoolDetail(
-        @Param('id', ParseIntPipe) id: number,
-    ) {
-        const carpoolDetail = await this.carpoolService.getCarpoolRoomDetail(id);
-        return ok<carpoolDetailSingleResponse>(
-            carpoolDetail,
-            'Success get carpool',
-        );
-    }
+  @Get('detail/:id')
+  @ApiOperation({ summary: '카풀 상세 조회' })
+  @ApiSuccessResponse({ type: CarpoolResponseDto })
+  @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
+  async getCarpoolDetail(@Param('id', ParseIntPipe) id: number) {
+    const carpoolDetail = await this.carpoolService.getCarpoolRoomDetail(id);
+    return ok<carpoolDetailSingleResponse>(
+      carpoolDetail,
+      'Success get carpool',
+    );
+  }
 
-    @Get('my/:userId')
-    @ApiOperation({ summary: '개인 카풀 목록 조회' })
-    @ApiSuccessResponse({ type: CarpoolResponseDto, isArray: true })
-    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
-    async findMyCarpools(
-        @Param('userId', ParseIntPipe) userId: number,
-    ) {
-        const carpools = await this.carpoolService.findMyCarpoolRooms(userId);
-        return ok<CarpoolListResponse>(
-            this.mapper.toResponseList(carpools),
-            'Success get carpools'
-        );
-    }
+  @Get('my/:userId')
+  @ApiOperation({ summary: '개인 카풀 목록 조회' })
+  @ApiSuccessResponse({ type: CarpoolResponseDto, isArray: true })
+  @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
+  async findMyCarpools(@Param('userId', ParseIntPipe) userId: number) {
+    const carpools = await this.carpoolService.findMyCarpoolRooms(userId);
+    return ok<CarpoolListResponse>(
+      this.mapper.toResponseList(carpools),
+      'Success get carpools',
+    );
+  }
 
-    @Post('available')
-    @ApiOperation({ summary: '참여 가능 카풀 목록 조회' })
-    @ApiSuccessResponse({ type: CarpoolResponseDto, isArray: true })
-    async findAvailableCarpools(
-        @Body() dto: findAvailableCarpoolsRequestDto,
-    ) {
-        const carpools = await this.carpoolService.findAvailableCarpools(dto.userId);
-        return ok<CarpoolWithDriverInfoListResponse>(
-            carpools,
-            'Success get available carpools'
-        );
-    }
+  @Post('available')
+  @ApiOperation({ summary: '참여 가능 카풀 목록 조회' })
+  @ApiSuccessResponse({ type: CarpoolResponseDto, isArray: true })
+  async findAvailableCarpools(@Body() dto: findAvailableCarpoolsRequestDto) {
+    const carpools = await this.carpoolService.findAvailableCarpools(
+      dto.userId,
+    );
+    return ok<CarpoolWithDriverInfoListResponse>(
+      carpools,
+      'Success get available carpools',
+    );
+  }
 
-    @Get('participating/:userId')
-    @ApiOperation({ summary: '참여 중 카풀 목록 조회' })
-    @ApiSuccessResponse({ type: CarpoolResponseDto, isArray: true })
-    async findParticipatingCarpools(
-        @Param('userId', ParseIntPipe) userId: number,
-    ) {
-        const carpools = await this.carpoolService.findParticipatingCarpools(userId);
-        return ok<CarpoolWithDriverInfoListResponse>(
-            carpools,
-            'Success get participating carpools'
-        );
-    }
+  @Get('participating/:userId')
+  @ApiOperation({ summary: '참여 중 카풀 목록 조회' })
+  @ApiSuccessResponse({ type: CarpoolResponseDto, isArray: true })
+  async findParticipatingCarpools(
+    @Param('userId', ParseIntPipe) userId: number,
+  ) {
+    const carpools =
+      await this.carpoolService.findParticipatingCarpools(userId);
+    return ok<CarpoolWithDriverInfoListResponse>(
+      carpools,
+      'Success get participating carpools',
+    );
+  }
 
-    // updatedAt의 default 값이 없다는 이유로 실패중
-    @Post()
-    @ApiOperation({ summary: '카풀 등록' })
-    @ApiSuccessResponse({ type: CarpoolResponseDto }) 
-    async createCarpool(
-        @Body() dto: createCarpoolRequestDto
-    ) {
-        const carpool = await this.carpoolService.createCarpoolRoom(dto);
-        return ok<CarpoolResponseDto>(
-            this.mapper.toResponse(carpool),
-            'Success create carpool',
-        );
-    }
+  // updatedAt의 default 값이 없다는 이유로 실패중
+  @Post()
+  @ApiOperation({ summary: '카풀 등록' })
+  @ApiSuccessResponse({ type: CarpoolResponseDto })
+  async createCarpool(@Body() dto: createCarpoolRequestDto) {
+    const carpool = await this.carpoolService.createCarpoolRoom(dto);
+    return ok<CarpoolResponseDto>(
+      this.mapper.toResponse(carpool),
+      'Success create carpool',
+    );
+  }
 
-    //
-    // id parameter 삭제하고 싶음.
-    @Post('update/:id')
-    @ApiOperation({ summary: '카풀 수정' })
-    @ApiSuccessResponse({ type: CarpoolResponseDto })
-    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
-    async updateCarpool(
-        @Param('id', ParseIntPipe) id: number,
-        @Body() dto: updateCarpoolRequestDto
-    ) {
-        const carpool = await this.carpoolService.updateCarpoolRoom(dto);
-        return ok<CarpoolResponseDto>(
-            this.mapper.toResponse(carpool),
-            'Success update carpool',
-        );
-    }
+  //
+  // id parameter 삭제하고 싶음.
+  @Post('update/:id')
+  @ApiOperation({ summary: '카풀 수정' })
+  @ApiSuccessResponse({ type: CarpoolResponseDto })
+  @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
+  async updateCarpool(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: updateCarpoolRequestDto,
+  ) {
+    const carpool = await this.carpoolService.updateCarpoolRoom(dto);
+    return ok<CarpoolResponseDto>(
+      this.mapper.toResponse(carpool),
+      'Success update carpool',
+    );
+  }
 
-    @Post('join')
-    @ApiOperation({ summary: '카풀 참여' })
-    @ApiSuccessResponse({ type: CarpoolResponseDto })
-    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
-    @ApiFailureResponse(409, ERROR_MESSAGES.CARPOOL_ALREADY_JOINED)
-    @ApiFailureResponse(409, ERROR_MESSAGES.CARPOOL_NO_SEAT)
-    async joinCarpool(
-        @Body() dto: participationCarpoolRequestDto
-    ) {
-        const carpool = await this.carpoolService.joinCarpoolRoom(dto);
-        return ok<CarpoolResponseDto>( 
-            this.mapper.toResponse(carpool),
-            'Success join carpool' 
-        );
-    }
+  @Post('join')
+  @ApiOperation({ summary: '카풀 참여' })
+  @ApiSuccessResponse({ type: CarpoolResponseDto })
+  @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
+  @ApiFailureResponse(409, ERROR_MESSAGES.CARPOOL_ALREADY_JOINED)
+  @ApiFailureResponse(409, ERROR_MESSAGES.CARPOOL_NO_SEAT)
+  async joinCarpool(@Body() dto: participationCarpoolRequestDto) {
+    const carpool = await this.carpoolService.joinCarpoolRoom(dto);
+    return ok<CarpoolResponseDto>(
+      this.mapper.toResponse(carpool),
+      'Success join carpool',
+    );
+  }
 
-    @Post('leave')
-    @ApiOperation({ summary: '카풀 퇴장' })
-    @ApiSuccessResponse({ type: CarpoolResponseDto })
-    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
-    @ApiFailureResponse(409, ERROR_MESSAGES.CARPOOL_NOT_MEMBER)
-    async leaveCarpool(
-        @Body() dto: participationCarpoolRequestDto
-    ) {
-        const carpool = await this.carpoolService.leaveCarpoolRoom(dto);
-        return ok<CarpoolResponseDto>( 
-            this.mapper.toResponse(carpool),
-            'Success leave carpool' 
-        );
-    }
+  @Post('leave')
+  @ApiOperation({ summary: '카풀 퇴장' })
+  @ApiSuccessResponse({ type: CarpoolResponseDto })
+  @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
+  @ApiFailureResponse(409, ERROR_MESSAGES.CARPOOL_NOT_MEMBER)
+  async leaveCarpool(@Body() dto: participationCarpoolRequestDto) {
+    const carpool = await this.carpoolService.leaveCarpoolRoom(dto);
+    return ok<CarpoolResponseDto>(
+      this.mapper.toResponse(carpool),
+      'Success leave carpool',
+    );
+  }
 
-    // 
-    @Post('delete/:id')
-    @ApiOperation({ summary: '카풀 삭제' })
-    @ApiSuccessResponse({})
-    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
-    async deleteCarpool(
-        @Param('id', ParseIntPipe) id: number,
-    ) {
-        await this.carpoolService.deleteCarpoolRoom(id);
-        return ok<null>( 
-            null,  
-            'Success delete carpool'
-        );
-    }
+  //
+  @Post('delete/:id')
+  @ApiOperation({ summary: '카풀 삭제' })
+  @ApiSuccessResponse({})
+  @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
+  async deleteCarpool(@Param('id', ParseIntPipe) id: number) {
+    await this.carpoolService.deleteCarpoolRoom(id);
+    return ok<null>(null, 'Success delete carpool');
+  }
 
-    //
-    @Post('status')
-    @ApiOperation({ summary: '카풀 상태 변경' })
-    @ApiSuccessResponse({ type: CarpoolResponseDto })
-    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
-    async updateCarpoolStatus(
-        @Body() dto: updateCarpoolstatusRequestDto
-    ) {
-        const carpool = await this.carpoolService.updateCarpoolStatus(dto);
-        return ok<CarpoolResponseDto>(
-            this.mapper.toResponse(carpool),
-            'Success update status'
-        )
-    }
+  //
+  @Post('status')
+  @ApiOperation({ summary: '카풀 상태 변경' })
+  @ApiSuccessResponse({ type: CarpoolResponseDto })
+  @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
+  async updateCarpoolStatus(@Body() dto: updateCarpoolstatusRequestDto) {
+    const carpool = await this.carpoolService.updateCarpoolStatus(dto);
+    return ok<CarpoolResponseDto>(
+      this.mapper.toResponse(carpool),
+      'Success update status',
+    );
+  }
 
-    @Post('start/:id')
-    @ApiOperation({ summary: '카풀 출발 알림 발송' })
-    @ApiSuccessResponse({})
-    @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
-    async sendCarpoolStartNotification(
-        @Param('id', ParseIntPipe) id: number,
-    ) {
-        // fcmservice의 send notification 동작 구현 후 작성 예정
-        await this.carpoolService.startCarpool(id);
-        return ok<null>(
-            null,
-            'Success start carpool'
-        )
-
-    }
-
+  @Post('start/:id')
+  @ApiOperation({ summary: '카풀 출발 알림 발송' })
+  @ApiSuccessResponse({})
+  @ApiFailureResponse(404, ERROR_MESSAGES.CARPOOL_NOT_FOUND)
+  async sendCarpoolStartNotification(@Param('id', ParseIntPipe) id: number) {
+    // fcmservice의 send notification 동작 구현 후 작성 예정
+    await this.carpoolService.startCarpool(id);
+    return ok<null>(null, 'Success start carpool');
+  }
 }

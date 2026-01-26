@@ -18,7 +18,9 @@ export class DashboardService {
   ) {}
 
   async getSummary(retreatId?: number): Promise<DashboardSummaryResponseDto> {
-    const totalCount = await this.userRepository.count({ where: { isDeleted: false } });
+    const totalCount = await this.userRepository.count({
+      where: { isDeleted: false },
+    });
     const targetRetreatId = retreatId ?? (await this.getLatestRetreatId());
 
     if (!targetRetreatId) {
@@ -32,16 +34,25 @@ export class DashboardService {
       };
     }
 
-    const [appliedCount, feePaidCount, attendedCount, applications] = await Promise.all([
-      this.applicationRepository.count({ where: { retreatId: targetRetreatId } }),
-      this.applicationRepository.count({ where: { retreatId: targetRetreatId, feePaid: true } }),
-      this.applicationRepository.count({ where: { retreatId: targetRetreatId, attended: true } }),
-      this.applicationRepository
-        .createQueryBuilder('application')
-        .select(['application.id', 'application.surveyData'])
-        .where('application.retreatId = :retreatId', { retreatId: targetRetreatId })
-        .getMany(),
-    ]);
+    const [appliedCount, feePaidCount, attendedCount, applications] =
+      await Promise.all([
+        this.applicationRepository.count({
+          where: { retreatId: targetRetreatId },
+        }),
+        this.applicationRepository.count({
+          where: { retreatId: targetRetreatId, feePaid: true },
+        }),
+        this.applicationRepository.count({
+          where: { retreatId: targetRetreatId, attended: true },
+        }),
+        this.applicationRepository
+          .createQueryBuilder('application')
+          .select(['application.id', 'application.surveyData'])
+          .where('application.retreatId = :retreatId', {
+            retreatId: targetRetreatId,
+          })
+          .getMany(),
+      ]);
 
     return {
       retreatId: targetRetreatId,
@@ -79,7 +90,9 @@ export class DashboardService {
       if (!Array.isArray(mealData)) continue;
 
       for (let dayIndex = 0; dayIndex < 3; dayIndex += 1) {
-        const dayMeals = Array.isArray(mealData[dayIndex]) ? mealData[dayIndex] : [];
+        const dayMeals = Array.isArray(mealData[dayIndex])
+          ? mealData[dayIndex]
+          : [];
         for (let mealIndex = 0; mealIndex < 3; mealIndex += 1) {
           const value = dayMeals[mealIndex];
           if (typeof value === 'number') {

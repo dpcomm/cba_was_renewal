@@ -6,7 +6,11 @@ export interface ApiResponse<T, E = unknown> {
   error?: E;
 }
 
-export const ok = <T>(data: T, message = 'ok', statusCode = 200): ApiResponse<T> => ({
+export const ok = <T>(
+  data: T,
+  message = 'ok',
+  statusCode = 200,
+): ApiResponse<T> => ({
   success: true,
   statusCode,
   message,

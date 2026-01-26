@@ -11,14 +11,13 @@ import { ExpoPushTokenModule } from '@modules/expo-push-token/expo-push-token.mo
 import { CarpoolSchedulerService } from './application/services/carpool.schedule.service';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([CarpoolMember, CarpoolRoom, User]),
-        PushNotificationModule,
-        ExpoPushTokenModule
-    ],
-    controllers: [CarpoolController],
-    providers: [CarpoolService, CarpoolMapper, CarpoolSchedulerService],
-    exports: [CarpoolService],
+  imports: [
+    TypeOrmModule.forFeature([CarpoolMember, CarpoolRoom, User]),
+    PushNotificationModule,
+    ExpoPushTokenModule,
+  ],
+  controllers: [CarpoolController],
+  providers: [CarpoolService, CarpoolMapper, CarpoolSchedulerService],
+  exports: [CarpoolService],
 })
-
 export class CarpoolModule {}

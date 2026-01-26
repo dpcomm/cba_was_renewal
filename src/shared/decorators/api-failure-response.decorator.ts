@@ -2,7 +2,10 @@ import { applyDecorators } from '@nestjs/common';
 import { ApiResponse, getSchemaPath, ApiExtraModels } from '@nestjs/swagger';
 import { ApiResponseBaseDto } from '../responses/api-response.dto';
 
-export const ApiFailureResponse = (status: number, message: string = 'Error') => {
+export const ApiFailureResponse = (
+  status: number,
+  message: string = 'Error',
+) => {
   return applyDecorators(
     ApiExtraModels(ApiResponseBaseDto),
     ApiResponse({

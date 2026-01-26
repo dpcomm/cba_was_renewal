@@ -19,13 +19,23 @@ export class Consent {
   @PrimaryColumn({ type: 'varchar', length: 191 })
   consentType: ConsentType;
 
-  @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
+  @CreateDateColumn({
+    type: 'datetime',
+    precision: 3,
+    default: () => 'CURRENT_TIMESTAMP(3)',
+  })
   consentedAt: Date;
 
   @Column()
   value: boolean;
 
-  @ManyToOne(() => User, (user) => user.consents, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
-  @JoinColumn({ name: 'userId', foreignKeyConstraintName: 'user_consents_userId_fkey' })
+  @ManyToOne(() => User, (user) => user.consents, {
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'userId',
+    foreignKeyConstraintName: 'user_consents_userId_fkey',
+  })
   user: User;
 }

@@ -1,37 +1,37 @@
-import { 
-    Entity,
-    PrimaryGeneratedColumn,
-    Column,
-    ManyToOne,
-    CreateDateColumn,
-    Index,
-    JoinColumn,
-} from "typeorm";
-import { User } from "@modules/user/domain/entities/user.entity";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  CreateDateColumn,
+  Index,
+  JoinColumn,
+} from 'typeorm';
+import { User } from '@modules/user/domain/entities/user.entity';
 
 @Entity('ExpoPushToken')
 @Index('ExpoPushToken_userId_idx', ['userId'])
 export class ExpoPushToken {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({nullable: false})
-    userId: number;
+  @Column({ nullable: false })
+  userId: number;
 
-    @Column({ length: 191 })
-    @Index('ExpoPushToken_token_key', { unique: true})
-    token: string;
+  @Column({ length: 191 })
+  @Index('ExpoPushToken_token_key', { unique: true })
+  token: string;
 
-    @Column({ default: 'expo' })
-    provider: 'expo';
+  @Column({ default: 'expo' })
+  provider: 'expo';
 
-    @ManyToOne(() => User, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'userId'})
-    user: User;
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
-    @Column({ type: 'timestamp', nullable: true })
-    lastUsedAt?: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  lastUsedAt?: Date;
 
-    @CreateDateColumn()
-    createdAt: Date;    
+  @CreateDateColumn()
+  createdAt: Date;
 }

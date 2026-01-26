@@ -16,13 +16,20 @@ export class Pray {
   @Column({ length: 191 })
   content: string;
 
-  @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
+  @CreateDateColumn({
+    type: 'datetime',
+    precision: 3,
+    default: () => 'CURRENT_TIMESTAMP(3)',
+  })
   createdAt: Date;
 
   @Column()
   userId: number;
 
-  @ManyToOne(() => User, (user) => user.prays, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.prays, {
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+  })
   @JoinColumn({ name: 'userId', foreignKeyConstraintName: 'Pray_userId_fkey' })
   user: User;
 }

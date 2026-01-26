@@ -45,8 +45,8 @@ export class SystemController {
   }
 
   @Put('admin')
-  @JwtGuard()
   @RankGuard(UserRank.ADMIN)
+  @JwtGuard()
   @ApiOperation({ summary: '[관리자] 시스템 설정 수정' })
   @ApiSuccessResponse({})
   @ApiFailureResponse(403, 'Forbidden')

@@ -4,7 +4,10 @@ export class DashboardSummaryResponseDto {
   @ApiProperty({ example: 12, nullable: true })
   retreatId: number | null;
 
-  @ApiProperty({ example: 320, description: 'Total user count (excluding deleted users)' })
+  @ApiProperty({
+    example: 320,
+    description: 'Total user count (excluding deleted users)',
+  })
   totalCount: number;
 
   @ApiProperty({ example: 120, description: 'Application count for retreat' })
@@ -22,7 +25,8 @@ export class DashboardSummaryResponseDto {
       [55, 65, 75],
       [50, 60, 70],
     ],
-    description: 'Meal counts by day: [day1, day2, day3], each [breakfast, lunch, dinner]',
+    description:
+      'Meal counts by day: [day1, day2, day3], each [breakfast, lunch, dinner]',
   })
   mealStats: number[][];
 }

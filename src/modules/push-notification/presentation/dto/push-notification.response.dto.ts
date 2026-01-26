@@ -1,18 +1,18 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty } from '@nestjs/swagger';
 
 export class reservationPushNotificationResponseDto {
-    @ApiProperty()
-    id: number;
+  @ApiProperty()
+  id: number;
 
-    @ApiProperty()
-    title: string;
+  @ApiProperty()
+  title: string;
 
-    @ApiProperty()
-    body: string;
+  @ApiProperty()
+  body: string;
 
-    @ApiProperty({type: [Number] })
-    target?: number[];
+  @ApiProperty({ type: [Number] })
+  target?: number[];
 
-    @ApiProperty({example: "2026-02-01T08:30:00.000Z", format: "date-time"})
-    reserveTime: string;
+  @ApiProperty({ example: '2026-02-01T08:30:00.000Z', format: 'date-time' })
+  reserveTime: string;
 }

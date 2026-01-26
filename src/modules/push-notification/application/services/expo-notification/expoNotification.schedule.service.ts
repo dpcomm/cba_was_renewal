@@ -6,35 +6,34 @@ import { NotificationDto } from '../../dto/notification.dto';
 
 @Injectable()
 export class ExpoNotificationScheduleService {
-    private readonly logger = new Logger(ExpoNotificationScheduleService.name);
+  private readonly logger = new Logger(ExpoNotificationScheduleService.name);
 
-    constructor(
-        private readonly expoService: ExpoNotificationService,
-        private readonly tokenService: ExpoPushTokenService,
-    ) {}
+  constructor(
+    private readonly expoService: ExpoNotificationService,
+    private readonly tokenService: ExpoPushTokenService,
+  ) {}
 
-    @Cron('* * * * *')
-    async pollReservation() {
-        const now = Date.now();
+  @Cron('* * * * *')
+  async pollReservation() {
+    const now = Date.now();
 
-        const reservations = await this.expoService.popDueReservations(now);
-        if (reservations.length === 0) return;
+    const reservations = await this.expoService.popDueReservations(now);
+    if (reservations.length === 0) return;
 
-        for (const r of reservations) {
-            try {
-                const tokens = await this.tokenService.getTokens(r.target);
+    for (const r of reservations) {
+      try {
+        const tokens = await this.tokenService.getTokens(r.target);
 
-                const dto: NotificationDto = {
-                    title: r.title,
-                    body: r.body,
-                    channelId: 'schedule',
-                };
+        const dto: NotificationDto = {
+          title: r.title,
+          body: r.body,
+          channelId: 'schedule',
+        };
 
-                await this.expoService.send(tokens, dto);
-            } catch (err) {
-                this.logger.error(`Failed reservation ${r.id}`, err);
-            }
-        }
-
+        await this.expoService.send(tokens, dto);
+      } catch (err) {
+        this.logger.error(`Failed reservation ${r.id}`, err);
+      }
     }
+  }
 }

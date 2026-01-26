@@ -30,18 +30,40 @@ export class ChatReport {
   @Column({ length: 191 })
   reason: string;
 
-  @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
+  @CreateDateColumn({
+    type: 'datetime',
+    precision: 3,
+    default: () => 'CURRENT_TIMESTAMP(3)',
+  })
   createdAt: Date;
 
-  @ManyToOne(() => User, (user) => user.reportsMade, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
-  @JoinColumn({ name: 'reporterId', foreignKeyConstraintName: 'ChatReport_reporterId_fkey' })
+  @ManyToOne(() => User, (user) => user.reportsMade, {
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'reporterId',
+    foreignKeyConstraintName: 'ChatReport_reporterId_fkey',
+  })
   reporter: User;
 
-  @ManyToOne(() => User, (user) => user.reportsReceived, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
-  @JoinColumn({ name: 'reportedUserId', foreignKeyConstraintName: 'ChatReport_reportedUserId_fkey' })
+  @ManyToOne(() => User, (user) => user.reportsReceived, {
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'reportedUserId',
+    foreignKeyConstraintName: 'ChatReport_reportedUserId_fkey',
+  })
   reported: User;
 
-  @ManyToOne(() => CarpoolRoom, (room) => room.reports, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
-  @JoinColumn({ name: 'roomId', foreignKeyConstraintName: 'ChatReport_roomId_fkey' })
+  @ManyToOne(() => CarpoolRoom, (room) => room.reports, {
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'roomId',
+    foreignKeyConstraintName: 'ChatReport_roomId_fkey',
+  })
   room: CarpoolRoom;
 }

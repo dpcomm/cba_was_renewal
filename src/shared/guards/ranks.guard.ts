@@ -9,15 +9,15 @@ export class RanksGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredRanks = this.reflector.getAllAndOverride<UserRank[]>(RANKS_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    
+    const requiredRanks = this.reflector.getAllAndOverride<UserRank[]>(
+      RANKS_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
     if (!requiredRanks) return true;
 
     const { user } = context.switchToHttp().getRequest();
-    
+
     if (!user || !user.rank) return false;
 
     return requiredRanks.includes(user.rank);

@@ -21,6 +21,9 @@ export class DashboardController {
   @ApiSuccessResponse({ type: DashboardSummaryResponseDto })
   async getSummary(@Query() dto: GetDashboardSummaryRequestDto) {
     const summary = await this.dashboardService.getSummary(dto.retreatId);
-    return ok<DashboardSummaryResponseDto>(summary, 'Success get dashboard summary');
+    return ok<DashboardSummaryResponseDto>(
+      summary,
+      'Success get dashboard summary',
+    );
   }
 }
