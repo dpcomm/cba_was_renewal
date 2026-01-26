@@ -1,5 +1,5 @@
 // common/utils/maskPhone.ts
-import { maskString } from "./mask.util";
+import { maskString } from './mask.util';
 
 export function maskPhone(phone: string): string {
   if (!phone) return '';

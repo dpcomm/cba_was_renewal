@@ -9,7 +9,7 @@ export class MailService {
   private readonly logoPath: string;
 
   constructor(private readonly mailerService: MailerService) {
-    const basePath = __dirname.includes('dist') 
+    const basePath = __dirname.includes('dist')
       ? join(__dirname, 'templates')
       : join(__dirname, 'templates');
     this.templatePath = join(basePath, 'verification.html');
@@ -18,7 +18,7 @@ export class MailService {
 
   async sendVerificationEmail(to: string, code: string): Promise<void> {
     console.log(`[MailService] Sending verification email to ${to}`);
-    
+
     let htmlTemplate = readFileSync(this.templatePath, 'utf-8');
     htmlTemplate = htmlTemplate.replace('${code}', code);
 

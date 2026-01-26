@@ -28,10 +28,7 @@ export class ConsentService {
     return consents;
   }
 
-  async findOne(
-    userId: number,
-    consentType: ConsentType,
-  ): Promise<Consent> {
+  async findOne(userId: number, consentType: ConsentType): Promise<Consent> {
     const consent = await this.consentRepository.findOne({
       where: { userId, consentType },
     });
@@ -58,7 +55,7 @@ export class ConsentService {
       value: dto.value,
       user,
     });
-    
+
     return this.consentRepository.save(consent);
   }
 

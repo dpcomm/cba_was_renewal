@@ -13,23 +13,21 @@ import { Lecture } from '@modules/lecture/domain/entities/lecture.entity';
 
 @Entity('Term')
 export class Term {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    name: string;
+  @Column()
+  name: string;
 
-    @Column({ type: 'varchar', length: 255, default: '' })
-    description: string;
+  @Column({ type: 'varchar', length: 255, default: '' })
+  description: string;
 
-    @Column()
-    startDate: Date;
+  @Column()
+  startDate: Date;
 
-    @Column()
-    endDate: Date;
+  @Column()
+  endDate: Date;
 
-    @OneToMany(() => Lecture, (lecture) => lecture.term)
-    lectures: Lecture[];
-
-
+  @OneToMany(() => Lecture, (lecture) => lecture.term)
+  lectures: Lecture[];
 }

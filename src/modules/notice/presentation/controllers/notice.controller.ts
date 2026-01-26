@@ -18,103 +18,104 @@ import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 import { RankGuard } from '@shared/decorators/rank-guard.decorator';
 import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
 import { NoticeService } from '@modules/notice/application/services/notice.service';
-import { 
-    createNoticeRequestDto,
-    getNoticeListRequestDto,
-    updateNoticeRequestDto,
+import {
+  createNoticeRequestDto,
+  getNoticeListRequestDto,
+  updateNoticeRequestDto,
+  noticePushRequestDto,
 } from '@modules/notice/application/dto/notice.request.dto';
-import { 
-    NoticeResponseDto, 
-    NoticeListResponse,
-    NoticeSingleResponse,
+import {
+  NoticeResponseDto,
+  NoticeListResponse,
+  NoticeSingleResponse,
 } from '../dto/notice.response.dto';
 import { NoticeMapper } from '@modules/notice/application/mappers/notice.mapper';
 import { NoticeAuthorGroup } from '@modules/notice/domain/notice-author.enum';
-
 
 @ApiTags('Notice')
 @Controller('notice')
 @JwtGuard()
 export class NoticeController {
-    constructor(
-        private readonly noticeService: NoticeService,
-        private readonly mapper: NoticeMapper,
-    ) {}
+  constructor(
+    private readonly noticeService: NoticeService,
+    private readonly mapper: NoticeMapper,
+  ) {}
 
-    @Post()
-    @JwtGuard()
-    @RankGuard(UserRank.ADMIN)
-    @ApiOperation({ summary: '공지 등록'})
-    @ApiSuccessResponse({ type: NoticeResponseDto })
-    async createNotice(
-        @Body() dto: createNoticeRequestDto
-    ) {
-        const notice = await this.noticeService.createNotice(dto);
-        return ok<NoticeResponseDto>(
-            this.mapper.toResponse(notice),
-            'Success create notice',
-        );
-    }
-    
-    @Get()
-    @ApiOperation({ summary: '공지 목록 조회'})
-    @ApiSuccessResponse({ type: NoticeResponseDto, isArray: true})
-    async getNoticeList(
-        @Query() dto: getNoticeListRequestDto,
-    ) {
-        const notices = await this.noticeService.getNoticeList(dto);
+  @Post()
+  @RankGuard(UserRank.ADMIN)
+  @JwtGuard()
+  @ApiOperation({ summary: '공지 등록' })
+  @ApiSuccessResponse({ type: NoticeResponseDto })
+  async createNotice(@Body() dto: createNoticeRequestDto) {
+    const notice = await this.noticeService.createNotice(dto);
+    return ok<NoticeResponseDto>(
+      this.mapper.toResponse(notice),
+      'Success create notice',
+    );
+  }
 
-        return ok<NoticeListResponse>(
-            this.mapper.toResponseList(notices),
-            'Success get notice list',
-        );
-    }
+  @Get()
+  @ApiOperation({ summary: '공지 목록 조회' })
+  @ApiSuccessResponse({ type: NoticeResponseDto, isArray: true })
+  async getNoticeList(@Query() dto: getNoticeListRequestDto) {
+    const notices = await this.noticeService.getNoticeList(dto);
 
-    @Get(':id')
-    @ApiOperation({ summary: '공지 조회'})
-    @ApiSuccessResponse({ type: NoticeResponseDto })
-    @ApiFailureResponse(404, ERROR_MESSAGES.NOTICE_NOT_FOUND)
-    async getNoticeById(
-        @Param('id', ParseIntPipe) id: number
-    ) {
-        const notice = await this.noticeService.getNotice(id);
-        return ok<NoticeSingleResponse>(
-            this.mapper.toResponse(notice),
-            'Success get notice',
-        )
-    }
+    return ok<NoticeListResponse>(
+      this.mapper.toResponseList(notices),
+      'Success get notice list',
+    );
+  }
 
-    @Post('update')
-    @JwtGuard()
-    @RankGuard(UserRank.ADMIN)
-    @ApiOperation({ summary: '공지 수정'})
-    @ApiSuccessResponse({ type: NoticeResponseDto })
-    @ApiFailureResponse(404, ERROR_MESSAGES.NOTICE_NOT_FOUND)
-    async updateNotice(
-        @Body() dto: updateNoticeRequestDto
-    ) {
-        const notice = await this.noticeService.updateNotice(dto);
-        return ok<NoticeResponseDto>(
-            this.mapper.toResponse(notice),
-            'Success update notice',
-        );
-    }
+  @Get(':id')
+  @ApiOperation({ summary: '공지 조회' })
+  @ApiSuccessResponse({ type: NoticeResponseDto })
+  @ApiFailureResponse(404, ERROR_MESSAGES.NOTICE_NOT_FOUND)
+  async getNoticeById(@Param('id', ParseIntPipe) id: number) {
+    const notice = await this.noticeService.getNotice(id);
+    return ok<NoticeSingleResponse>(
+      this.mapper.toResponse(notice),
+      'Success get notice',
+    );
+  }
 
-    @Delete(':id')
-    @JwtGuard()
-    @RankGuard(UserRank.ADMIN)
-    @ApiOperation({ summary: '공지 삭제'})
-    @ApiSuccessResponse({})
-    @ApiFailureResponse(404, ERROR_MESSAGES.NOTICE_NOT_FOUND)
-    async deleteNotice(
-        @Param('id', ParseIntPipe) id: number,
-    ) {
-        await this.noticeService.deleteNotice(id);
+  @Post('update')
+  @RankGuard(UserRank.ADMIN)
+  @JwtGuard()
+  @ApiOperation({ summary: '공지 수정' })
+  @ApiSuccessResponse({ type: NoticeResponseDto })
+  @ApiFailureResponse(404, ERROR_MESSAGES.NOTICE_NOT_FOUND)
+  async updateNotice(@Body() dto: updateNoticeRequestDto) {
+    const notice = await this.noticeService.updateNotice(dto);
+    return ok<NoticeResponseDto>(
+      this.mapper.toResponse(notice),
+      'Success update notice',
+    );
+  }
 
-        return ok<null>(
-            null,
-            'Success delete notice',
-        );
-    }
+  @Delete(':id')
+  @RankGuard(UserRank.ADMIN)
+  @JwtGuard()
+  @ApiOperation({ summary: '공지 삭제' })
+  @ApiSuccessResponse({})
+  @ApiFailureResponse(404, ERROR_MESSAGES.NOTICE_NOT_FOUND)
+  async deleteNotice(@Param('id', ParseIntPipe) id: number) {
+    await this.noticeService.deleteNotice(id);
 
+    return ok<null>(null, 'Success delete notice');
+  }
+
+  @Post(':id/push')
+  @RankGuard(UserRank.ADMIN)
+  @JwtGuard()
+  @ApiOperation({ summary: '공지 푸시 발송/예약' })
+  @ApiSuccessResponse({})
+  @ApiFailureResponse(404, ERROR_MESSAGES.NOTICE_NOT_FOUND)
+  async sendNoticePush(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: noticePushRequestDto,
+  ) {
+    await this.noticeService.sendNoticePush(id, dto);
+
+    return ok<null>(null, 'Success send notice push');
+  }
 }

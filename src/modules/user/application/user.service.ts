@@ -104,4 +104,16 @@ export class UserService {
     }
     return users;
   }
+
+  async searchUsersByName(name: string): Promise<User[]> {
+    if (!name.trim()) return [];
+    return this.userRepository
+      .createQueryBuilder('user')
+      .where('user.name LIKE :name', { name: `%${name}%` })
+      .andWhere('user.isDeleted = :isDeleted', { isDeleted: false })
+      .orderBy('user.name', 'ASC')
+      .addOrderBy('user.id', 'ASC')
+      .take(20)
+      .getMany();
+  }
 }

@@ -17,17 +17,27 @@ export class CarpoolMember {
   @PrimaryColumn()
   userId: number;
 
-  @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
+  @CreateDateColumn({
+    type: 'datetime',
+    precision: 3,
+    default: () => 'CURRENT_TIMESTAMP(3)',
+  })
   joinedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.joinedRooms, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.joinedRooms, {
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+  })
   @JoinColumn({
     name: 'userId',
     foreignKeyConstraintName: 'carpool_members_userId_fkey',
   })
   user: User;
 
-  @ManyToOne(() => CarpoolRoom, (room) => room.members, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
+  @ManyToOne(() => CarpoolRoom, (room) => room.members, {
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+  })
   @JoinColumn({
     name: 'roomId',
     foreignKeyConstraintName: 'carpool_members_roomId_fkey',

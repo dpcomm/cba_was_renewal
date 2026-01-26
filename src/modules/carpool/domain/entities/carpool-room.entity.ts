@@ -26,7 +26,11 @@ export class CarpoolRoom {
   @Column({ nullable: true, length: 191 })
   carInfo: string;
 
-  @Column({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
+  @Column({
+    type: 'datetime',
+    precision: 3,
+    default: () => 'CURRENT_TIMESTAMP(3)',
+  })
   departureTime: Date;
 
   @Column({ length: 191 })
@@ -62,19 +66,35 @@ export class CarpoolRoom {
   @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
   destLng: number;
 
-  @Column({ type: 'varchar', default: CarpoolStatus.Before_Departure, length: 50 })
+  @Column({
+    type: 'varchar',
+    default: CarpoolStatus.Before_Departure,
+    length: 50,
+  })
   status: CarpoolStatus;
 
   @Column({ default: false })
   isArrived: boolean;
 
-  @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
+  @CreateDateColumn({
+    type: 'datetime',
+    precision: 3,
+    default: () => 'CURRENT_TIMESTAMP(3)',
+  })
   createdAt: Date;
 
-  @Column({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)', onUpdate: 'CURRENT_TIMESTAMP(3)'})
+  @Column({
+    type: 'datetime',
+    precision: 3,
+    default: () => 'CURRENT_TIMESTAMP(3)',
+    onUpdate: 'CURRENT_TIMESTAMP(3)',
+  })
   updatedAt: Date;
 
-  @ManyToOne(() => User, (user) => user.createdRooms, { onDelete: 'RESTRICT', onUpdate: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.createdRooms, {
+    onDelete: 'RESTRICT',
+    onUpdate: 'CASCADE',
+  })
   @JoinColumn({
     name: 'driverId',
     foreignKeyConstraintName: 'CarpoolRoom_driverId_fkey',

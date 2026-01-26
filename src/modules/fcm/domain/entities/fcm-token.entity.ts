@@ -27,8 +27,11 @@ export class FcmToken {
 
   @ManyToOne(() => User, (user) => user.tokens, {
     onDelete: 'RESTRICT',
-    onUpdate: 'CASCADE'
+    onUpdate: 'CASCADE',
   })
-  @JoinColumn({ name: 'userId', foreignKeyConstraintName: 'FcmToken_userId_fkey' })
+  @JoinColumn({
+    name: 'userId',
+    foreignKeyConstraintName: 'FcmToken_userId_fkey',
+  })
   user: User;
 }

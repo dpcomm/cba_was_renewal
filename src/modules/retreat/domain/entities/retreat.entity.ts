@@ -20,10 +20,19 @@ export class Retreat {
   @Column({ type: 'datetime', precision: 3 })
   date: Date;
 
-  @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
+  @CreateDateColumn({
+    type: 'datetime',
+    precision: 3,
+    default: () => 'CURRENT_TIMESTAMP(3)',
+  })
   createdAt: Date;
 
-  @Column({ type: 'datetime', precision: 3 })
+  @UpdateDateColumn({
+    type: 'datetime',
+    precision: 3,
+    default: () => 'CURRENT_TIMESTAMP(3)',
+    onUpdate: 'CURRENT_TIMESTAMP(3)',
+  })
   updatedAt: Date;
 
   @OneToMany(() => Application, (application) => application.retreat)

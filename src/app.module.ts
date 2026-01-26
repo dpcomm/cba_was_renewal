@@ -10,7 +10,7 @@ import { FirebaseModule } from '@infrastructure/firebase/firebase.module';
 import { FcmTokenModule } from '@modules/fcm/fcm-token.module';
 import { MailModule } from '@infrastructure/mail/mail.module';
 import { UserModule } from '@modules/user/user.module';
-import { StatusModule } from '@modules/status/status.module';
+import { SystemModule } from '@modules/system/system.module';
 import { ExpoPushTokenModule } from '@modules/expo-push-token/expo-push-token.module';
 import { NoticeModule } from '@modules/notice/notice.module';
 import { PushNotificationModule } from '@modules/push-notification/push-notification.module';
@@ -18,6 +18,7 @@ import { LectureModule } from '@modules/lecture/lecture.module';
 import { DashboardModule } from '@modules/dashboard/dashboard.module';
 import { TermModule } from '@modules/term/term.module';
 import { ApplicationModule } from '@modules/application/application.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { ApplicationModule } from '@modules/application/application.module';
     RedisModule,
     AuthModule,
     UserModule,
-    StatusModule,
+    SystemModule,
     ConsentModule,
     CarpoolModule,
     ChatModule,
@@ -43,6 +44,7 @@ import { ApplicationModule } from '@modules/application/application.module';
     TermModule,
     DashboardModule,
     ApplicationModule,
+    ScheduleModule.forRoot(),
   ],
 })
 export class AppModule {}
