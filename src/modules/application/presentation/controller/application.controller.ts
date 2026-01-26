@@ -43,27 +43,28 @@ export class ApplicationController {
     return ok<boolean>(result, 'Success check application');
   }
 
-  @Get('check/paid/:userId/:retreatId')
-  @ApiOperation({ summary: '수련회 회비 납부 여부 확인' })
+  @Get('me/paid/:retreatId')
+  @ApiOperation({ summary: '내 수련회 회비 납부 여부 확인' })
   @ApiSuccessResponse({})
   @ApiFailureResponse(404, ERROR_MESSAGES.APPLICATION_NOT_FOUND)
   async checkApplicationPaid(
-    @Param('userId') userId: string,
+    @User() user: UserEntity,
     @Param('retreatId', ParseIntPipe) retreatId: number,
   ) {
     const result = await this.applicationService.checkApplicatinoPaid(
-      userId,
+      user.userId,
       retreatId,
     );
     return ok<boolean>(result, 'Success check application paid');
   }
 
-  @Get(':userId')
-  @ApiOperation({ summary: '수련회 히스토리 조회' })
+  @Get('me/history')
+  @ApiOperation({ summary: '내 수련회 히스토리 조회' })
   @ApiSuccessResponse({})
-  async getApplicationsByUserId(@Param('userId') userId: string) {
-    const retreatIds =
-      await this.applicationService.getApplicationsByUserId(userId);
+  async getApplicationsByUserId(@User() user: UserEntity) {
+    const retreatIds = await this.applicationService.getApplicationsByUserId(
+      user.userId,
+    );
     return ok<number[]>(retreatIds, 'Success get retreat id list');
   }
 
