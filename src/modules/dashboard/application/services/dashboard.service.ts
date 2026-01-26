@@ -54,9 +54,10 @@ export class DashboardService {
   }
 
   private async getLatestRetreatId(): Promise<number | null> {
-    const latest = await this.retreatRepository.findOne({
+    const [latest] = await this.retreatRepository.find({
       select: ['id'],
       order: { id: 'DESC' },
+      take: 1,
     });
 
     return latest?.id ?? null;

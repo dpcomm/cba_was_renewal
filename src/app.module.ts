@@ -18,6 +18,7 @@ import { LectureModule } from '@modules/lecture/lecture.module';
 import { DashboardModule } from '@modules/dashboard/dashboard.module';
 import { TermModule } from '@modules/term/term.module';
 import { ApplicationModule } from '@modules/application/application.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { ApplicationModule } from '@modules/application/application.module';
     TermModule,
     DashboardModule,
     ApplicationModule,
+    ScheduleModule.forRoot(),
   ],
 })
 export class AppModule {}

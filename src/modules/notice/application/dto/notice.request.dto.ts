@@ -15,6 +15,15 @@ export class createNoticeRequestDto {
     @ApiProperty({example: '최신 기능과 안정적인 사용을 위해 앱을 업데이트해주세요.', required: true})
     @IsString()
     body: string;
+
+    @ApiPropertyOptional({example: "2026-02-01T08:30:00.000Z", format: "date-time"})
+    @IsOptional()
+    @IsDateString()
+    reserveTime?: string;
+
+    @ApiPropertyOptional({example: true, description: '푸시 발송 여부'})
+    @IsOptional()
+    sendPush?: boolean;
 }
 
 // export class getNoticeRequestDto {
@@ -50,4 +59,12 @@ export class updateNoticeRequestDto {
     @IsOptional()
     @IsString()
     body?: string;    
+}
+
+export class noticePushRequestDto {
+
+    @ApiPropertyOptional({example: "2026-02-01T08:30:00.000Z", format: "date-time"})
+    @IsOptional()
+    @IsDateString()
+    reserveTime?: string;
 }

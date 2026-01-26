@@ -8,11 +8,13 @@ import { User } from "@modules/user/domain/entities/user.entity";
 import { ExpoPushToken } from "@modules/expo-push-token/domain/entities/expo-push-token.entity";
 import { PushNofiticationController } from "./presentation/controllers/push-notification.controller";
 import { ExpoPushTokenModule } from "@modules/expo-push-token/expo-push-token.module";
+import { RedisModule } from "@infrastructure/redis/redis.module";
+import { ExpoNotificationScheduleService } from "./application/services/expo-notification/expoNotification.schedule.service";
 
 @Module({
-    imports: [ExpoPushTokenModule],
+    imports: [ExpoPushTokenModule, RedisModule],
     controllers: [PushNofiticationController],
-    providers: [ExpoNotificationService],
+    providers: [ExpoNotificationService, ExpoNotificationScheduleService],
     exports: [ExpoNotificationService],
 })
 
