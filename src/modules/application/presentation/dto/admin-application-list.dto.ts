@@ -14,7 +14,7 @@ export class AdminApplicationListDto {
   search?: string;
 
   @ApiPropertyOptional({
-    description: '필터 (ALL, NOT_CHECKED_IN, ISSUES)',
+    description: '필터 (ALL, NOT_CHECKED_IN, FEE_UNPAID, EVENT_WIN)',
     example: 'ALL',
   })
   @IsString()

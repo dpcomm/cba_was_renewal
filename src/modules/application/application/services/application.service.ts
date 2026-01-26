@@ -213,9 +213,10 @@ export class ApplicationService {
     // 필터
     if (dto.filter === 'NOT_CHECKED_IN') {
       query.andWhere('app.checkedInAt IS NULL');
-    } else if (dto.filter === 'ISSUES') {
-      // 예: 회비 미납이거나, 정보가 부족하거나 등등 (현재는 회비 미납만)
+    } else if (dto.filter === 'FEE_UNPAID') {
       query.andWhere('app.feePaid = false');
+    } else if (dto.filter === 'EVENT_WIN') {
+      query.andWhere('app.eventResult = :eventResult', { eventResult: 'WIN' });
     }
 
     const applications = await query.getMany();
@@ -227,6 +228,7 @@ export class ApplicationService {
       group: app.user.group,
       feePaid: app.feePaid,
       checkedInAt: app.checkedInAt,
+      eventResult: app.eventResult ?? null,
     }));
   }
 }

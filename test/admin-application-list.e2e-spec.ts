@@ -52,50 +52,94 @@ describe('Admin Application List (E2E)', () => {
 
     // 2. Create Admin
     const adminUser = await userRepo.save({
-        userId: `admin_list_${Date.now()}`,
-        password: await bcrypt.hash('password', 10),
-        name: 'AdminUser',
-        rank: UserRank.ADMIN,
-        phone: '010-0000-0000',
-        email: `admin_list_${Date.now()}@test.com`,
-        group: 'Staff',
+      userId: `admin_list_${Date.now()}`,
+      password: await bcrypt.hash('password', 10),
+      name: 'AdminUser',
+      rank: UserRank.ADMIN,
+      phone: '010-0000-0000',
+      email: `admin_list_${Date.now()}@test.com`,
+      group: 'Staff',
     });
-    adminToken = jwtService.sign({ id: adminUser.id, userId: adminUser.userId, rank: adminUser.rank });
+    adminToken = jwtService.sign({
+      id: adminUser.id,
+      userId: adminUser.userId,
+      rank: adminUser.rank,
+    });
 
     // 3. Create Normal Member
     const memberUser = await userRepo.save({
-        userId: `member_list_${Date.now()}`,
-        password: await bcrypt.hash('password', 10),
-        name: 'MemberUser',
-        rank: UserRank.MEMBER,
-        phone: '010-1111-1111',
-        email: `member_list_${Date.now()}@test.com`,
-        group: 'Member',
+      userId: `member_list_${Date.now()}`,
+      password: await bcrypt.hash('password', 10),
+      name: 'MemberUser',
+      rank: UserRank.MEMBER,
+      phone: '010-1111-1111',
+      email: `member_list_${Date.now()}@test.com`,
+      group: 'Member',
     });
-    memberToken = jwtService.sign({ id: memberUser.id, userId: memberUser.userId, rank: memberUser.rank });
+    memberToken = jwtService.sign({
+      id: memberUser.id,
+      userId: memberUser.userId,
+      rank: memberUser.rank,
+    });
 
     // 4. Create Applications with various states
-    
+
     // User A: Paid, Checked In
     const userA = await userRepo.save({
-        userId: `userA_${Date.now()}`,
-        password: 'pw', name: 'Alice', rank: 'M', phone: '010-1234-5678', email: `userA_${Date.now()}@test.com`, group: 'A'
+      userId: `userA_${Date.now()}`,
+      password: 'pw',
+      name: 'Alice',
+      rank: 'M',
+      phone: '010-1234-5678',
+      email: `userA_${Date.now()}@test.com`,
+      group: 'A',
     });
-    await appRepo.save({ user: userA, retreat, idn: 'A001', surveyData: {}, feePaid: true, checkedInAt: new Date() });
+    await appRepo.save({
+      user: userA,
+      retreat,
+      idn: 'A001',
+      surveyData: {},
+      feePaid: true,
+      checkedInAt: new Date(),
+    });
 
     // User B: Paid, Not Checked In
     const userB = await userRepo.save({
-        userId: `userB_${Date.now()}`,
-        password: 'pw', name: 'Bob', rank: 'M', phone: '010-2345-6789', email: `userB_${Date.now()}@test.com`, group: 'B'
+      userId: `userB_${Date.now()}`,
+      password: 'pw',
+      name: 'Bob',
+      rank: 'M',
+      phone: '010-2345-6789',
+      email: `userB_${Date.now()}@test.com`,
+      group: 'B',
     });
-    await appRepo.save({ user: userB, retreat, idn: 'B001', surveyData: {}, feePaid: true, checkedInAt: null });
+    await appRepo.save({
+      user: userB,
+      retreat,
+      idn: 'B001',
+      surveyData: {},
+      feePaid: true,
+      checkedInAt: null,
+    });
 
     // User C: Not Paid, Not Checked In
     const userC = await userRepo.save({
-        userId: `userC_${Date.now()}`,
-        password: 'pw', name: 'Charlie', rank: 'M', phone: '010-3456-7890', email: `userC_${Date.now()}@test.com`, group: 'C'
+      userId: `userC_${Date.now()}`,
+      password: 'pw',
+      name: 'Charlie',
+      rank: 'M',
+      phone: '010-3456-7890',
+      email: `userC_${Date.now()}@test.com`,
+      group: 'C',
     });
-    await appRepo.save({ user: userC, retreat, idn: 'C001', surveyData: {}, feePaid: false, checkedInAt: null });
+    await appRepo.save({
+      user: userC,
+      retreat,
+      idn: 'C001',
+      surveyData: {},
+      feePaid: false,
+      checkedInAt: null,
+    });
   }
 
   it('Should fail if not admin', async () => {
@@ -116,7 +160,7 @@ describe('Admin Application List (E2E)', () => {
     expect(response.body.success).toBe(true);
     const data = response.body.data;
     expect(data.length).toBeGreaterThanOrEqual(3);
-    
+
     const names = data.map((d: any) => d.name);
     expect(names).toContain('Alice');
     expect(names).toContain('Bob');
@@ -163,18 +207,17 @@ describe('Admin Application List (E2E)', () => {
     expect(names).toContain('Charlie');
   });
 
-  it('Should filter by ISSUES (Fee not paid)', async () => {
+  it('Should filter by FEE_UNPAID (Fee not paid)', async () => {
     const response = await request(app.getHttpServer())
       .get('/application/admin/list')
-      .query({ retreatId, filter: 'ISSUES' })
+      .query({ retreatId, filter: 'FEE_UNPAID' })
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
     const data = response.body.data;
-    // Using current logic: feePaid = false
     const names = data.map((d: any) => d.name);
     expect(names).toContain('Charlie');
     expect(names).not.toContain('Alice'); // Paid
-    expect(names).not.toContain('Bob');   // Paid
+    expect(names).not.toContain('Bob'); // Paid
   });
 });
