@@ -8,6 +8,7 @@ import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { RankGuard } from '@shared/decorators/rank-guard.decorator';
 import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
 import { SystemConfigResponseDto } from '../dto/system-config.response.dto';
+import { UpdateSystemConfigDto } from '../dto/update-system-config.request.dto';
 
 @ApiTags('System')
 @Controller('system')
@@ -51,15 +52,7 @@ export class SystemController {
   @ApiFailureResponse(403, 'Forbidden')
   async updateSystemConfig(
     @Body()
-    body: {
-      appName?: string;
-      versionName?: string;
-      versionCode?: number;
-      privacyPolicyUrl?: string;
-      privacyPolicyVersion?: number;
-      currentTermId?: number;
-      currentRetreatId?: number;
-    },
+    body: UpdateSystemConfigDto,
   ) {
     const updated = await this.systemService.updateConfig(body);
     return ok(updated, 'System config updated successfully');
