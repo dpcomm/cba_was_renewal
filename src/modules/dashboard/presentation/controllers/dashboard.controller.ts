@@ -7,7 +7,7 @@ import { RankGuard } from '@shared/decorators/rank-guard.decorator';
 import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
 import { DashboardService } from '@modules/dashboard/application/services/dashboard.service';
 import { GetDashboardSummaryRequestDto } from '@modules/dashboard/application/dto/dashboard.request.dto';
-import { DashboardSummaryResponseDto } from '@modules/dashboard/presentation/dto/dashboard.response.dto';
+import { DashboardGroupStatResponseDto, DashboardSummaryResponseDto } from '@modules/dashboard/presentation/dto/dashboard.response.dto';
 
 @ApiTags('Dashboard')
 @Controller('dashboard')
@@ -25,5 +25,14 @@ export class DashboardController {
       summary,
       'Success get dashboard summary',
     );
+  }
+
+  @Get('group-stats')
+  @RankGuard(UserRank.ADMIN)
+  @ApiOperation({ summary: '대시보드 그룹별 통계 조회' })
+  @ApiSuccessResponse({ type: DashboardGroupStatResponseDto, isArray: true })
+  async getGroupStats(@Query() dto: GetDashboardSummaryRequestDto) {
+    const stats = await this.dashboardService.getGroupStats(dto.retreatId);
+    return ok<DashboardGroupStatResponseDto[]>(stats, 'Success get dashboard group stats');
   }
 }

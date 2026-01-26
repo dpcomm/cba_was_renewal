@@ -30,3 +30,20 @@ export class DashboardSummaryResponseDto {
   })
   mealStats: number[][];
 }
+
+export class DashboardGroupStatResponseDto {
+  @ApiProperty({ example: '새친구' })
+  group: string;
+
+  @ApiProperty({ example: 24, description: 'Total user count for group (excluding deleted users)' })
+  totalCount: number;
+
+  @ApiProperty({ example: 10, description: 'Application count for retreat in group' })
+  appliedCount: number;
+
+  @ApiProperty({ example: 8, description: 'feePaid count for retreat in group' })
+  feePaidCount: number;
+
+  @ApiProperty({ example: 6, description: 'attended count for retreat in group' })
+  attendedCount: number;
+}
