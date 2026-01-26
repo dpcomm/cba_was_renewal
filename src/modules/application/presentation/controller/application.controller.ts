@@ -21,7 +21,14 @@ import { ApplicationService } from '@modules/application/application/services/ap
 import { CheckInDto } from '../dto/check-in.dto';
 import { PlayEventDto } from '../dto/play-event.dto';
 import { AdminScanResponseDto } from '../dto/admin-scan.response.dto';
-import { EventResult } from '@modules/application/domain/enum/application.enum';
+import { ApplicationDetailResponseDto } from '../dto/application-detail.response.dto';
+import {
+  CheckApplicationPaidResponseDto,
+  CheckApplicationResponseDto,
+} from '../dto/check-application.response.dto';
+import { ApplicationHistoryResponseDto } from '../dto/application-history.response.dto';
+import { CheckInResponseDto } from '../dto/check-in.response.dto';
+import { PlayEventResponseDto } from '../dto/play-event.response.dto';
 
 @ApiTags('Application')
 @Controller('application')
@@ -31,7 +38,7 @@ export class ApplicationController {
 
   @Get('check/:userId/:retreatId')
   @ApiOperation({ summary: '수련회 신청 여부 확인' })
-  @ApiSuccessResponse({})
+  @ApiSuccessResponse({ type: CheckApplicationResponseDto })
   async checkApplication(
     @Param('userId') userId: string,
     @Param('retreatId', ParseIntPipe) retreatId: number,
@@ -40,12 +47,15 @@ export class ApplicationController {
       userId,
       retreatId,
     );
-    return ok<boolean>(result, 'Success check application');
+    return ok<CheckApplicationResponseDto>(
+      { isApplied: result },
+      'Success check application',
+    );
   }
 
   @Get('me/paid/:retreatId')
   @ApiOperation({ summary: '내 수련회 회비 납부 여부 확인' })
-  @ApiSuccessResponse({})
+  @ApiSuccessResponse({ type: CheckApplicationPaidResponseDto })
   @ApiFailureResponse(404, ERROR_MESSAGES.APPLICATION_NOT_FOUND)
   async checkApplicationPaid(
     @User() user: UserEntity,
@@ -55,22 +65,28 @@ export class ApplicationController {
       user.userId,
       retreatId,
     );
-    return ok<boolean>(result, 'Success check application paid');
+    return ok<CheckApplicationPaidResponseDto>(
+      { isPaid: result },
+      'Success check application paid',
+    );
   }
 
   @Get('me/history')
   @ApiOperation({ summary: '내 수련회 히스토리 조회' })
-  @ApiSuccessResponse({})
+  @ApiSuccessResponse({ type: ApplicationHistoryResponseDto })
   async getApplicationsByUserId(@User() user: UserEntity) {
     const retreatIds = await this.applicationService.getApplicationsByUserId(
       user.userId,
     );
-    return ok<number[]>(retreatIds, 'Success get retreat id list');
+    return ok<ApplicationHistoryResponseDto>(
+      { retreatIds },
+      'Success get retreat id list',
+    );
   }
 
   @Get('me/:retreatId')
   @ApiOperation({ summary: '내 수련회 등록 정보 상세 조회' })
-  @ApiSuccessResponse({})
+  @ApiSuccessResponse({ type: ApplicationDetailResponseDto })
   @ApiFailureResponse(404, ERROR_MESSAGES.APPLICATION_NOT_FOUND)
   async getMyApplicationDetail(
     @User() user: UserEntity,
@@ -99,7 +115,7 @@ export class ApplicationController {
   @Post('admin/check-in')
   @RankGuard(UserRank.ADMIN)
   @ApiOperation({ summary: '[관리자] 체크인 확정 처리' })
-  @ApiSuccessResponse({})
+  @ApiSuccessResponse({ type: CheckInResponseDto })
   @ApiFailureResponse(404, ERROR_MESSAGES.APPLICATION_NOT_FOUND)
   async adminCheckIn(@User() admin: UserEntity, @Body() dto: CheckInDto) {
     const result = await this.applicationService.checkIn(
@@ -107,12 +123,12 @@ export class ApplicationController {
       dto.retreatId,
       admin.userId,
     );
-    return ok(result, 'Success check-in');
+    return ok<CheckInResponseDto>(result, 'Success check-in');
   }
 
   @Post('event')
   @ApiOperation({ summary: '웰컴 이벤트 참여 (체크인 후 가능)' })
-  @ApiSuccessResponse({})
+  @ApiSuccessResponse({ type: PlayEventResponseDto })
   @ApiFailureResponse(403, '체크인 후 이벤트 참여가 가능합니다.')
   @ApiFailureResponse(409, '이미 이벤트에 참여하셨습니다.')
   async playEvent(@User() user: UserEntity, @Body() dto: PlayEventDto) {
@@ -120,6 +136,6 @@ export class ApplicationController {
       user.userId,
       dto.retreatId,
     );
-    return ok<{ eventResult: EventResult }>(result, 'Success play event');
+    return ok<PlayEventResponseDto>(result, 'Success play event');
   }
 }
