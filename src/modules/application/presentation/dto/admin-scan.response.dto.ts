@@ -1,8 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class AdminScanResponseDto {
+  @ApiProperty({ example: 'profitia', description: '사용자 ID' })
+  userId: string;
+
   @ApiProperty({ example: '홍길동', description: '사용자 이름' })
   name: string;
+
+  @ApiProperty({ example: '01012345678', description: '연락처' })
+  phone: string;
+
+  @ApiProperty({ example: '총무팀', description: '중그룹' })
+  group: string;
 
   @ApiProperty({ example: true, description: '납부 완료 여부' })
   feePaid: boolean;

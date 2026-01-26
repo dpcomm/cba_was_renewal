@@ -83,7 +83,14 @@ export class ApplicationService {
   async adminScan(
     userId: string,
     retreatId: number,
-  ): Promise<{ name: string; feePaid: boolean; checkedInAt: Date | null }> {
+  ): Promise<{
+    userId: string;
+    name: string;
+    phone: string;
+    group: string;
+    feePaid: boolean;
+    checkedInAt: Date | null;
+  }> {
     const application = await this.applicationRepository.findOne({
       where: { userId, retreatId },
       relations: ['user'],
@@ -94,7 +101,10 @@ export class ApplicationService {
     }
 
     return {
+      userId: application.userId,
       name: application.user.name,
+      phone: application.user.phone,
+      group: application.user.group,
       feePaid: application.feePaid,
       checkedInAt: application.checkedInAt,
     };
