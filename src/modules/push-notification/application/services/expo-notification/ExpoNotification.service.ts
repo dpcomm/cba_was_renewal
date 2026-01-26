@@ -175,7 +175,6 @@ export class ExpoNotificationService {
       nowMs,
     );
 
-    console.log(nowMs);
     if (members.length === 0) return [];
 
     const results: reservationPushNotificationResponseDto[] = [];
