@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Patch, Req } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Query, Req } from '@nestjs/common';
 import { UserService } from '../application/user.service';
 import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
@@ -9,6 +9,9 @@ import { UpdateUserDto } from '../application/dto/update-user.dto';
 import { UpdateEmailDto } from '../application/dto/update-email.dto';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
+import { RankGuard } from '@shared/decorators/rank-guard.decorator';
+import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
+import { UserSearchListResponse, UserSearchResponseDto } from './dto/user.search.response.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -53,5 +56,20 @@ export class UserController {
   async deleteAccount(@Req() req) {
     await this.userService.deleteAccount(req.user.id);
     return ok(null, 'Success delete account');
+  }
+
+  @Get('search')
+  @RankGuard(UserRank.ADMIN)
+  @ApiOperation({ summary: '이름으로 사용자 검색' })
+  @ApiSuccessResponse({ type: UserSearchResponseDto, isArray: true })
+  async searchUsers(@Query('name') name: string) {
+    const users = await this.userService.searchUsersByName(name ?? '');
+    const payload = users.map((user) => ({
+      id: user.id,
+      name: user.name,
+      group: user.group,
+      phone: user.phone,
+    }));
+    return ok<UserSearchListResponse>(payload, 'Success search users');
   }
 }
