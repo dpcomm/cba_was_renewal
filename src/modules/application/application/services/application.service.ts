@@ -1,53 +1,179 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ForbiddenException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository, DataSource, Between } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 import { Application } from '@modules/application/domain/entities/application.entity';
+import { EventResult } from '@modules/application/domain/enum/application.enum';
 
 @Injectable()
 export class ApplicationService {
-    constructor(
-        @InjectRepository(Application)
-        private applicationRepository: Repository<Application>,
-    ) {}
+  private readonly logger = new Logger(ApplicationService.name);
 
-    async checkApplication(userId: string, retreatId: number): Promise<boolean> {
-        const application = await this.applicationRepository.findOne({
-            where: {
-                userId: userId,
-                retreatId: retreatId,
-            },
-            select: ['id'],
-        });
+  constructor(
+    @InjectRepository(Application)
+    private applicationRepository: Repository<Application>,
+    private readonly dataSource: DataSource,
+  ) {}
 
-        return !!application;
+  async checkApplication(userId: string, retreatId: number): Promise<boolean> {
+    const application = await this.applicationRepository.findOne({
+      where: {
+        userId: userId,
+        retreatId: retreatId,
+      },
+      select: ['id'],
+    });
+
+    return !!application;
+  }
+
+  async checkApplicatinoPaid(
+    userId: string,
+    retreatId: number,
+  ): Promise<boolean> {
+    const application = await this.applicationRepository.findOne({
+      where: {
+        userId: userId,
+        retreatId: retreatId,
+      },
+      select: ['feePaid'],
+    });
+
+    if (!application) {
+      throw new NotFoundException(ERROR_MESSAGES.APPLICATION_NOT_FOUND);
     }
 
-    async checkApplicatinoPaid(userId: string, retreatId: number): Promise<boolean> {
-        const application = await this.applicationRepository.findOne({
-            where: {
-                userId: userId,
-                retreatId: retreatId,
-            },
-            select: ['feePaid'],
-        });
+    return application.feePaid;
+  }
 
-        if (!application) {
-            throw new NotFoundException(ERROR_MESSAGES.APPLICATION_NOT_FOUND);
-        }
+  async getApplicationsByUserId(userId: string): Promise<number[]> {
+    const applications = await this.applicationRepository.find({
+      where: { userId },
+      select: ['retreatId'],
+      order: { createdAt: 'ASC' },
+    });
 
-        return application.feePaid;
+    return applications.map((app) => app.retreatId);
+  }
 
+  /**
+   * 내 등록 정보 상세 조회 (User)
+   */
+  async getApplicationDetail(
+    userId: string,
+    retreatId: number,
+  ): Promise<Application | null> {
+    return this.applicationRepository.findOne({
+      where: { userId, retreatId },
+    });
+  }
+
+  /**
+   * 관리자 스캔 조회 (Admin)
+   */
+  async adminScan(
+    userId: string,
+    retreatId: number,
+  ): Promise<{ name: string; feePaid: boolean; checkedInAt: Date | null }> {
+    const application = await this.applicationRepository.findOne({
+      where: { userId, retreatId },
+      relations: ['user'],
+    });
+
+    if (!application) {
+      throw new NotFoundException(ERROR_MESSAGES.APPLICATION_NOT_FOUND);
     }
 
-    async getApplicationsByUserId(userId: string): Promise<number[]> {
-        const applications = await this.applicationRepository.find({
-            where: { userId },
-            select: ['retreatId'],
-            order: { createdAt: 'ASC' },
-        });
+    return {
+      name: application.user.name,
+      feePaid: application.feePaid,
+      checkedInAt: application.checkedInAt,
+    };
+  }
 
-        return applications.map(app => app.retreatId);
+  /**
+   * 체크인 처리 (Admin)
+   */
+  async checkIn(
+    targetUserId: string,
+    retreatId: number,
+    adminUserId: string,
+  ): Promise<{ checkedInAt: Date }> {
+    const application = await this.applicationRepository.findOne({
+      where: { userId: targetUserId, retreatId },
+    });
+
+    if (!application) {
+      throw new NotFoundException(ERROR_MESSAGES.APPLICATION_NOT_FOUND);
     }
+
+    if (application.checkedInAt) {
+      throw new ConflictException('이미 체크인된 사용자입니다.');
+    }
+
+    const now = new Date();
+    await this.applicationRepository.update(
+      { userId: targetUserId, retreatId },
+      {
+        checkedInAt: now,
+        checkedInBy: adminUserId,
+      },
+    );
+
+    this.logger.log(
+      `Check-in: ${targetUserId} by ${adminUserId} at ${now.toISOString()}`,
+    );
+
+    return { checkedInAt: now };
+  }
+
+  /**
+   * 이벤트 참여 (User)
+   */
+  async playEvent(
+    userId: string,
+    retreatId: number,
+  ): Promise<{ eventResult: EventResult }> {
+    return this.dataSource.transaction(async (manager) => {
+      const application = await manager.findOne(Application, {
+        where: { userId, retreatId },
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!application) {
+        throw new NotFoundException(ERROR_MESSAGES.APPLICATION_NOT_FOUND);
+      }
+
+      if (!application.checkedInAt) {
+        throw new ForbiddenException('체크인 후 이벤트 참여가 가능합니다.');
+      }
+
+      if (application.eventResult) {
+        throw new ConflictException('이미 이벤트에 참여하셨습니다.');
+      }
+
+      const isWin = Math.random() < 0.3;
+      const result = isWin ? EventResult.WIN : EventResult.LOSE;
+
+      await manager.update(
+        Application,
+        { userId, retreatId },
+        {
+          eventResult: result,
+          eventParticipatedAt: new Date(),
+        },
+      );
+
+      this.logger.log(`Event played: ${userId} -> ${result}`);
+
+      return { eventResult: result };
+    });
+  }
 }

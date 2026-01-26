@@ -31,9 +31,9 @@ describe('Email Sending', () => {
   it('should send verification email successfully', async () => {
     const targetEmail = process.env.TEST_EMAIL || 'jipkim2@gmail.com';
     console.log(`Sending test email to: ${targetEmail}`);
-    
+
     await expect(
-      mailService.sendVerificationEmail(targetEmail, '123456')
+      mailService.sendVerificationEmail(targetEmail, '123456'),
     ).resolves.not.toThrow();
   });
 });

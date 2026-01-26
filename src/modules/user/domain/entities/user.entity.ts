@@ -56,10 +56,19 @@ export class User {
   @Column({ type: 'datetime', precision: 3, nullable: true })
   emailVerifiedAt: Date;
 
-  @CreateDateColumn({ type: 'datetime', precision: 3, default: () => 'CURRENT_TIMESTAMP(3)' })
+  @CreateDateColumn({
+    type: 'datetime',
+    precision: 3,
+    default: () => 'CURRENT_TIMESTAMP(3)',
+  })
   createdAt: Date;
 
-  @Column({ type: 'datetime', precision: 3 })
+  @UpdateDateColumn({
+    type: 'datetime',
+    precision: 3,
+    default: () => 'CURRENT_TIMESTAMP(3)',
+    onUpdate: 'CURRENT_TIMESTAMP(3)',
+  })
   updatedAt: Date;
 
   @OneToMany(() => Application, (application) => application.user)
@@ -89,7 +98,6 @@ export class User {
   @OneToMany(() => Consent, (consent) => consent.user)
   consents: Consent[];
 
-  @OneToMany(() => LectureEnrollment, enrollment => enrollment.user)
+  @OneToMany(() => LectureEnrollment, (enrollment) => enrollment.user)
   enrollments: LectureEnrollment[];
-
 }
