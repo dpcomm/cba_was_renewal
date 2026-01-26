@@ -51,6 +51,9 @@ export class LectureEnrolleeDto {
 
   @ApiProperty({ example: 'test group' })
   group: string;
+
+  @ApiProperty({ example: '010-1234-5678' })
+  phone: string;
 }
 
 export class LectureDetailResponseDto {

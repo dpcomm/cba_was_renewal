@@ -92,6 +92,7 @@ export class LectureService {
         id: enrollment.user.id,
         name: enrollment.user.name,
         group: enrollment.user.group,
+        phone: enrollment.user.phone,
       })),
     };
   }
