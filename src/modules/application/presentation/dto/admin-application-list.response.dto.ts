@@ -17,6 +17,9 @@ export class AdminApplicationListResponseDto {
   @ApiProperty()
   feePaid: boolean;
 
+  @ApiProperty()
+  attended: boolean;
+
   @ApiProperty({ nullable: true })
   checkedInAt: Date | null;
 

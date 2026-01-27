@@ -16,6 +16,9 @@ export class AdminScanResponseDto {
   @ApiProperty({ example: true, description: '납부 완료 여부' })
   feePaid: boolean;
 
+  @ApiProperty({ example: true, description: '참석 여부' })
+  attended: boolean;
+
   @ApiProperty({
     example: '2025-01-30T10:00:00.000Z',
     nullable: true,

@@ -89,6 +89,7 @@ export class ApplicationService {
     phone: string;
     group: string;
     feePaid: boolean;
+    attended: boolean;
     checkedInAt: Date | null;
   }> {
     const application = await this.applicationRepository.findOne({
@@ -106,6 +107,7 @@ export class ApplicationService {
       phone: application.user.phone,
       group: application.user.group,
       feePaid: application.feePaid,
+      attended: application.attended,
       checkedInAt: application.checkedInAt,
     };
   }
@@ -136,6 +138,7 @@ export class ApplicationService {
       {
         checkedInAt: now,
         checkedInBy: adminUserId,
+        attended: true,
       },
     );
 
@@ -237,6 +240,7 @@ export class ApplicationService {
       phone: app.user.phone,
       group: app.user.group,
       feePaid: app.feePaid,
+      attended: app.attended,
       checkedInAt: app.checkedInAt,
       eventResult: app.eventResult ?? null,
     }));
