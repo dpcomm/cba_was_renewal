@@ -10,11 +10,21 @@ import { PushNofiticationController } from './presentation/controllers/push-noti
 import { ExpoPushTokenModule } from '@modules/expo-push-token/expo-push-token.module';
 import { RedisModule } from '@infrastructure/redis/redis.module';
 import { ExpoNotificationScheduleService } from './application/services/expo-notification/expoNotification.schedule.service';
+import { Notice } from '@modules/notice/domain/entities/notice.entity';
+import { NoticePushService } from './application/services/notice-push.service';
 
 @Module({
-  imports: [ExpoPushTokenModule, RedisModule],
+  imports: [
+    TypeOrmModule.forFeature([Notice]),
+    ExpoPushTokenModule,
+    RedisModule,
+  ],
   controllers: [PushNofiticationController],
-  providers: [ExpoNotificationService, ExpoNotificationScheduleService],
+  providers: [
+    ExpoNotificationService,
+    ExpoNotificationScheduleService,
+    NoticePushService,
+  ],
   exports: [ExpoNotificationService],
 })
 export class PushNotificationModule {}
