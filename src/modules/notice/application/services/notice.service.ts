@@ -1,27 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository, DataSource } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Notice } from '@modules/notice/domain/entities/notice.entity';
 import {
   createNoticeRequestDto,
   getNoticeListRequestDto,
   updateNoticeRequestDto,
-  noticePushRequestDto,
 } from '../dto/notice.request.dto';
-import { NoticeAuthorGroup } from '@modules/notice/domain/notice-author.enum';
-import { ExpoNotificationService } from '@modules/push-notification/application/services/expo-notification/ExpoNotification.service';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
-import { ExpoPushTokenService } from '@modules/expo-push-token/application/services/expo-push-token.service';
-import { NoticeNotificationDto } from '@modules/push-notification/application/dto/notice-notification.dto';
-import { reservePushNotificationRequestDto } from '@modules/push-notification/application/dto/push-notification.request.dto';
 
 @Injectable()
 export class NoticeService {
   constructor(
     @InjectRepository(Notice)
     private noticeRepository: Repository<Notice>,
-    private readonly expoMessageService: ExpoNotificationService,
-    private readonly expoTokenService: ExpoPushTokenService,
   ) {}
 
   // 공지 생성
@@ -32,27 +24,7 @@ export class NoticeService {
       body: dto.body,
     });
 
-    const savedNotice = await this.noticeRepository.save(notice);
-
-    if (dto.sendPush === false) {
-      return savedNotice;
-    }
-
-    if (dto.reserveTime) {
-      const reservation: reservePushNotificationRequestDto = {
-        title: dto.title,
-        body: dto.body,
-        reserveTime: dto.reserveTime,
-      };
-      await this.expoMessageService.reserve(reservation);
-    } else {
-      const tokens = await this.expoTokenService.getTokens();
-      const notification = new NoticeNotificationDto(dto.title);
-
-      await this.expoMessageService.send(tokens, notification);
-    }
-
-    return savedNotice;
+    return this.noticeRepository.save(notice);
   }
 
   // id를 통한 공지 조회
@@ -118,21 +90,4 @@ export class NoticeService {
     }
   }
 
-  async sendNoticePush(id: number, dto: noticePushRequestDto): Promise<void> {
-    const notice = await this.getNotice(id);
-    const notification = new NoticeNotificationDto(notice.title);
-
-    if (dto.reserveTime) {
-      const reservation: reservePushNotificationRequestDto = {
-        title: notification.title,
-        body: notification.body,
-        reserveTime: dto.reserveTime,
-      };
-      await this.expoMessageService.reserve(reservation);
-      return;
-    }
-
-    const tokens = await this.expoTokenService.getTokens();
-    await this.expoMessageService.send(tokens, notification);
-  }
 }

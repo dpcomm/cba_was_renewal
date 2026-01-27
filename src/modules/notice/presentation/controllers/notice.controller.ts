@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseEnumPipe,
   ParseIntPipe,
   Post,
   Query,
@@ -22,7 +21,6 @@ import {
   createNoticeRequestDto,
   getNoticeListRequestDto,
   updateNoticeRequestDto,
-  noticePushRequestDto,
 } from '@modules/notice/application/dto/notice.request.dto';
 import {
   NoticeResponseDto,
@@ -30,7 +28,6 @@ import {
   NoticeSingleResponse,
 } from '../dto/notice.response.dto';
 import { NoticeMapper } from '@modules/notice/application/mappers/notice.mapper';
-import { NoticeAuthorGroup } from '@modules/notice/domain/notice-author.enum';
 
 @ApiTags('Notice')
 @Controller('notice')
@@ -44,7 +41,10 @@ export class NoticeController {
   @Post()
   @RankGuard(UserRank.ADMIN)
   @JwtGuard()
-  @ApiOperation({ summary: '공지 등록' })
+  @ApiOperation({
+    summary: '공지 등록',
+    description: '공지사항을 저장한다. 푸시 발송은 포함하지 않는다.',
+  })
   @ApiSuccessResponse({ type: NoticeResponseDto })
   async createNotice(@Body() dto: createNoticeRequestDto) {
     const notice = await this.noticeService.createNotice(dto);
@@ -55,7 +55,10 @@ export class NoticeController {
   }
 
   @Get()
-  @ApiOperation({ summary: '공지 목록 조회' })
+  @ApiOperation({
+    summary: '공지 목록 조회',
+    description: '공지사항 목록을 조회한다. (푸시 발송과 무관)',
+  })
   @ApiSuccessResponse({ type: NoticeResponseDto, isArray: true })
   async getNoticeList(@Query() dto: getNoticeListRequestDto) {
     const notices = await this.noticeService.getNoticeList(dto);
@@ -67,7 +70,10 @@ export class NoticeController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: '공지 조회' })
+  @ApiOperation({
+    summary: '공지 조회',
+    description: '공지사항 단건을 조회한다. (푸시 발송과 무관)',
+  })
   @ApiSuccessResponse({ type: NoticeResponseDto })
   @ApiFailureResponse(404, ERROR_MESSAGES.NOTICE_NOT_FOUND)
   async getNoticeById(@Param('id', ParseIntPipe) id: number) {
@@ -81,7 +87,10 @@ export class NoticeController {
   @Post('update')
   @RankGuard(UserRank.ADMIN)
   @JwtGuard()
-  @ApiOperation({ summary: '공지 수정' })
+  @ApiOperation({
+    summary: '공지 수정',
+    description: '공지사항 내용을 수정한다. 푸시 발송은 별도 API를 사용한다.',
+  })
   @ApiSuccessResponse({ type: NoticeResponseDto })
   @ApiFailureResponse(404, ERROR_MESSAGES.NOTICE_NOT_FOUND)
   async updateNotice(@Body() dto: updateNoticeRequestDto) {
@@ -95,7 +104,10 @@ export class NoticeController {
   @Delete(':id')
   @RankGuard(UserRank.ADMIN)
   @JwtGuard()
-  @ApiOperation({ summary: '공지 삭제' })
+  @ApiOperation({
+    summary: '공지 삭제',
+    description: '공지사항을 삭제한다. 푸시 발송/예약 정보는 별도 관리 대상이다.',
+  })
   @ApiSuccessResponse({})
   @ApiFailureResponse(404, ERROR_MESSAGES.NOTICE_NOT_FOUND)
   async deleteNotice(@Param('id', ParseIntPipe) id: number) {
@@ -104,18 +116,4 @@ export class NoticeController {
     return ok<null>(null, 'Success delete notice');
   }
 
-  @Post(':id/push')
-  @RankGuard(UserRank.ADMIN)
-  @JwtGuard()
-  @ApiOperation({ summary: '공지 푸시 발송/예약' })
-  @ApiSuccessResponse({})
-  @ApiFailureResponse(404, ERROR_MESSAGES.NOTICE_NOT_FOUND)
-  async sendNoticePush(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: noticePushRequestDto,
-  ) {
-    await this.noticeService.sendNoticePush(id, dto);
-
-    return ok<null>(null, 'Success send notice push');
-  }
 }

@@ -1,13 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsBoolean,
-  IsEnum,
-  IsInt,
-  IsString,
-  IsNumber,
-  IsOptional,
-  IsDateString,
-} from 'class-validator';
+import { IsEnum, IsInt, IsString, IsOptional } from 'class-validator';
 import { NoticeAuthorGroup } from '@modules/notice/domain/notice-author.enum';
 
 export class createNoticeRequestDto {
@@ -15,32 +7,27 @@ export class createNoticeRequestDto {
     example: NoticeAuthorGroup.DEVELOPMENT,
     enum: NoticeAuthorGroup,
     required: true,
+    description: '공지 작성 주체',
   })
   @IsEnum(NoticeAuthorGroup)
   author: NoticeAuthorGroup;
 
-  @ApiProperty({ example: '업데이트 공지', required: true })
+  @ApiProperty({
+    example: '서비스 업데이트 안내',
+    required: true,
+    description: '공지 제목',
+  })
   @IsString()
   title: string;
 
   @ApiProperty({
     example: '최신 기능과 안정적인 사용을 위해 앱을 업데이트해주세요.',
     required: true,
+    description: '공지 본문',
   })
   @IsString()
   body: string;
 
-  @ApiPropertyOptional({
-    example: '2026-02-01T08:30:00.000Z',
-    format: 'date-time',
-  })
-  @IsOptional()
-  @IsDateString()
-  reserveTime?: string;
-
-  @ApiPropertyOptional({ example: true, description: '푸시 발송 여부' })
-  @IsOptional()
-  sendPush?: boolean;
 }
 
 // export class getNoticeRequestDto {
@@ -61,37 +48,29 @@ export class getNoticeListRequestDto {
 }
 
 export class updateNoticeRequestDto {
-  @ApiProperty({ example: 3, required: true })
+  @ApiProperty({ example: 3, required: true, description: '공지 ID' })
   @IsInt()
   id: number;
 
   @ApiProperty({
     example: NoticeAuthorGroup.DEVELOPMENT,
     enum: NoticeAuthorGroup,
+    description: '공지 작성 주체',
   })
   @IsOptional()
   @IsEnum(NoticeAuthorGroup)
   author?: NoticeAuthorGroup;
 
-  @ApiProperty({ example: '업데이트 공지' })
+  @ApiProperty({ example: '서비스 업데이트 안내', description: '공지 제목' })
   @IsOptional()
   @IsString()
   title?: string;
 
   @ApiProperty({
     example: '최신 기능과 안정적인 사용을 위해 앱을 업데이트해주세요.',
+    description: '공지 본문',
   })
   @IsOptional()
   @IsString()
   body?: string;
-}
-
-export class noticePushRequestDto {
-  @ApiPropertyOptional({
-    example: '2026-02-01T08:30:00.000Z',
-    format: 'date-time',
-  })
-  @IsOptional()
-  @IsDateString()
-  reserveTime?: string;
 }
