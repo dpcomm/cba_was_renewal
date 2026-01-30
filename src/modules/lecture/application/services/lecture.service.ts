@@ -3,32 +3,32 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository, DataSource, Not } from 'typeorm';
+import { Repository, DataSource, In } from 'typeorm';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 import { Lecture } from '@modules/lecture/domain/entities/lecture.entity';
 import { LectureEnrollment } from '@modules/lecture/domain/entities/lectureEnrollment.entity';
+import { Retreat } from '@modules/retreat/domain/entities/retreat.entity';
+import { User } from '@modules/user/domain/entities/user.entity';
 import {
   createLectureRequestDto,
   updateLectureRequestDto,
   enrollLectureRequestDto,
   dropLectureRequestDto,
 } from '../dto/lecture.request.dto';
-import {
-  LectureResponseDto,
-  LectureDetailResponseDto,
-} from '@modules/lecture/presentation/dto/lecture.response.dto';
-
-import { User } from '@modules/user/domain/entities/user.entity';
-
 @Injectable()
 export class LectureService {
+  private readonly logger = new Logger(LectureService.name);
+
   constructor(
     @InjectRepository(Lecture)
     private lectureRepository: Repository<Lecture>,
     @InjectRepository(LectureEnrollment)
     private lecutreEnrollmentRepository: Repository<LectureEnrollment>,
+    @InjectRepository(Retreat)
+    private readonly retreatRepository: Repository<Retreat>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private readonly dataSource: DataSource,
@@ -66,7 +66,25 @@ export class LectureService {
   // id에 따른 참여자 정보를 포함한 lecture 정보 조회
   async getLectureDetailById(
     lectureId: number,
-  ): Promise<LectureDetailResponseDto> {
+  ): Promise<{
+    id: number;
+    title: string;
+    instructorName: string;
+    instructorBio: string;
+    location: string;
+    startTime: string;
+    currentCount: number;
+    maxCapacity: number;
+    termName: string;
+    codeNumber: string;
+    introduction: string;
+    enrollees: Array<{
+      id: number;
+      name: string;
+      group: string;
+      phone: string;
+    }>;
+  }> {
     const lecture = await this.lectureRepository.findOne({
       where: { id: lectureId },
       relations: ['term', 'enrollments', 'enrollments.user'],
@@ -273,5 +291,230 @@ export class LectureService {
 
       return enrollment;
     });
+  }
+
+  private async getLatestRetreatId(): Promise<number> {
+    const latest = await this.retreatRepository
+      .createQueryBuilder('retreat')
+      .select(['retreat.id'])
+      .orderBy('retreat.id', 'DESC')
+      .limit(1)
+      .getOne();
+
+    if (!latest) {
+      throw new NotFoundException(ERROR_MESSAGES.RETREAT_NOT_FOUND);
+    }
+
+    return latest.id;
+  }
+
+  private async getEligibleUsersForTerm(
+    termId: number,
+    name?: string,
+    limit?: number,
+    retreatId?: number,
+  ): Promise<User[]> {
+    const resolvedRetreatId =
+      typeof retreatId === 'number' && retreatId > 0
+        ? retreatId
+        : await this.getLatestRetreatId();
+
+    const enrolledSubQuery = this.lecutreEnrollmentRepository
+      .createQueryBuilder('enrollment')
+      .select('enrollment.userId')
+      .innerJoin('enrollment.lecture', 'lecture')
+      .where('lecture.term_id = :termId', { termId });
+
+    const query = this.userRepository
+      .createQueryBuilder('user')
+      .innerJoin(
+        'user.applications',
+        'application',
+        'application.retreatId = :retreatId AND application.attended = :attended',
+        { retreatId: resolvedRetreatId, attended: true },
+      )
+      .where('user.isDeleted = :isDeleted', { isDeleted: false })
+      .andWhere(`user.id NOT IN (${enrolledSubQuery.getQuery()})`)
+      .setParameter('termId', termId)
+      .orderBy('user.name', 'ASC')
+      .addOrderBy('user.id', 'ASC');
+
+    if (name) {
+      query.andWhere('user.name LIKE :name', { name: `%${name}%` });
+    }
+
+    if (limit) {
+      query.take(limit);
+    }
+
+    return query.getMany();
+  }
+
+  async searchEligibleUsers(
+    termId: number,
+    name?: string,
+    retreatId?: number,
+    limit?: number,
+  ): Promise<User[]> {
+    return this.getEligibleUsersForTerm(termId, name, limit, retreatId);
+  }
+
+  async enrollEligibleUsers(
+    lectureId: number,
+    userIds: number[],
+  ): Promise<number> {
+    if (!userIds || userIds.length === 0) return 0;
+
+    const uniqueUserIds = Array.from(new Set(userIds));
+
+    return this.dataSource.transaction(async (manager) => {
+      const lecture = await manager.findOne(Lecture, {
+        where: { id: lectureId },
+        relations: ['term'],
+        lock: { mode: 'pessimistic_write' },
+      });
+
+      if (!lecture) {
+        throw new NotFoundException(ERROR_MESSAGES.LECTURE_NOT_FOUND);
+      }
+
+      const remaining = lecture.maxCapacity - lecture.currentCount;
+      if (remaining <= 0) {
+        throw new BadRequestException(ERROR_MESSAGES.LECTURE_FULL);
+      }
+
+      if (uniqueUserIds.length > remaining) {
+        throw new BadRequestException(ERROR_MESSAGES.LECTURE_CAPACITY_EXCEEDED);
+      }
+
+      const eligibleUsers = await this.getEligibleUsersForTerm(lecture.term.id);
+      const eligibleSet = new Set(eligibleUsers.map((user) => user.id));
+      const hasIneligible = uniqueUserIds.some((id) => !eligibleSet.has(id));
+
+      if (hasIneligible) {
+        throw new BadRequestException(
+          ERROR_MESSAGES.LECTURE_ELIGIBLE_USER_REQUIRED,
+        );
+      }
+
+      const existing = await manager.find(LectureEnrollment, {
+        where: {
+          lectureId,
+          userId: In(uniqueUserIds),
+        },
+      });
+
+      if (existing.length > 0) {
+        throw new BadRequestException(ERROR_MESSAGES.ALREADY_ENROLLED);
+      }
+
+      const enrollments = uniqueUserIds.map((userId) =>
+        manager.create(LectureEnrollment, {
+          lecture: { id: lectureId },
+          user: { id: userId },
+        }),
+      );
+      await manager.save(LectureEnrollment, enrollments);
+
+      await manager.increment(
+        Lecture,
+        { id: lectureId },
+        'currentCount',
+        uniqueUserIds.length,
+      );
+
+      return uniqueUserIds.length;
+    });
+  }
+
+  async autoAssignLectures(termId: number): Promise<{
+    totalAssigned: number;
+    remainingEligible: number;
+    lectures: { lectureId: number; assignedCount: number }[];
+  }> {
+    try {
+      const eligibleUsers = await this.getEligibleUsersForTerm(termId);
+      const pool = eligibleUsers.map((user) => user.id);
+
+      for (let i = pool.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+
+      const lectures = await this.lectureRepository
+        .createQueryBuilder('lecture')
+        .where('lecture.term_id = :termId', { termId })
+        .andWhere('lecture.currentCount < lecture.maxCapacity')
+        .orderBy('lecture.id', 'ASC')
+        .getMany();
+
+      const results: { lectureId: number; assignedCount: number }[] = [];
+
+      await this.dataSource.transaction(async (manager) => {
+        for (const lecture of lectures) {
+          if (pool.length === 0) break;
+
+          const lockedLecture = await manager.findOne(Lecture, {
+            where: { id: lecture.id },
+            lock: { mode: 'pessimistic_write' },
+          });
+
+          if (!lockedLecture) continue;
+
+          const remaining =
+            lockedLecture.maxCapacity - lockedLecture.currentCount;
+          if (remaining <= 0) continue;
+
+          const selected = pool.splice(0, remaining);
+          if (selected.length === 0) break;
+
+          const values = selected.map((userId) => ({
+            lectureId: lockedLecture.id,
+            userId,
+          }));
+
+          const insertResult = await manager
+            .createQueryBuilder()
+            .insert()
+            .into(LectureEnrollment)
+            .values(values)
+            .orIgnore()
+            .execute();
+
+          const insertedCount = insertResult?.raw?.affectedRows ?? 0;
+
+          if (insertedCount > 0) {
+            await manager.increment(
+              Lecture,
+              { id: lockedLecture.id },
+              'currentCount',
+              insertedCount,
+            );
+          }
+
+          results.push({
+            lectureId: lockedLecture.id,
+            assignedCount: insertedCount,
+          });
+        }
+      });
+
+      const totalAssigned = results.reduce(
+        (sum, item) => sum + item.assignedCount,
+        0,
+      );
+
+      return {
+        totalAssigned,
+        remainingEligible: pool.length,
+        lectures: results,
+      };
+    } catch (error) {
+      this.logger.error(
+        `autoAssignLectures failed (termId=${termId})`,
+        error instanceof Error ? error.stack : String(error),
+      );
+      throw error;
+    }
   }
 }

@@ -32,6 +32,8 @@ import {
   updateLectureRequestDto,
   enrollLectureRequestDto,
   dropLectureRequestDto,
+  autoAssignLectureRequestDto,
+  enrollEligibleLectureRequestDto,
 } from '@modules/lecture/application/dto/lecture.request.dto';
 import {
   LectureResponseDto,
@@ -40,8 +42,14 @@ import {
   LectureDetailResponseDto,
   LectureDetailListResponse,
   LectureDetailSingleResponse,
+  LectureAutoAssignResponseDto,
+  LectureEnrollEligibleResponseDto,
 } from '../dto/lecture.response.dto';
 import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
+import {
+  UserSearchListResponse,
+  UserSearchResponseDto,
+} from '@modules/user/presentation/dto/user.search.response.dto';
 
 @ApiTags('Lecture')
 @Controller('lecture')
@@ -65,6 +73,75 @@ export class LectureController {
   }
 
   // 강의 목록 조회
+
+  // 최신 수련회 참석자 중 미배정 사용자 검색
+  @Get('eligible-users')
+  @RankGuard(UserRank.ADMIN)
+  @ApiOperation({ summary: '최신 수련회 참석자 중 미배정 사용자 검색' })
+  @ApiSuccessResponse({ type: UserSearchResponseDto, isArray: true })
+  async getEligibleUsers(
+    @Query('termId', ParseIntPipe) termId: number,
+    @Query('name') name?: string,
+    @Query('retreatId') retreatIdRaw?: string,
+    @Query('limit') limitRaw?: string,
+  ) {
+    const trimmedName = name?.trim();
+    const retreatId = retreatIdRaw ? Number(retreatIdRaw) : undefined;
+    const limit = limitRaw ? Number(limitRaw) : undefined;
+    const resolvedRetreatId =
+      typeof retreatId === 'number' && Number.isFinite(retreatId) && retreatId > 0
+        ? retreatId
+        : undefined;
+    const resolvedLimit =
+      typeof limit === 'number' && Number.isFinite(limit) && limit > 0
+        ? limit
+        : trimmedName
+        ? 50
+        : undefined;
+    const users = await this.lectureService.searchEligibleUsers(
+      termId,
+      trimmedName,
+      resolvedRetreatId,
+      resolvedLimit,
+    );
+    const payload: UserSearchListResponse = users.map((user) => ({
+      id: user.id,
+      name: user.name,
+      group: user.group,
+      phone: user.phone,
+    }));
+
+    return ok<UserSearchListResponse>(payload, 'Success get eligible users');
+  }
+
+  // 정원 미달 강의 자동 배정
+  @Post('auto-assign')
+  @RankGuard(UserRank.ADMIN)
+  @ApiOperation({ summary: '정원 미달 강의 자동 배정' })
+  @ApiSuccessResponse({ type: LectureAutoAssignResponseDto })
+  async autoAssignLectures(@Body() dto: autoAssignLectureRequestDto) {
+    const result = await this.lectureService.autoAssignLectures(dto.termId);
+    return ok<LectureAutoAssignResponseDto>(
+      result,
+      'Success auto assign lectures',
+    );
+  }
+
+  // 최신 수련회 참석자 명단 일괄 등록
+  @Post('enroll-eligible')
+  @RankGuard(UserRank.ADMIN)
+  @ApiOperation({ summary: '최신 수련회 참석자 명단 일괄 등록' })
+  @ApiSuccessResponse({ type: LectureEnrollEligibleResponseDto })
+  async enrollEligible(@Body() dto: enrollEligibleLectureRequestDto) {
+    const assignedCount = await this.lectureService.enrollEligibleUsers(
+      dto.lectureId,
+      dto.userIds,
+    );
+    return ok<LectureEnrollEligibleResponseDto>(
+      { assignedCount },
+      'Success enroll eligible users',
+    );
+  }
 
   // 강의 조회
   // id를 통해 강의에 대한 정보 조회
