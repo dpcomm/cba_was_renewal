@@ -1,5 +1,6 @@
 import {
   Body,
+  BadRequestException,
   Controller,
   Delete,
   Get,
@@ -8,7 +9,9 @@ import {
   ParseIntPipe,
   Post,
   Query,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { ok } from '@shared/responses/api-response';
 import {
   ApiOkResponse,
@@ -80,11 +83,23 @@ export class LectureController {
   @ApiOperation({ summary: '최신 수련회 참석자 중 미배정 사용자 검색' })
   @ApiSuccessResponse({ type: UserSearchResponseDto, isArray: true })
   async getEligibleUsers(
-    @Query('termId', ParseIntPipe) termId: number,
+    @Query('termId') termIdRaw: string | string[] | undefined,
+    @Req() req: Request,
     @Query('name') name?: string,
     @Query('retreatId') retreatIdRaw?: string,
     @Query('limit') limitRaw?: string,
   ) {
+    // Debug: confirm raw query payload during validation issues
+    console.log('[eligible-users] raw query:', req.query);
+    const termId = Array.isArray(termIdRaw) ? termIdRaw[0] : termIdRaw;
+    const trimmedTermId = termId?.trim();
+    if (!trimmedTermId) {
+      throw new BadRequestException('termId is required and must be a numeric string');
+    }
+    if (!/^\d+$/.test(trimmedTermId)) {
+      throw new BadRequestException('termId must be a numeric string');
+    }
+    const resolvedTermId = Number(trimmedTermId);
     const trimmedName = name?.trim();
     const retreatId = retreatIdRaw ? Number(retreatIdRaw) : undefined;
     const limit = limitRaw ? Number(limitRaw) : undefined;
@@ -99,7 +114,7 @@ export class LectureController {
         ? 50
         : undefined;
     const users = await this.lectureService.searchEligibleUsers(
-      termId,
+      resolvedTermId,
       trimmedName,
       resolvedRetreatId,
       resolvedLimit,
