@@ -24,7 +24,9 @@ import { ScheduleModule } from '@nestjs/schedule';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['prod', 'production'].includes(process.env.NODE_ENV)
+      envFilePath: ['prod', 'production'].includes(
+        process.env.NODE_ENV || 'dev',
+      )
         ? '.env.prod'
         : '.env.dev',
     }),
