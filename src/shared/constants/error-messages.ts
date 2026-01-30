@@ -24,4 +24,7 @@ export const ERROR_MESSAGES = {
   TERM_ALREADY_EXISTS: 'Term with same year and termType already exists',
   TERM_NOT_FOUND: 'Term not found',
   APPLICATION_NOT_FOUND: 'Application not found',
+  RETREAT_NOT_FOUND: 'Retreat not found',
+  LECTURE_CAPACITY_EXCEEDED: 'Selected users exceed remaining lecture capacity',
+  LECTURE_ELIGIBLE_USER_REQUIRED: 'Ineligible user included for lecture enrollment',
 } as const;

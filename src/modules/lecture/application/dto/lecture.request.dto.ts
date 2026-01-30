@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  ArrayNotEmpty,
+  IsArray,
   IsBoolean,
   IsEnum,
   IsInt,
@@ -114,4 +116,26 @@ export class dropLectureRequestDto {
   @ApiProperty({ example: 1, required: true })
   @IsInt()
   lectureId: number;
+}
+
+export class autoAssignLectureRequestDto {
+  @ApiProperty({
+    example: 1,
+    description: '강의가 속한 학기(Term) ID',
+    required: true,
+  })
+  @IsInt()
+  termId: number;
+}
+
+export class enrollEligibleLectureRequestDto {
+  @ApiProperty({ example: 1, required: true })
+  @IsInt()
+  lectureId: number;
+
+  @ApiProperty({ example: [1, 2, 3], required: true })
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsInt({ each: true })
+  userIds: number[];
 }

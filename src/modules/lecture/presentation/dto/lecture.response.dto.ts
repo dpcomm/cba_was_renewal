@@ -100,3 +100,27 @@ export class LectureDetailResponseDto {
 
 export type LectureDetailListResponse = LectureDetailResponseDto[];
 export type LectureDetailSingleResponse = LectureDetailResponseDto | null;
+
+export class LectureAutoAssignItemDto {
+  @ApiProperty({ example: 1 })
+  lectureId: number;
+
+  @ApiProperty({ example: 5 })
+  assignedCount: number;
+}
+
+export class LectureAutoAssignResponseDto {
+  @ApiProperty({ example: 20 })
+  totalAssigned: number;
+
+  @ApiProperty({ example: 12 })
+  remainingEligible: number;
+
+  @ApiProperty({ type: LectureAutoAssignItemDto, isArray: true })
+  lectures: LectureAutoAssignItemDto[];
+}
+
+export class LectureEnrollEligibleResponseDto {
+  @ApiProperty({ example: 5 })
+  assignedCount: number;
+}
