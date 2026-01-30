@@ -317,6 +317,10 @@ export class CarpoolService {
         roomId: savedRoom.id,
       });
 
+      this.logger.log(
+        `카풀 생성 완료 - 방 ID: ${savedRoom.id}, 운전자 ID: ${dto.driverId}`,
+      );
+
       return savedRoom;
     });
   }
@@ -369,6 +373,8 @@ export class CarpoolService {
 
     await this.expoMessageService.send(tokens, notification);
 
+    this.logger.log(`카풀 수정 완료 - 방 ID: ${result.id}`);
+
     return result;
   }
 
@@ -409,6 +415,8 @@ export class CarpoolService {
 
     // 카풀 삭제 알림 전송
     await this.expoMessageService.send(tokens, notification);
+
+    this.logger.log(`카풀 삭제 완료 - 방 ID: ${roomId}`);
   }
 
   async joinCarpoolRoom(
@@ -484,6 +492,10 @@ export class CarpoolService {
 
       // 카풀 join 알림 전송
       await this.expoMessageService.send(tokens, notification);
+
+      this.logger.log(
+        `카풀 참여 완료 - 사용자 ID: ${dto.userId}, 방 ID: ${dto.roomId}`,
+      );
 
       return joinedRoom;
     } catch (err) {
@@ -561,6 +573,10 @@ export class CarpoolService {
       // 카풀 leave 알림 전송
       await this.expoMessageService.send(tokens, notification);
 
+      this.logger.log(
+        `카풀 나가기 완료 - 사용자 ID: ${dto.userId}, 방 ID: ${dto.roomId}`,
+      );
+
       return leavedRoom;
     } catch (err) {
       throw err;
@@ -582,6 +598,8 @@ export class CarpoolService {
       room.status = dto.newStatus;
 
       await manager.save(room);
+
+      this.logger.log(`카풀 상태 변경: ${room.id} -> ${dto.newStatus}`);
 
       return room;
     });
@@ -666,6 +684,7 @@ export class CarpoolService {
     const notification = new CarpoolStartNotificationDto(driverName);
 
     await this.expoMessageService.send(tokens, notification);
+    this.logger.log(`카풀 운행 시작 - 방 ID: ${id}`);
   }
 
   async getCarpoolMembers(roomId: number): Promise<number[]> {

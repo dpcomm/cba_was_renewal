@@ -1,4 +1,6 @@
-import { Body, Controller, Get, Put } from '@nestjs/common';
+import { Body, Controller, Get, Put, Logger } from '@nestjs/common';
+import { User } from '@shared/decorators/user.decorator';
+import { User as UserEntity } from '@modules/user/domain/entities/user.entity';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
@@ -13,12 +15,19 @@ import { UpdateSystemConfigDto } from '../dto/update-system-config.request.dto';
 @ApiTags('System')
 @Controller('system')
 export class SystemController {
+  private readonly logger = new Logger(SystemController.name);
+
   constructor(private readonly systemService: SystemService) {}
 
   @Get()
   @ApiOperation({ summary: '시스템 설정 조회 (버전, 현재 학기/수련회 ID)' })
   @ApiSuccessResponse({ type: SystemConfigResponseDto })
-  async getSystemConfig() {
+  async getSystemConfig(@User() user?: UserEntity) {
+    this.logger.log(
+      `앱 실행 / 버전 확인 - 사용자: ${user?.userId ?? '비인증'} (${
+        user?.id ?? '없음'
+      })`,
+    );
     const config = await this.systemService.getConfig();
     if (!config) {
       return ok(null, 'No config found');

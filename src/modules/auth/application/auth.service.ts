@@ -3,6 +3,7 @@ import {
   Injectable,
   UnauthorizedException,
   Inject,
+  Logger,
 } from '@nestjs/common';
 import { MailService } from '@infrastructure/mail/mail.service';
 import { UserService } from '@modules/user/application/user.service';
@@ -20,6 +21,8 @@ import { maskString } from '../../../shared/utils/mask.util';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
@@ -51,6 +54,8 @@ export class AuthService {
       { expiresIn },
     );
     await this.redis.set(String(user.id), refreshToken, { EX: expiresIn });
+
+    this.logger.log(`로그인 성공 - 사용자 ID: ${user.userId} (${user.id})`);
 
     return {
       access_token: accessToken,
@@ -106,12 +111,15 @@ export class AuthService {
       rank: dto.rank,
     });
 
+    this.logger.log(`회원가입 완료 - 사용자 ID: ${newUser.userId}`);
+
     return new UserResponseDto(newUser);
   }
 
   async logout(user: User): Promise<void> {
     if (!user) throw new BadRequestException(ERROR_MESSAGES.USER_NOT_FOUND);
     await this.redis.del(String(user.id));
+    this.logger.log(`로그아웃 완료 - 사용자 ID: ${user.userId}`);
   }
 
   async refresh(refreshToken: string): Promise<{ access_token: string }> {
@@ -168,9 +176,7 @@ export class AuthService {
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const redisKey = `email_verification:${email}`;
-    console.log(
-      `[AuthService] Generating verification code for ${email}: ${code}`,
-    );
+    this.logger.log(`[인증번호 생성] 이메일: ${email}, 코드: ${code}`);
 
     // 3분(180초) 유효
     await this.redis.set(redisKey, code, { EX: 180 });

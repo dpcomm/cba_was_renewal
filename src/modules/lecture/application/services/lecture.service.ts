@@ -151,6 +151,8 @@ export class LectureService {
       throw new NotFoundException('Lecture not found after save');
     }
 
+    this.logger.log(`강의 생성 완료 - ID: ${savedLecture.id}`);
+
     return lectureWithRelations;
   }
 
@@ -208,12 +210,15 @@ export class LectureService {
       throw new NotFoundException('Lecture not found after save');
     }
 
+    this.logger.log(`강의 수정 완료 - ID: ${savedLecture.id}`);
+
     return lectureWithRelations;
   }
 
   // lecture 삭제
   async deleteLecture(lectureId: number): Promise<void> {
     await this.lectureRepository.delete({ id: lectureId });
+    this.logger.log(`강의 삭제 완료 - ID: ${lectureId}`);
   }
 
   // lecture 신청
@@ -259,6 +264,9 @@ export class LectureService {
         'currentCount',
         1,
       );
+      this.logger.log(
+        `수강 신청 완료 - 사용자 ID: ${dto.userId}, 강의 ID: ${dto.lectureId}`,
+      );
     });
   }
 
@@ -288,6 +296,10 @@ export class LectureService {
 
       // enrollment 삭제
       await manager.remove(LectureEnrollment, enrollment);
+
+      this.logger.log(
+        `수강 취소 완료 - 사용자 ID: ${dto.userId}, 강의 ID: ${dto.lectureId}`,
+      );
 
       return enrollment;
     });

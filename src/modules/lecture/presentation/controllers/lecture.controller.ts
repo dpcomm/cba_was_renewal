@@ -5,7 +5,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseEnumPipe,
   ParseIntPipe,
   Post,
   Query,
@@ -14,9 +13,7 @@ import {
 import { Request } from 'express';
 import { ok } from '@shared/responses/api-response';
 import {
-  ApiOkResponse,
   ApiOperation,
-  ApiRequestTimeoutResponse,
   ApiTags,
 } from '@nestjs/swagger';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
@@ -43,7 +40,6 @@ import {
   LectureListResponse,
   LectureSingleResponse,
   LectureDetailResponseDto,
-  LectureDetailListResponse,
   LectureDetailSingleResponse,
   LectureAutoAssignResponseDto,
   LectureEnrollEligibleResponseDto,
@@ -90,7 +86,7 @@ export class LectureController {
     @Query('limit') limitRaw?: string,
   ) {
     // Debug: confirm raw query payload during validation issues
-    console.log('[eligible-users] raw query:', req.query);
+    // Debug: confirm raw query payload during validation issues
     const termId = Array.isArray(termIdRaw) ? termIdRaw[0] : termIdRaw;
     const trimmedTermId = termId?.trim();
     if (!trimmedTermId) {
