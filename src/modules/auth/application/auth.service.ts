@@ -55,8 +55,9 @@ export class AuthService {
     );
     await this.redis.set(String(user.id), refreshToken, { EX: expiresIn });
 
-    this.logger.log(`로그인 성공 - 사용자 ID: ${user.userId} (${user.id})`);
-
+    this.logger.log(
+      `로그인 성공 - 사용자: ${user.name} (${user.userId}, ID: ${user.id})`,
+    );
     return {
       access_token: accessToken,
       refresh_token: refreshToken,
@@ -139,6 +140,9 @@ export class AuthService {
         userId: user.userId,
         rank: payload.rank,
       });
+      this.logger.log(
+        `세션 갱신 (자동 로그인) - 사용자: ${user.name} (${user.userId})`,
+      );
       return { access_token: accessToken };
     } catch (e) {
       if (e instanceof BadRequestException) throw e;
@@ -248,6 +252,7 @@ export class AuthService {
     await this.userService.updateUser(user.id, {
       password: dto.newPassword,
     });
+    this.logger.log(`비밀번호 재설정 완료: ${user.email} (${user.name})`);
   }
 
   async findId(name: string, phone: string): Promise<{ userIds: string[] }> {

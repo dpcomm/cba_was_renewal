@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,6 +15,8 @@ import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UserService {
+  private readonly logger = new Logger(UserService.name);
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -63,13 +66,20 @@ export class UserService {
     }
 
     Object.assign(user, dto);
-    return this.userRepository.save(user);
+    const updatedUser = await this.userRepository.save(user);
+
+    this.logger.log(
+      `회원 정보 수정: ${updatedUser.name}(${updatedUser.id}) - 변경 항목: ${Object.keys(dto).join(', ')}`,
+    );
+
+    return updatedUser;
   }
 
   async deleteAccount(userId: number): Promise<void> {
     const user = await this.findOneById(userId);
     user.isDeleted = true;
     await this.userRepository.save(user);
+    this.logger.warn(`회원 탈퇴(Soft Delete): ${user.name}(${user.id})`);
   }
 
   async updateEmail(userId: number, dto: UpdateEmailDto): Promise<User> {
@@ -94,7 +104,13 @@ export class UserService {
     const user = await this.findOneById(userId);
     user.email = dto.email;
     user.emailVerifiedAt = new Date();
-    return this.userRepository.save(user);
+    const updatedUser = await this.userRepository.save(user);
+
+    this.logger.log(
+      `이메일 변경 완료: ${updatedUser.name}(${updatedUser.id}) -> ${dto.email}`,
+    );
+
+    return updatedUser;
   }
 
   async findUsersByNameAndPhone(name: string, phone: string): Promise<User[]> {

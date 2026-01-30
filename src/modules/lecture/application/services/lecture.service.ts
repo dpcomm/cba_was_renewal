@@ -7,7 +7,6 @@ import { Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, In } from 'typeorm';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
-
 import { Lecture } from '@modules/lecture/domain/entities/lecture.entity';
 import { LectureEnrollment } from '@modules/lecture/domain/entities/lectureEnrollment.entity';
 import { Retreat } from '@modules/retreat/domain/entities/retreat.entity';
@@ -264,8 +263,12 @@ export class LectureService {
         'currentCount',
         1,
       );
+      const user = await manager.findOne(User, {
+        where: { id: dto.userId },
+        select: ['name'],
+      });
       this.logger.log(
-        `수강 신청 완료 - 사용자 ID: ${dto.userId}, 강의 ID: ${dto.lectureId}`,
+        `수강 신청 완료 - 사용자: ${user?.name ?? '알수없음'} (${dto.userId}), 강의 ID: ${dto.lectureId}`,
       );
     });
   }
@@ -293,12 +296,11 @@ export class LectureService {
         'currentCount',
         1,
       );
-
       // enrollment 삭제
       await manager.remove(LectureEnrollment, enrollment);
 
       this.logger.log(
-        `수강 취소 완료 - 사용자 ID: ${dto.userId}, 강의 ID: ${dto.lectureId}`,
+        `수강 신청 취소 - 사용자: ${enrollment.user.name} (${dto.userId}), 강의 ID: ${dto.lectureId}`,
       );
 
       return enrollment;

@@ -15,10 +15,11 @@ import { join } from 'path';
           join(__dirname, '..', '..', 'modules', '**', '*.entity{.ts,.js}'),
         ],
         synchronize: false,
-        logging:
-          configService.get<string>('NODE_ENV') === 'prod'
-            ? ['error', 'warn']
-            : true,
+        logging: ['prod', 'production'].includes(
+          configService.get<string>('NODE_ENV'),
+        )
+          ? ['error', 'warn']
+          : true,
       }),
     }),
   ],

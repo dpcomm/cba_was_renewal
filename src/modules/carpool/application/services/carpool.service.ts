@@ -494,7 +494,7 @@ export class CarpoolService {
       await this.expoMessageService.send(tokens, notification);
 
       this.logger.log(
-        `카풀 참여 완료 - 사용자 ID: ${dto.userId}, 방 ID: ${dto.roomId}`,
+        `카풀 참여 완료 - 사용자: ${userName} (ID: ${dto.userId}), 방 ID: ${dto.roomId}`,
       );
 
       return joinedRoom;
@@ -574,7 +574,7 @@ export class CarpoolService {
       await this.expoMessageService.send(tokens, notification);
 
       this.logger.log(
-        `카풀 나가기 완료 - 사용자 ID: ${dto.userId}, 방 ID: ${dto.roomId}`,
+        `카풀 나가기 완료 - 사용자: ${userName} (${dto.userId}), 방 ID: ${dto.roomId}`,
       );
 
       return leavedRoom;
