@@ -1,18 +1,15 @@
-import { EventResult } from '@modules/application/domain/enum/application.enum';
+import { EventResult, ApplicationStatus, PaymentStatus } from '@modules/application/domain/enum/application.enum';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class ApplicationDetailResponseDto {
   @ApiProperty({ example: 1, required: true })
   id: number;
 
-  @ApiProperty({ example: 'abc123', required: true })
-  idn: string;
+  @ApiProperty({ enum: ApplicationStatus, example: ApplicationStatus.SUBMITTED })
+  status: ApplicationStatus;
 
-  @ApiProperty({ example: true, required: true })
-  attended: boolean;
-
-  @ApiProperty({ example: true, required: true })
-  feePaid: boolean;
+  @ApiProperty({ enum: PaymentStatus, example: PaymentStatus.PENDING })
+  paymentStatus: PaymentStatus;
 
   @ApiProperty({ example: 'user123', required: true })
   userId: string;
@@ -26,9 +23,6 @@ export class ApplicationDetailResponseDto {
     nullable: true,
   })
   checkedInAt: Date | null;
-
-  @ApiProperty({ example: 'admin1', required: false, nullable: true })
-  checkedInBy: string | null;
 
   @ApiProperty({ enum: EventResult, required: false, nullable: true })
   eventResult: EventResult | null;

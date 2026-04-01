@@ -11,6 +11,7 @@ import { Lecture } from '@modules/lecture/domain/entities/lecture.entity';
 import { LectureEnrollment } from '@modules/lecture/domain/entities/lectureEnrollment.entity';
 import { Retreat } from '@modules/retreat/domain/entities/retreat.entity';
 import { User } from '@modules/user/domain/entities/user.entity';
+import { ApplicationStatus } from '@modules/application/domain/enum/application.enum';
 import {
   createLectureRequestDto,
   updateLectureRequestDto,
@@ -63,9 +64,7 @@ export class LectureService {
   }
 
   // id에 따른 참여자 정보를 포함한 lecture 정보 조회
-  async getLectureDetailById(
-    lectureId: number,
-  ): Promise<{
+  async getLectureDetailById(lectureId: number): Promise<{
     id: number;
     title: string;
     instructorName: string;
@@ -344,8 +343,8 @@ export class LectureService {
       .innerJoin(
         'user.applications',
         'application',
-        'application.retreatId = :retreatId AND application.attended = :attended',
-        { retreatId: resolvedRetreatId, attended: true },
+        'application.retreatId = :retreatId AND application.status = :status',
+        { retreatId: resolvedRetreatId, status: ApplicationStatus.CHECKED_IN },
       )
       .where('user.isDeleted = :isDeleted', { isDeleted: false })
       .andWhere(`user.id NOT IN (${enrolledSubQuery.getQuery()})`)

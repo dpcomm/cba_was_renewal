@@ -10,7 +10,11 @@ import { Repository, DataSource } from 'typeorm';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 import { Application } from '@modules/application/domain/entities/application.entity';
-import { EventResult } from '@modules/application/domain/enum/application.enum';
+import {
+  EventResult,
+  ApplicationStatus,
+  PaymentStatus,
+} from '@modules/application/domain/enum/application.enum';
 import { AdminApplicationListDto } from '@modules/application/presentation/dto/admin-application-list.dto';
 import { AdminApplicationListResponseDto } from '@modules/application/presentation/dto/admin-application-list.response.dto';
 import { User } from '@modules/user/domain/entities/user.entity';
@@ -46,14 +50,14 @@ export class ApplicationService {
         userId: userId,
         retreatId: retreatId,
       },
-      select: ['feePaid'],
+      select: ['paymentStatus'],
     });
 
     if (!application) {
       throw new NotFoundException(ERROR_MESSAGES.APPLICATION_NOT_FOUND);
     }
 
-    return application.feePaid;
+    return application.paymentStatus === PaymentStatus.PAID;
   }
 
   async getApplicationsByUserId(userId: string): Promise<number[]> {
@@ -75,6 +79,15 @@ export class ApplicationService {
   ): Promise<Application | null> {
     return this.applicationRepository.findOne({
       where: { userId, retreatId },
+      relations: [
+        'applicationMeals',
+        'applicationMeals.retreatMeal',
+        'applicationTransports',
+        'applicationTransports.retreatTransport',
+        'answers',
+        'answers.question',
+        'answers.questionOption',
+      ],
     });
   }
 
@@ -89,8 +102,8 @@ export class ApplicationService {
     name: string;
     phone: string;
     group: string;
-    feePaid: boolean;
-    attended: boolean;
+    paymentStatus: PaymentStatus;
+    status: ApplicationStatus;
     checkedInAt: Date | null;
   }> {
     const application = await this.applicationRepository.findOne({
@@ -103,7 +116,7 @@ export class ApplicationService {
     }
 
     this.logger.log(
-      `QR 스캔 조회: ${application.user.name}(${application.userId}) - 결과: ${application.feePaid ? '입금완료' : '미입금'}, ${application.attended ? '체크인완료' : '미체크인'}`,
+      `QR 스캔 조회: ${application.user.name}(${application.userId}) - 결과: ${application.paymentStatus === PaymentStatus.PAID ? '입금완료' : '미입금'}, ${application.status === ApplicationStatus.CHECKED_IN ? '체크인완료' : '미체크인'}`,
     );
 
     return {
@@ -111,8 +124,8 @@ export class ApplicationService {
       name: application.user.name,
       phone: application.user.phone,
       group: application.user.group,
-      feePaid: application.feePaid,
-      attended: application.attended,
+      paymentStatus: application.paymentStatus,
+      status: application.status,
       checkedInAt: application.checkedInAt,
     };
   }
@@ -142,8 +155,7 @@ export class ApplicationService {
       { userId: targetUserId, retreatId },
       {
         checkedInAt: now,
-        checkedInBy: adminUserId,
-        attended: true,
+        status: ApplicationStatus.CHECKED_IN,
       },
     );
 
@@ -180,7 +192,7 @@ export class ApplicationService {
         throw new NotFoundException(ERROR_MESSAGES.APPLICATION_NOT_FOUND);
       }
 
-      if (!application.checkedInAt) {
+      if (application.status !== ApplicationStatus.CHECKED_IN) {
         throw new ForbiddenException('체크인 후 이벤트 참여가 가능합니다.');
       }
 
@@ -245,9 +257,13 @@ export class ApplicationService {
 
     // 필터
     if (dto.filter === 'NOT_CHECKED_IN') {
-      query.andWhere('app.checkedInAt IS NULL');
+      query.andWhere('app.status != :checkedIn', {
+        checkedIn: ApplicationStatus.CHECKED_IN,
+      });
     } else if (dto.filter === 'FEE_UNPAID') {
-      query.andWhere('app.feePaid = false');
+      query.andWhere('app.paymentStatus != :paid', {
+        paid: PaymentStatus.PAID,
+      });
     } else if (dto.filter === 'EVENT_WIN') {
       query.andWhere('app.eventResult = :eventResult', { eventResult: 'WIN' });
     }
@@ -259,8 +275,8 @@ export class ApplicationService {
       name: app.user.name,
       phone: app.user.phone,
       group: app.user.group,
-      feePaid: app.feePaid,
-      attended: app.attended,
+      paymentStatus: app.paymentStatus,
+      status: app.status,
       checkedInAt: app.checkedInAt,
       eventResult: app.eventResult ?? null,
     }));

@@ -12,10 +12,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { ok } from '@shared/responses/api-response';
-import {
-  ApiOperation,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { RankGuard } from '@shared/decorators/rank-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
@@ -90,7 +87,9 @@ export class LectureController {
     const termId = Array.isArray(termIdRaw) ? termIdRaw[0] : termIdRaw;
     const trimmedTermId = termId?.trim();
     if (!trimmedTermId) {
-      throw new BadRequestException('termId is required and must be a numeric string');
+      throw new BadRequestException(
+        'termId is required and must be a numeric string',
+      );
     }
     if (!/^\d+$/.test(trimmedTermId)) {
       throw new BadRequestException('termId must be a numeric string');
@@ -100,15 +99,17 @@ export class LectureController {
     const retreatId = retreatIdRaw ? Number(retreatIdRaw) : undefined;
     const limit = limitRaw ? Number(limitRaw) : undefined;
     const resolvedRetreatId =
-      typeof retreatId === 'number' && Number.isFinite(retreatId) && retreatId > 0
+      typeof retreatId === 'number' &&
+      Number.isFinite(retreatId) &&
+      retreatId > 0
         ? retreatId
         : undefined;
     const resolvedLimit =
       typeof limit === 'number' && Number.isFinite(limit) && limit > 0
         ? limit
         : trimmedName
-        ? 50
-        : undefined;
+          ? 50
+          : undefined;
     const users = await this.lectureService.searchEligibleUsers(
       resolvedTermId,
       trimmedName,
