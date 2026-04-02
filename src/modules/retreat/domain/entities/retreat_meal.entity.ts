@@ -14,9 +14,9 @@ import { ApplicationMeal } from '@modules/application/domain/entities/applicatio
 import { MealType } from '../enum/retreat-meal.enum';
 
 @Entity('RetreatMeal')
-@Unique('RetreatMeal_retreatId_dayNumber_mealType_key', [
+@Unique('RetreatMeal_retreatId_mealDay_mealType_key', [
   'retreatId',
-  'dayNumber',
+  'mealDay',
   'mealType',
 ])
 export class RetreatMeal {
@@ -26,11 +26,14 @@ export class RetreatMeal {
   @Column({ name: 'retreat_id' })
   retreatId: number;
 
-  @Column({ type: 'int', name: 'day_number' })
-  dayNumber: number;
+  @Column({ type: 'date', name: 'meal_day' })
+  mealDay: string;
 
   @Column({ type: 'enum', enum: MealType, name: 'meal_type' })
   mealType: MealType;
+
+  @Column({ type: 'simple-json', name: 'meal_table', nullable: true })
+  mealTable: string[] | null;
 
   @CreateDateColumn({
     type: 'datetime',

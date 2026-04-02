@@ -1,11 +1,23 @@
-import { EventResult, ApplicationStatus, PaymentStatus } from '@modules/application/domain/enum/application.enum';
 import { ApiProperty } from '@nestjs/swagger';
+import {
+  EventResult,
+  ApplicationStatus,
+  PaymentStatus,
+} from '@modules/application/domain/enum/application.enum';
+import {
+  ApplicationMealResponseDto,
+  ApplicationTransportResponseDto,
+  AnswerResponseDto,
+} from './application-sub-response.dto';
 
 export class ApplicationDetailResponseDto {
   @ApiProperty({ example: 1, required: true })
   id: number;
 
-  @ApiProperty({ enum: ApplicationStatus, example: ApplicationStatus.SUBMITTED })
+  @ApiProperty({
+    enum: ApplicationStatus,
+    example: ApplicationStatus.SUBMITTED,
+  })
   status: ApplicationStatus;
 
   @ApiProperty({ enum: PaymentStatus, example: PaymentStatus.PENDING })
@@ -33,4 +45,13 @@ export class ApplicationDetailResponseDto {
     nullable: true,
   })
   eventParticipatedAt: Date | null;
+
+  @ApiProperty({ type: [ApplicationMealResponseDto] })
+  applicationMeals: ApplicationMealResponseDto[];
+
+  @ApiProperty({ type: [ApplicationTransportResponseDto] })
+  applicationTransports: ApplicationTransportResponseDto[];
+
+  @ApiProperty({ type: [AnswerResponseDto] })
+  answers: AnswerResponseDto[];
 }

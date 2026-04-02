@@ -61,21 +61,45 @@ export class DashboardService {
       }),
     ]);
 
+    const retreat = await this.retreatRepository.findOne({
+      where: { id: targetRetreatId },
+      select: ['retreatStartAt'],
+    });
+
+    if (!retreat) {
+      return {
+        retreatId: targetRetreatId,
+        totalCount,
+        appliedCount: 0,
+        paidCount: 0,
+        checkedInCount: 0,
+        mealStats: this.createEmptyMealStats(),
+      };
+    }
+
     const mealStatsRaw = await this.applicationRepository.manager
       .createQueryBuilder(ApplicationMeal, 'am')
       .innerJoin('am.retreatMeal', 'rm')
       .innerJoin('am.application', 'app')
-      .select('rm.dayNumber', 'dayNumber')
+      .select('rm.meal_day', 'mealDay')
       .addSelect('rm.mealType', 'mealType')
       .addSelect('COUNT(am.id)', 'count')
       .where('app.retreatId = :retreatId', { retreatId: targetRetreatId })
-      .groupBy('rm.dayNumber')
+      .groupBy('rm.meal_day')
       .addGroupBy('rm.mealType')
-      .getRawMany<{ dayNumber: number; mealType: MealType; count: string }>();
+      .getRawMany<{ mealDay: string; mealType: MealType; count: string }>();
 
     const mealStats = this.createEmptyMealStats();
+    const startDate = new Date(retreat.retreatStartAt);
+    startDate.setHours(0, 0, 0, 0);
+
     for (const stat of mealStatsRaw) {
-      const dayIdx = stat.dayNumber - 1;
+      const mealDate = new Date(stat.mealDay);
+      mealDate.setHours(0, 0, 0, 0);
+
+      const diffTime = mealDate.getTime() - startDate.getTime();
+      const dayIdx = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
       let mealIdx = 0;
       if (stat.mealType === MealType.LUNCH) mealIdx = 1;
       else if (stat.mealType === MealType.DINNER) mealIdx = 2;

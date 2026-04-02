@@ -36,6 +36,7 @@ describe('DashboardService', () => {
 
   const mockRetreatRepository = {
     find: jest.fn(),
+    findOne: jest.fn(),
   };
 
   const mockUserRepository = {
@@ -79,11 +80,23 @@ describe('DashboardService', () => {
     it('should calculate meal stats from ApplicationMeal relations', async () => {
       mockUserRepository.count.mockResolvedValue(100);
       mockRetreatRepository.find.mockResolvedValue([{ id: 1 }]);
+      mockRetreatRepository.findOne.mockResolvedValue({
+        id: 1,
+        retreatStartAt: new Date('2025-08-14T00:00:00Z'),
+      });
       mockApplicationRepository.count.mockResolvedValue(50);
 
       const mockMealRaw = [
-        { dayNumber: 1, mealType: MealType.DINNER, count: '10' },
-        { dayNumber: 2, mealType: MealType.LUNCH, count: '20' },
+        {
+          mealDay: '2025-08-14T00:00:00Z', // dayIdx = 0 (Day 1)
+          mealType: MealType.DINNER,
+          count: '10',
+        },
+        {
+          mealDay: '2025-08-15T00:00:00Z', // dayIdx = 1 (Day 2)
+          mealType: MealType.LUNCH,
+          count: '20',
+        },
       ];
       mockApplicationRepository.manager
         .createQueryBuilder()

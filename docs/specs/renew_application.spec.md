@@ -207,8 +207,9 @@ DINNER
 
 - `id` bigint PK
 - `retreat_id` bigint FK not null
-- `day_number` int not null
+- `meal_day` date not null
 - `meal_type` enum not null
+- `meal_table` json null
 - `created_at` timestamp not null
 - `updated_at` timestamp not null
 
@@ -218,15 +219,15 @@ DINNER
 
 ### 제약
 
-- `UNIQUE (retreat_id, day_number, meal_type)`
+- `UNIQUE (retreat_id, meal_day, meal_type)`
 
 ### 설명
 
 예시:
 
-- 1일차 아침
-- 1일차 점심
-- 2일차 저녁
+- 2025-08-14 아침 (['사과', '요거트'])
+- 2025-08-14 점심 (['돈가스', '수프'])
+- 2025-08-15 저녁 (['삼겹살', '된장찌개'])
 
 ### 삭제 정책
 

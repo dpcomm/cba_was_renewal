@@ -28,11 +28,13 @@ npm run build
 
 ### Step 3. 마이그레이션 실행
 
-별도의 마이그레이션 스크립트(`migrate-survey-data.ts`)를 실행할 필요 없이, 다음 명령어로 모든 스키마 변경 및 데이터 클린업을 한 번에 완료합니다.
+### Step 3. 마이그레이션 실행
+
+별도의 마이그레이션 스크립트(`migrate-survey-data.ts`)를 실행할 필요 없이, 다음 명령어로 모든 스키마 변경 및 데이터 클린업을 한 번에 완료합니다. 빌드된 파일(`.js`) 기반으로 작동하도록 프로덕션 스크립트를 사용합니다.
 
 ```bash
 # 상용 DB 환경변수 주입 상태에서 실행
-npm run typeorm migration:run -- -d src/infrastructure/database/data-source.ts
+npm run migration:prod
 ```
 
 > [!NOTE]
@@ -42,18 +44,23 @@ npm run typeorm migration:run -- -d src/infrastructure/database/data-source.ts
 > - `Survey` 데이터가 없는 수련회에 대해 기본 설문 1건 자동 생성
 > - `Application` 데이터를 신규 생성된 설문에 자동 연결 (survey_id 채우기)
 > - 모든 컬럼명을 `snake_case`로 변경 및 `NOT NULL` 제약 조건 적용
-> - 신규 명세 기반 인덱스 및 외래 키(Foreign Key) 일괄 재생성
+> - 신규 명세 기반 인덱스 및 외래 키 일괄 재생성
+> - **[NEW] `RetreatMeal` 테이블의 `day_number`를 수련회 시작일 기반의 실제 날짜인 `meal_day`로 안전 이관**
+> - **[NEW] `RetreatMeal` 식단표 추가용 `meal_table` JSON 컬럼 생성**
 
 ### Step 4. 최종 데이터 검증
 
 정상적으로 데이터가 연결되었는지 확인하기 위해 다음 쿼리를 운영 DB에서 실행해 봅니다.
 
 ```sql
--- 모든 신청서가 유효한 survey_id를 가지고 있는지 확인
+-- 1. 모든 신청서가 유효한 survey_id를 가지고 있는지 확인
 SELECT COUNT(*) FROM Application WHERE survey_id IS NULL; -- 결과가 0이어야 함
 
--- 수련회별 설문 생성 여부 확인
+-- 2. 수련회별 설문 생성 여부 확인
 SELECT retreat_id, COUNT(*) FROM Survey GROUP BY retreat_id;
+
+-- 3. [NEW] 수련회 식단 데이터가 날짜(meal_day) 기준으로 잘 옮겨졌는지 확인
+SELECT id, retreat_id, meal_day, meal_type FROM RetreatMeal LIMIT 10;
 ```
 
 ### Step 5. 레거시 데이터(`surveyData`) 정리 (선택)

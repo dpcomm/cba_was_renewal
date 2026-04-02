@@ -26,5 +26,6 @@ export const ERROR_MESSAGES = {
   APPLICATION_NOT_FOUND: 'Application not found',
   RETREAT_NOT_FOUND: 'Retreat not found',
   LECTURE_CAPACITY_EXCEEDED: 'Selected users exceed remaining lecture capacity',
-  LECTURE_ELIGIBLE_USER_REQUIRED: 'Ineligible user included for lecture enrollment',
+  LECTURE_ELIGIBLE_USER_REQUIRED:
+    'Ineligible user included for lecture enrollment',
 } as const;

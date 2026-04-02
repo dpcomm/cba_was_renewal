@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Patch, Query, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { UserService } from '../application/user.service';
 import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
@@ -11,7 +19,10 @@ import { ApiFailureResponse } from '@shared/decorators/api-failure-response.deco
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 import { RankGuard } from '@shared/decorators/rank-guard.decorator';
 import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
-import { UserSearchListResponse, UserSearchResponseDto } from './dto/user.search.response.dto';
+import {
+  UserSearchListResponse,
+  UserSearchResponseDto,
+} from './dto/user.search.response.dto';
 
 @ApiTags('Users')
 @Controller('users')

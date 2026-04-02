@@ -89,7 +89,11 @@ describe('Application Event Limit (E2E)', () => {
       group: 'TargetGroup',
     });
     // IMPORTANT: Include userId in payload as per previous fix
-    targetUserToken = jwtService.sign({ id: targetUser.id, userId: targetUser.userId, rank: targetUser.rank });
+    targetUserToken = jwtService.sign({
+      id: targetUser.id,
+      userId: targetUser.userId,
+      rank: targetUser.rank,
+    });
 
     await appRepo.save({
       user: targetUser,
@@ -104,11 +108,11 @@ describe('Application Event Limit (E2E)', () => {
   }
 
   it('Verification: Checks that there are already 10 winners', async () => {
-     const count = await dataSource.getRepository(Application).count({
-         where: { retreatId, eventResult: EventResult.WIN }
-     });
-     console.log(`[Test] Current Winners in DB: ${count}`);
-     expect(count).toBeGreaterThanOrEqual(10);
+    const count = await dataSource.getRepository(Application).count({
+      where: { retreatId, eventResult: EventResult.WIN },
+    });
+    console.log(`[Test] Current Winners in DB: ${count}`);
+    expect(count).toBeGreaterThanOrEqual(10);
   });
 
   it('POST /application/event - Should result in LOSE because limit is reached', async () => {
