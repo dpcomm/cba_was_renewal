@@ -18,6 +18,7 @@ import {
 
 import { QuestionMapper } from '../mappers/question.mapper';
 import { AnswerType } from '@modules/application/domain/enum/survey.enum';
+import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 @Injectable()
 export class QuestionService {
@@ -46,7 +47,7 @@ export class QuestionService {
     });
 
     if (!survey) {
-      throw new NotFoundException('Survey not found');
+      throw new NotFoundException(ERROR_MESSAGES.SURVEY_NOT_FOUND);
     }
 
     this.validateOptions(dto.answerType, dto.options);
@@ -82,7 +83,7 @@ export class QuestionService {
     });
 
     if (!question) {
-      throw new NotFoundException('Question not found');
+      throw new NotFoundException(ERROR_MESSAGES.QUESTION_NOT_FOUND);
     }
 
     return this.mapper.toDetail(question);
@@ -113,7 +114,7 @@ export class QuestionService {
     });
 
     if (!question) {
-      throw new NotFoundException('Question not found');
+      throw new NotFoundException(ERROR_MESSAGES.QUESTION_NOT_FOUND);
     }
 
     const nextAnswerType = dto.answerType ?? question.answerType;
@@ -144,7 +145,7 @@ export class QuestionService {
       });
 
       if (questions.length !== dto.questionIds.length) {
-        throw new BadRequestException('Invalid questionIds');
+        throw new BadRequestException(ERROR_MESSAGES.INVALID_QUESTION_ID);
       }
 
       // 1️⃣ 충돌 방지용 임시 이동
@@ -179,7 +180,7 @@ export class QuestionService {
       });
 
       if (!question) {
-        throw new NotFoundException('Question not found');
+        throw new NotFoundException(ERROR_MESSAGES.QUESTION_NOT_FOUND);
       }
 
       try {
@@ -206,7 +207,7 @@ export class QuestionService {
     if (answerType === AnswerType.SUBJECTIVE) {
       if (options && options.length > 0) {
         throw new BadRequestException(
-          'SUBJECTIVE type cannot have options',
+          ERROR_MESSAGES.INVALID_QUESTION_OPTIONS_FOR_SUBJECTIVE,
         );
       }
       return;
@@ -215,7 +216,7 @@ export class QuestionService {
     // 선택형은 옵션 필수
     if (!options || options.length === 0) {
       throw new BadRequestException(
-        'Options are required for select type',
+        ERROR_MESSAGES.QUESTION_OPTIONS_REQUIRED,
       );
     }
 
@@ -224,7 +225,7 @@ export class QuestionService {
     const unique = new Set(labels);
 
     if (unique.size !== labels.length) {
-      throw new BadRequestException('Duplicate option labels');
+      throw new BadRequestException(ERROR_MESSAGES.DUPLICATE_QUESTION_OPTION_LABELS);
     }
   }
 

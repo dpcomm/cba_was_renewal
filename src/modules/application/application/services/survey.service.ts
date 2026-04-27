@@ -19,6 +19,7 @@ import {
 } from '../../presentation/dto/survey.response.dto';
 
 import { SurveyMapper } from '../mappers/survey.mapper';
+import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 @Injectable()
 export class SurveyService {
@@ -55,7 +56,7 @@ export class SurveyService {
     });
 
     if (!survey) {
-      throw new NotFoundException('Survey not found');
+      throw new NotFoundException(ERROR_MESSAGES.SURVEY_NOT_FOUND);
     }
 
     return this.mapper.toSurveyResponse(survey);
@@ -73,7 +74,7 @@ export class SurveyService {
     });
 
     if (!survey) {
-      throw new NotFoundException('Survey not found');
+      throw new NotFoundException(ERROR_MESSAGES.SURVEY_NOT_FOUND);
     }
 
     return this.mapper.toSurveyPreview(survey);
@@ -107,7 +108,7 @@ export class SurveyService {
     });
 
     if (!survey) {
-      throw new NotFoundException('Survey not found');
+      throw new NotFoundException(ERROR_MESSAGES.SURVEY_NOT_FOUND);
     }
 
     survey.surveyStartAt = new Date(dto.surveyStartAt);
@@ -125,7 +126,7 @@ export class SurveyService {
     });
 
     if (!survey) {
-      throw new NotFoundException('Survey not found');
+      throw new NotFoundException(ERROR_MESSAGES.SURVEY_NOT_FOUND);
     }
 
     /**
