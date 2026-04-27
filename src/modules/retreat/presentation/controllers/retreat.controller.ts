@@ -10,8 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ok } from '@shared/responses/api-response';
-import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
-import { RankGuard } from '@shared/decorators/rank-guard.decorator';
+import { AdminGuard } from '@shared/decorators/admin-guard.decorator';
 import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
@@ -30,8 +29,8 @@ import {
 } from '../dto/retreat.response.dto';
 
 @ApiTags('Admin Retreat')
+@AdminGuard()
 @Controller('admin/retreat')
-@JwtGuard()
 export class RetreatController {
   constructor(
     private readonly retreatService: RetreatService,
@@ -62,7 +61,6 @@ export class RetreatController {
   }
 
   @Post()
-  @RankGuard(UserRank.ADMIN)
   @ApiOperation({ summary: '수련회 생성' })
   @ApiSuccessResponse({ type: RetreatResponseDto })
   async createRetreat(@Body() dto: CreateRetreatRequestDto) {
@@ -74,7 +72,6 @@ export class RetreatController {
   }
 
   @Patch()
-  @RankGuard(UserRank.ADMIN)
   @ApiOperation({ summary: '수련회 수정' })
   @ApiSuccessResponse({ type: RetreatResponseDto })
   @ApiFailureResponse(404, ERROR_MESSAGES.RETREAT_NOT_FOUND)
@@ -87,7 +84,6 @@ export class RetreatController {
   }
 
   @Delete(':id')
-  @RankGuard(UserRank.ADMIN)
   @ApiOperation({ summary: '수련회 삭제' })
   @ApiSuccessResponse({})
   @ApiFailureResponse(404, ERROR_MESSAGES.RETREAT_NOT_FOUND)
