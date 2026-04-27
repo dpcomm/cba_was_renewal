@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, DataSource } from 'typeorm';
 
 import { Question } from '../../domain/entities/question.entity';
 import { QuestionOption } from '../../domain/entities/question_option.entity';
@@ -32,6 +32,8 @@ export class QuestionService {
     private readonly surveyRepository: Repository<Survey>,
 
     private readonly mapper: QuestionMapper,
+
+    private readonly dataSource: DataSource,
   ) {}
 
   /**
@@ -133,57 +135,61 @@ export class QuestionService {
    * 질문 순서 변경
    */
   async reorderQuestions(dto: ReorderQuestionRequestDto): Promise<void> {
-    const questions = await this.questionRepository.find({
-      where: {
-        surveyId: dto.surveyId,
-        id: In(dto.questionIds),
-      },
+    await this.dataSource.transaction(async (manager) => {
+      const questions = await manager.find(Question, {
+        where: {
+          surveyId: dto.surveyId,
+          id: In(dto.questionIds),
+        },
+      });
+
+      if (questions.length !== dto.questionIds.length) {
+        throw new BadRequestException('Invalid questionIds');
+      }
+
+      // 1️⃣ 충돌 방지용 임시 이동
+      await manager
+        .createQueryBuilder()
+        .update(Question)
+        .set({
+          orderNo: () => 'order_no + 1000',
+        })
+        .where('survey_id = :surveyId', { surveyId: dto.surveyId })
+        .execute();
+
+      // 2️⃣ 순서 재정렬
+      for (let i = 0; i < dto.questionIds.length; i++) {
+        await manager
+          .createQueryBuilder()
+          .update(Question)
+          .set({ orderNo: i + 1 })
+          .where('id = :id', { id: dto.questionIds[i] })
+          .execute();
+      }
     });
-
-    if (questions.length !== dto.questionIds.length) {
-      throw new BadRequestException('Invalid questionIds');
-    }
-
-    // 1️⃣ 먼저 충돌 안 나는 값으로 이동
-    await this.questionRepository.query(
-      `
-      UPDATE Question
-      SET order_no = order_no + 1000
-      WHERE survey_id = ?
-      `,
-      [dto.surveyId],
-    );
-
-    // 2️⃣ 정상 순서로 재정렬
-    await this.questionRepository.query(
-      `
-      UPDATE Question
-      SET order_no = CASE id
-        ${dto.questionIds
-          .map((id, idx) => `WHEN ${id} THEN ${idx + 1}`)
-          .join(' ')}
-      END
-      WHERE id IN (${dto.questionIds.join(',')})
-      `,
-    );
   }
+
   /**
    * 질문 삭제
    */
   async deleteQuestion(questionId: number): Promise<void> {
-    const question = await this.questionRepository.findOne({
-      where: { id: questionId },
+    await this.dataSource.transaction(async (manager) => {
+      const question = await manager.findOne(Question, {
+        where: { id: questionId },
+      });
+
+      if (!question) {
+        throw new NotFoundException('Question not found');
+      }
+
+      try {
+        await manager.delete(QuestionOption, { questionId });
+        await manager.delete(Question, { id: questionId });
+      } catch (e) {
+        console.error('DELETE ERROR:', e);
+        throw e;
+      }
     });
-
-    if (!question) {
-      throw new NotFoundException('Question not found');
-    }
-
-    // 🔥 먼저 옵션 삭제
-    await this.optionRepository.delete({ questionId });
-
-    // 🔥 그 다음 질문 삭제
-    await this.questionRepository.delete(questionId);
   }
 
   // =========================
