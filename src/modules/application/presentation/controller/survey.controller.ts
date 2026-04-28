@@ -26,9 +26,13 @@ import {
   SurveyResponseDto,
   SurveyPreviewResponseDto,
 } from '../dto/survey.response.dto';
+import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
+import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
+import { ok } from '@shared/responses/api-response';
 
 @ApiTags('Survey')
 @Controller('surveys')
+@JwtGuard()
 export class SurveyController {
   constructor(private readonly surveyService: SurveyService) {}
 
@@ -37,11 +41,12 @@ export class SurveyController {
    */
   @Get('retreat/:retreatId')
   @ApiOperation({ summary: '수련회별 설문 조회' })
-  @ApiResponse({ type: [SurveySummaryResponseDto] })
+  @ApiSuccessResponse({ type: SurveySummaryResponseDto, isArray: true })
   async getSurveyByRetreat(
     @Param('retreatId', ParseIntPipe) retreatId: number,
-  ): Promise<SurveySummaryResponseDto[]> {
-    return this.surveyService.getSurveyByRetreat(retreatId);
+  ) {
+    const result = await this.surveyService.getSurveyByRetreat(retreatId);
+    return ok(result, 'Success get survey list by retreatId');
   }
 
   /**
@@ -49,11 +54,12 @@ export class SurveyController {
    */
   @Get(':surveyId')
   @ApiOperation({ summary: '설문 상세 조회 (질문 포함)' })
-  @ApiResponse({ type: SurveyResponseDto })
+  @ApiSuccessResponse({ type: SurveyResponseDto })
   async getSurvey(
     @Param('surveyId', ParseIntPipe) surveyId: number,
-  ): Promise<SurveyResponseDto> {
-    return this.surveyService.getSurvey(surveyId);
+  ) {
+    const result = await this.surveyService.getSurvey(surveyId);
+    return ok(result, 'Success get survey detail by surveyId');
   }
 
   /**
@@ -61,44 +67,12 @@ export class SurveyController {
    */
   @Get(':surveyId/preview')
   @ApiOperation({ summary: '설문 미리보기 (옵션 포함)' })
-  @ApiResponse({ type: SurveyPreviewResponseDto })
+  @ApiSuccessResponse({ type: SurveyPreviewResponseDto })
   async previewSurvey(
     @Param('surveyId', ParseIntPipe) surveyId: number,
-  ): Promise<SurveyPreviewResponseDto> {
-    return this.surveyService.previewSurvey(surveyId);
+  ) {
+    const result = await this.surveyService.previewSurvey(surveyId);
+    return ok(result, 'Success get survey overview');
   }
 
-  /**
-   * 설문 생성
-   */
-  @Post()
-  @ApiOperation({ summary: '설문 생성' })
-  @ApiResponse({ type: SurveySummaryResponseDto })
-  async createSurvey(
-    @Body() dto: CreateSurveyRequestDto,
-  ): Promise<SurveySummaryResponseDto> {
-    return this.surveyService.createSurvey(dto);
-  }
-
-  /**
-   * 설문 기간 수정
-   */
-  @Patch()
-  @ApiOperation({ summary: '설문 기간 수정' })
-  async updateSurveyPeriod(
-    @Body() dto: UpdateSurveyPeriodRequestDto,
-  ): Promise<void> {
-    return this.surveyService.updateSurveyPeriod(dto);
-  }
-
-  /**
-   * 설문 삭제
-   */
-  @Delete(':surveyId')
-  @ApiOperation({ summary: '설문 삭제' })
-  async deleteSurvey(
-    @Param('surveyId', ParseIntPipe) surveyId: number,
-  ): Promise<void> {
-    return this.surveyService.deleteSurvey(surveyId);
-  }
 }

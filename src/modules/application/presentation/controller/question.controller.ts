@@ -23,57 +23,27 @@ import {
   QuestionDetailResponseDto,
   QuestionSummaryResponseDto,
 } from '../dto/question.response.dto';
+import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
+import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
+import { ok } from '@shared/responses/api-response';
 
 @ApiTags('Question')
 @Controller('questions')
+@JwtGuard()
 export class QuestionController {
   constructor(private readonly questionService: QuestionService) {}
-
-  /**
-   * 질문 생성
-   */
-  @Post()
-  @ApiOperation({ summary: '질문 생성' })
-  @ApiResponse({ type: QuestionSummaryResponseDto })
-  async createQuestion(
-    @Body() dto: CreateQuestionRequestDto,
-  ): Promise<QuestionSummaryResponseDto> {
-    return this.questionService.createQuestion(dto);
-  }
-
-  /**
-   * 질문 수정 (옵션 포함)
-   */
-  @Patch()
-  @ApiOperation({ summary: '질문 수정' })
-  @ApiResponse({ type: QuestionSummaryResponseDto })
-  async updateQuestion(
-    @Body() dto: UpdateQuestionRequestDto,
-  ): Promise<void> {
-    return this.questionService.updateQuestion(dto);
-  }
-
-  /**
-   * 질문 순서 변경
-   */
-  @Patch('reorder')
-  @ApiOperation({ summary: '질문 순서 변경' })
-  async reorderQuestions(
-    @Body() dto: ReorderQuestionRequestDto,
-  ): Promise<void> {
-    return this.questionService.reorderQuestions(dto);
-  }
 
   /**
    * 질문 단건 조회 (Edit / Preview 용)
    */
   @Get(':questionId')
   @ApiOperation({ summary: '질문 단건 조회' })
-  @ApiResponse({ type: QuestionDetailResponseDto })
+  @ApiSuccessResponse({ type: QuestionDetailResponseDto })
   async getQuestion(
     @Param('questionId', ParseIntPipe) questionId: number,
-  ): Promise<QuestionDetailResponseDto | null> {
-    return this.questionService.getQuestion(questionId);
+  ) {
+    const result = await this.questionService.getQuestion(questionId);
+    return ok(result, 'Success get question');
   }
 
   @Get('/survey/:surveyId')
@@ -81,17 +51,8 @@ export class QuestionController {
   async getQuestionsBySurvey(
     @Param('surveyId', ParseIntPipe) surveyId: number,
   ) {
-    return this.questionService.getQuestionsBySurvey(surveyId);
+    const result = await this.questionService.getQuestionsBySurvey(surveyId);
+    return ok(result, 'Success get question list by survey Id');
   }  
 
-  /**
-   * 질문 삭제
-   */
-  @Delete(':questionId')
-  @ApiOperation({ summary: '질문 삭제' })
-  async deleteQuestion(
-    @Param('questionId', ParseIntPipe) questionId: number,
-  ): Promise<void> {
-    return this.questionService.deleteQuestion(questionId);
-  }
 }

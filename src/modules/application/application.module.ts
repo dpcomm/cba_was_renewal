@@ -12,10 +12,12 @@ import { SurveyService } from './application/services/survey.service';
 import { QuestionService } from './application/services/question.service';
 import { QuestionMapper } from './application/mappers/question.mapper';
 import { SurveyMapper } from './application/mappers/survey.mapper';
+import { AdminSurveyController } from './presentation/controller/survey.admin.controller';
+import { AdminQuestionController } from './presentation/controller/question.admin.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Application, Survey, Question, QuestionOption])],
-  controllers: [ApplicationController, SurveyController, QuestionController],
+  controllers: [ApplicationController, SurveyController, QuestionController, AdminSurveyController, AdminQuestionController],
   providers: [ApplicationService, SurveyService, QuestionService, SurveyMapper, QuestionMapper],
 })
 export class ApplicationModule {}
