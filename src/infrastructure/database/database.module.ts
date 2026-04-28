@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { join } from 'path';
 
 @Module({
   imports: [
@@ -11,11 +10,13 @@ import { join } from 'path';
       useFactory: (configService: ConfigService) => ({
         type: 'mysql',
         url: configService.get<string>('DATABASE_URL'),
-        entities: [
-          join(__dirname, '..', '..', 'modules', '**', '*.entity{.ts,.js}'),
-        ],
-        synchronize: false,
-        logging: true,
+        entities: [__dirname + '/../../modules/**/domain/entities/*.entity.{ts,js}'],
+        synchronize: true,
+        logging: ['prod', 'production'].includes(
+          configService.get<string>('NODE_ENV') || 'dev',
+        )
+          ? ['error', 'warn']
+          : true,
       }),
     }),
   ],

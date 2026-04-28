@@ -27,7 +27,6 @@ export class createNoticeRequestDto {
   })
   @IsString()
   body: string;
-
 }
 
 // export class getNoticeRequestDto {

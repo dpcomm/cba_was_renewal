@@ -7,11 +7,11 @@ import { Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, In } from 'typeorm';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
-
 import { Lecture } from '@modules/lecture/domain/entities/lecture.entity';
 import { LectureEnrollment } from '@modules/lecture/domain/entities/lectureEnrollment.entity';
 import { Retreat } from '@modules/retreat/domain/entities/retreat.entity';
 import { User } from '@modules/user/domain/entities/user.entity';
+import { ApplicationStatus } from '@modules/application/domain/enum/application.enum';
 import {
   createLectureRequestDto,
   updateLectureRequestDto,
@@ -64,9 +64,7 @@ export class LectureService {
   }
 
   // id에 따른 참여자 정보를 포함한 lecture 정보 조회
-  async getLectureDetailById(
-    lectureId: number,
-  ): Promise<{
+  async getLectureDetailById(lectureId: number): Promise<{
     id: number;
     title: string;
     instructorName: string;
@@ -151,6 +149,8 @@ export class LectureService {
       throw new NotFoundException('Lecture not found after save');
     }
 
+    this.logger.log(`강의 생성 완료 - ID: ${savedLecture.id}`);
+
     return lectureWithRelations;
   }
 
@@ -208,12 +208,15 @@ export class LectureService {
       throw new NotFoundException('Lecture not found after save');
     }
 
+    this.logger.log(`강의 수정 완료 - ID: ${savedLecture.id}`);
+
     return lectureWithRelations;
   }
 
   // lecture 삭제
   async deleteLecture(lectureId: number): Promise<void> {
     await this.lectureRepository.delete({ id: lectureId });
+    this.logger.log(`강의 삭제 완료 - ID: ${lectureId}`);
   }
 
   // lecture 신청
@@ -259,6 +262,13 @@ export class LectureService {
         'currentCount',
         1,
       );
+      const user = await manager.findOne(User, {
+        where: { id: dto.userId },
+        select: ['name'],
+      });
+      this.logger.log(
+        `수강 신청 완료 - 사용자: ${user?.name ?? '알수없음'} (${dto.userId}), 강의 ID: ${dto.lectureId}`,
+      );
     });
   }
 
@@ -285,9 +295,12 @@ export class LectureService {
         'currentCount',
         1,
       );
-
       // enrollment 삭제
       await manager.remove(LectureEnrollment, enrollment);
+
+      this.logger.log(
+        `수강 신청 취소 - 사용자: ${enrollment.user.name} (${dto.userId}), 강의 ID: ${dto.lectureId}`,
+      );
 
       return enrollment;
     });
@@ -330,8 +343,8 @@ export class LectureService {
       .innerJoin(
         'user.applications',
         'application',
-        'application.retreatId = :retreatId AND application.attended = :attended',
-        { retreatId: resolvedRetreatId, attended: true },
+        'application.retreatId = :retreatId AND application.status = :status',
+        { retreatId: resolvedRetreatId, status: ApplicationStatus.CHECKED_IN },
       )
       .where('user.isDeleted = :isDeleted', { isDeleted: false })
       .andWhere(`user.id NOT IN (${enrolledSubQuery.getQuery()})`)

@@ -1,7 +1,7 @@
 import { Expo, ExpoPushMessage, ExpoPushTicket } from 'expo-server-sdk';
 import { NotificationDto } from '../../dto/notification.dto';
 import { ExpoPushToken } from '@modules/expo-push-token/domain/entities/expo-push-token.entity';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { reservePushNotificationRequestDto } from '../../dto/push-notification.request.dto';
 import { reservationPushNotificationResponseDto } from '@modules/push-notification/presentation/dto/push-notification.response.dto';
 import { RedisClientType } from 'redis';
@@ -9,6 +9,7 @@ import { RedisClientType } from 'redis';
 @Injectable()
 export class ExpoNotificationService {
   private expo: Expo;
+  private readonly logger = new Logger(ExpoNotificationService.name);
 
   private readonly RESERVATION_ZSET_KEY = 'notification:reservation:zset';
   private readonly RESERVATION_DATA_KEY = (id: number) =>
@@ -29,7 +30,7 @@ export class ExpoNotificationService {
       const token = tokenEntity.token;
 
       if (!Expo.isExpoPushToken(token)) {
-        console.warn(`Invalid Expo push token: ${token}`);
+        this.logger.warn(`유효하지 않은 Expo 푸시 토큰: ${token}`);
         continue;
       }
 
@@ -51,7 +52,7 @@ export class ExpoNotificationService {
         const ticketChunk = await this.expo.sendPushNotificationsAsync(chunk);
         tickets.push(...ticketChunk);
       } catch (error) {
-        console.error('Expo push send error:', error);
+        this.logger.error('Expo 푸시 전송 에러:', error);
       }
     }
 

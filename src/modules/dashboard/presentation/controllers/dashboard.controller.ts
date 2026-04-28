@@ -7,7 +7,10 @@ import { RankGuard } from '@shared/decorators/rank-guard.decorator';
 import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
 import { DashboardService } from '@modules/dashboard/application/services/dashboard.service';
 import { GetDashboardSummaryRequestDto } from '@modules/dashboard/application/dto/dashboard.request.dto';
-import { DashboardGroupStatResponseDto, DashboardSummaryResponseDto } from '@modules/dashboard/presentation/dto/dashboard.response.dto';
+import {
+  DashboardGroupStatResponseDto,
+  DashboardSummaryResponseDto,
+} from '@modules/dashboard/presentation/dto/dashboard.response.dto';
 
 @ApiTags('Dashboard')
 @Controller('dashboard')
@@ -33,6 +36,9 @@ export class DashboardController {
   @ApiSuccessResponse({ type: DashboardGroupStatResponseDto, isArray: true })
   async getGroupStats(@Query() dto: GetDashboardSummaryRequestDto) {
     const stats = await this.dashboardService.getGroupStats(dto.retreatId);
-    return ok<DashboardGroupStatResponseDto[]>(stats, 'Success get dashboard group stats');
+    return ok<DashboardGroupStatResponseDto[]>(
+      stats,
+      'Success get dashboard group stats',
+    );
   }
 }

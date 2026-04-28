@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notice } from '@modules/notice/domain/entities/notice.entity';
@@ -11,6 +11,8 @@ import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 @Injectable()
 export class NoticeService {
+  private readonly logger = new Logger(NoticeService.name);
+
   constructor(
     @InjectRepository(Notice)
     private noticeRepository: Repository<Notice>,
@@ -24,7 +26,11 @@ export class NoticeService {
       body: dto.body,
     });
 
-    return this.noticeRepository.save(notice);
+    const savedNotice = await this.noticeRepository.save(notice);
+
+    this.logger.log(`공지 생성: ${savedNotice.title} by ${savedNotice.author}`);
+
+    return savedNotice;
   }
 
   // id를 통한 공지 조회
@@ -76,7 +82,12 @@ export class NoticeService {
       notice.body = dto.body;
     }
 
-    return this.noticeRepository.save(notice);
+    const updatedNotice = await this.noticeRepository.save(notice);
+    this.logger.log(
+      `공지 수정: ${updatedNotice.title} (ID: ${updatedNotice.id})`,
+    );
+
+    return updatedNotice;
   }
 
   // 공지 삭제
@@ -88,6 +99,7 @@ export class NoticeService {
     if ((result.affected ?? 0) === 0) {
       throw new NotFoundException(ERROR_MESSAGES.NOTICE_NOT_FOUND);
     }
-  }
 
+    this.logger.warn(`공지 삭제: ${id}`);
+  }
 }

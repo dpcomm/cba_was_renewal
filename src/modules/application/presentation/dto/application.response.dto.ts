@@ -1,17 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
+import {
+  ApplicationStatus,
+  PaymentStatus,
+} from '../../domain/enum/application.enum';
 
 export class ApplicationResponseDto {
   @ApiProperty({ example: 1, required: true })
   id: number;
 
-  @ApiProperty({ example: 'idn', required: true })
-  idn: string;
+  @ApiProperty({
+    enum: ApplicationStatus,
+    example: ApplicationStatus.SUBMITTED,
+  })
+  status: ApplicationStatus;
 
-  @ApiProperty({ example: true, required: true })
-  attended: boolean;
-
-  @ApiProperty({ example: true, required: true })
-  feePaid: boolean;
+  @ApiProperty({ enum: PaymentStatus, example: PaymentStatus.PENDING })
+  paymentStatus: PaymentStatus;
 
   @ApiProperty({ example: 'userId', required: true })
   userId: string;

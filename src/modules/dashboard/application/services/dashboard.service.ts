@@ -4,7 +4,16 @@ import { Repository } from 'typeorm';
 import { Application } from '@modules/application/domain/entities/application.entity';
 import { Retreat } from '@modules/retreat/domain/entities/retreat.entity';
 import { User } from '@modules/user/domain/entities/user.entity';
-import { DashboardGroupStatResponseDto, DashboardSummaryResponseDto } from '@modules/dashboard/presentation/dto/dashboard.response.dto';
+import {
+  DashboardGroupStatResponseDto,
+  DashboardSummaryResponseDto,
+} from '@modules/dashboard/presentation/dto/dashboard.response.dto';
+import { ApplicationMeal } from '@modules/application/domain/entities/application_meal.entity';
+import { MealType } from '@modules/retreat/domain/enum/retreat-meal.enum';
+import {
+  ApplicationStatus,
+  PaymentStatus,
+} from '@modules/application/domain/enum/application.enum';
 
 @Injectable()
 export class DashboardService {
@@ -28,43 +37,91 @@ export class DashboardService {
         retreatId: null,
         totalCount,
         appliedCount: 0,
-        feePaidCount: 0,
-        attendedCount: 0,
+        paidCount: 0,
+        checkedInCount: 0,
         mealStats: this.createEmptyMealStats(),
       };
     }
 
-    const [appliedCount, feePaidCount, attendedCount, applications] =
-      await Promise.all([
-        this.applicationRepository.count({
-          where: { retreatId: targetRetreatId },
-        }),
-        this.applicationRepository.count({
-          where: { retreatId: targetRetreatId, feePaid: true },
-        }),
-        this.applicationRepository.count({
-          where: { retreatId: targetRetreatId, attended: true },
-        }),
-        this.applicationRepository
-          .createQueryBuilder('application')
-          .select(['application.id', 'application.surveyData'])
-          .where('application.retreatId = :retreatId', {
-            retreatId: targetRetreatId,
-          })
-          .getMany(),
-      ]);
+    const [appliedCount, paidCount, checkedInCount] = await Promise.all([
+      this.applicationRepository.count({
+        where: { retreatId: targetRetreatId },
+      }),
+      this.applicationRepository.count({
+        where: {
+          retreatId: targetRetreatId,
+          paymentStatus: PaymentStatus.PAID,
+        },
+      }),
+      this.applicationRepository.count({
+        where: {
+          retreatId: targetRetreatId,
+          status: ApplicationStatus.CHECKED_IN,
+        },
+      }),
+    ]);
+
+    const retreat = await this.retreatRepository.findOne({
+      where: { id: targetRetreatId },
+      select: ['retreatStartAt'],
+    });
+
+    if (!retreat) {
+      return {
+        retreatId: targetRetreatId,
+        totalCount,
+        appliedCount: 0,
+        paidCount: 0,
+        checkedInCount: 0,
+        mealStats: this.createEmptyMealStats(),
+      };
+    }
+
+    const mealStatsRaw = await this.applicationRepository.manager
+      .createQueryBuilder(ApplicationMeal, 'am')
+      .innerJoin('am.retreatMeal', 'rm')
+      .innerJoin('am.application', 'app')
+      .select('rm.meal_day', 'mealDay')
+      .addSelect('rm.mealType', 'mealType')
+      .addSelect('COUNT(am.id)', 'count')
+      .where('app.retreatId = :retreatId', { retreatId: targetRetreatId })
+      .groupBy('rm.meal_day')
+      .addGroupBy('rm.mealType')
+      .getRawMany<{ mealDay: string; mealType: MealType; count: string }>();
+
+    const mealStats = this.createEmptyMealStats();
+    const startDate = new Date(retreat.retreatStartAt);
+    startDate.setHours(0, 0, 0, 0);
+
+    for (const stat of mealStatsRaw) {
+      const mealDate = new Date(stat.mealDay);
+      mealDate.setHours(0, 0, 0, 0);
+
+      const diffTime = mealDate.getTime() - startDate.getTime();
+      const dayIdx = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      let mealIdx = 0;
+      if (stat.mealType === MealType.LUNCH) mealIdx = 1;
+      else if (stat.mealType === MealType.DINNER) mealIdx = 2;
+
+      if (dayIdx >= 0 && dayIdx < 3 && mealIdx >= 0 && mealIdx < 3) {
+        mealStats[dayIdx][mealIdx] = Number(stat.count);
+      }
+    }
 
     return {
       retreatId: targetRetreatId,
       totalCount,
       appliedCount,
-      feePaidCount,
-      attendedCount,
-      mealStats: this.calculateMealStats(applications),
+      paidCount,
+      checkedInCount,
+      mealStats,
     };
   }
 
-  async getGroupStats(retreatId?: number): Promise<DashboardGroupStatResponseDto[]> {
+  async getGroupStats(
+    retreatId?: number,
+  ): Promise<DashboardGroupStatResponseDto[]> {
     const targetRetreatId = retreatId ?? (await this.getLatestRetreatId());
     const groupTotals = await this.userRepository
       .createQueryBuilder('user')
@@ -80,16 +137,28 @@ export class DashboardService {
           .innerJoin('application.user', 'user')
           .select("COALESCE(user.group, '미지정')", 'group')
           .addSelect('COUNT(application.id)', 'appliedCount')
-          .addSelect('SUM(CASE WHEN application.feePaid = true THEN 1 ELSE 0 END)', 'feePaidCount')
-          .addSelect('SUM(CASE WHEN application.attended = true THEN 1 ELSE 0 END)', 'attendedCount')
-          .where('application.retreatId = :retreatId', { retreatId: targetRetreatId })
+          .addSelect(
+            'SUM(CASE WHEN application.payment_status = :paid THEN 1 ELSE 0 END)',
+            'paidCount',
+          )
+          .addSelect(
+            'SUM(CASE WHEN application.status = :checkedIn THEN 1 ELSE 0 END)',
+            'checkedInCount',
+          )
+          .where('application.retreatId = :retreatId', {
+            retreatId: targetRetreatId,
+          })
+          .setParameters({
+            paid: PaymentStatus.PAID,
+            checkedIn: ApplicationStatus.CHECKED_IN,
+          })
           .andWhere('user.isDeleted = :isDeleted', { isDeleted: false })
           .groupBy("COALESCE(user.group, '미지정')")
           .getRawMany<{
             group: string;
             appliedCount: string;
-            feePaidCount: string;
-            attendedCount: string;
+            paidCount: string;
+            checkedInCount: string;
           }>()
       : [];
 
@@ -98,8 +167,8 @@ export class DashboardService {
         item.group,
         {
           appliedCount: Number(item.appliedCount) || 0,
-          feePaidCount: Number(item.feePaidCount) || 0,
-          attendedCount: Number(item.attendedCount) || 0,
+          paidCount: Number(item.paidCount) || 0,
+          checkedInCount: Number(item.checkedInCount) || 0,
         },
       ]),
     );
@@ -108,15 +177,15 @@ export class DashboardService {
       .map((total) => {
         const applied = appliedMap.get(total.group) ?? {
           appliedCount: 0,
-          feePaidCount: 0,
-          attendedCount: 0,
+          paidCount: 0,
+          checkedInCount: 0,
         };
         return {
           group: total.group,
           totalCount: Number(total.totalCount) || 0,
           appliedCount: applied.appliedCount,
-          feePaidCount: applied.feePaidCount,
-          attendedCount: applied.attendedCount,
+          paidCount: applied.paidCount,
+          checkedInCount: applied.checkedInCount,
         };
       })
       .sort((a, b) => a.group.localeCompare(b.group));
@@ -138,30 +207,5 @@ export class DashboardService {
       [0, 0, 0],
       [0, 0, 0],
     ];
-  }
-
-  private calculateMealStats(applications: Application[]): number[][] {
-    const stats = this.createEmptyMealStats();
-
-    for (const application of applications) {
-      const mealData = application?.surveyData?.meal;
-      if (!Array.isArray(mealData)) continue;
-
-      for (let dayIndex = 0; dayIndex < 3; dayIndex += 1) {
-        const dayMeals = Array.isArray(mealData[dayIndex])
-          ? mealData[dayIndex]
-          : [];
-        for (let mealIndex = 0; mealIndex < 3; mealIndex += 1) {
-          const value = dayMeals[mealIndex];
-          if (typeof value === 'number') {
-            stats[dayIndex][mealIndex] += value;
-          } else if (value) {
-            stats[dayIndex][mealIndex] += 1;
-          }
-        }
-      }
-    }
-
-    return stats;
   }
 }

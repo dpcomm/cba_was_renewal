@@ -10,12 +10,7 @@ import { User } from '@modules/user/domain/entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      Lecture,
-      LectureEnrollment,
-      Retreat,
-      User,
-    ]),
+    TypeOrmModule.forFeature([Lecture, LectureEnrollment, Retreat, User]),
   ],
   controllers: [LectureController],
   providers: [LectureService, LectureMapper],

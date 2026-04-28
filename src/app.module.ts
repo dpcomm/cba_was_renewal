@@ -24,7 +24,11 @@ import { ScheduleModule } from '@nestjs/schedule';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: process.env.NODE_ENV === 'prod' ? '.env.prod' : '.env.dev',
+      envFilePath: ['prod', 'production'].includes(
+        process.env.NODE_ENV || 'dev',
+      )
+        ? '.env.prod'
+        : '.env.dev',
     }),
     DatabaseModule,
     RedisModule,

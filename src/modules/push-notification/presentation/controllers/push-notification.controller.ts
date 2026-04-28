@@ -41,7 +41,8 @@ export class PushNofiticationController {
   @JwtGuard()
   @ApiOperation({
     summary: '푸시 메세지 발송',
-    description: '즉시 푸시를 발송한다. 공지와 무관한 단발성 메시지에 사용한다.',
+    description:
+      '즉시 푸시를 발송한다. 공지와 무관한 단발성 메시지에 사용한다.',
   })
   @ApiSuccessResponse({})
   async create(@Body() dto: createPushNotificationRequestDto) {

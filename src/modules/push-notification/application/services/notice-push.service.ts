@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notice } from '@modules/notice/domain/entities/notice.entity';
@@ -10,6 +10,8 @@ import { reservePushNotificationRequestDto } from '../dto/push-notification.requ
 
 @Injectable()
 export class NoticePushService {
+  private readonly logger = new Logger(NoticePushService.name);
+
   constructor(
     @InjectRepository(Notice)
     private readonly noticeRepository: Repository<Notice>,
@@ -46,5 +48,8 @@ export class NoticePushService {
 
     const tokens = await this.expoTokenService.getTokens(dto.target);
     await this.expoMessageService.send(tokens, notification);
+    this.logger.log(
+      `공지 푸시 발송: "${notice.title}" (공지ID: ${id}, 타겟: ${dto.target}, 토큰수: ${tokens?.length ?? 0})`,
+    );
   }
 }

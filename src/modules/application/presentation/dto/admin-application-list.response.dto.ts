@@ -1,5 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { EventResult } from '@modules/application/domain/enum/application.enum';
+import {
+  EventResult,
+  ApplicationStatus,
+  PaymentStatus,
+} from '@modules/application/domain/enum/application.enum';
 
 export class AdminApplicationListResponseDto {
   @ApiProperty()
@@ -14,11 +18,11 @@ export class AdminApplicationListResponseDto {
   @ApiProperty()
   group: string;
 
-  @ApiProperty()
-  feePaid: boolean;
+  @ApiProperty({ enum: PaymentStatus })
+  paymentStatus: PaymentStatus;
 
-  @ApiProperty()
-  attended: boolean;
+  @ApiProperty({ enum: ApplicationStatus })
+  status: ApplicationStatus;
 
   @ApiProperty({ nullable: true })
   checkedInAt: Date | null;

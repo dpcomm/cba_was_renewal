@@ -106,7 +106,8 @@ export class NoticeController {
   @JwtGuard()
   @ApiOperation({
     summary: '공지 삭제',
-    description: '공지사항을 삭제한다. 푸시 발송/예약 정보는 별도 관리 대상이다.',
+    description:
+      '공지사항을 삭제한다. 푸시 발송/예약 정보는 별도 관리 대상이다.',
   })
   @ApiSuccessResponse({})
   @ApiFailureResponse(404, ERROR_MESSAGES.NOTICE_NOT_FOUND)
@@ -115,5 +116,4 @@ export class NoticeController {
 
     return ok<null>(null, 'Success delete notice');
   }
-
 }

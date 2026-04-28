@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Logger, Injectable } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { readFileSync } from 'fs';
 import { join } from 'path';
@@ -7,6 +7,7 @@ import { join } from 'path';
 export class MailService {
   private readonly templatePath: string;
   private readonly logoPath: string;
+  private readonly logger = new Logger(MailService.name);
 
   constructor(private readonly mailerService: MailerService) {
     const basePath = __dirname.includes('dist')
@@ -17,7 +18,7 @@ export class MailService {
   }
 
   async sendVerificationEmail(to: string, code: string): Promise<void> {
-    console.log(`[MailService] Sending verification email to ${to}`);
+    this.logger.log(`[메일 발송] 인증 메일 전송 시작 -> ${to}`);
 
     let htmlTemplate = readFileSync(this.templatePath, 'utf-8');
     htmlTemplate = htmlTemplate.replace('${code}', code);

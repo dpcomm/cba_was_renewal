@@ -1,21 +1,18 @@
 import {
   Body,
+  BadRequestException,
   Controller,
   Delete,
   Get,
   Param,
-  ParseEnumPipe,
   ParseIntPipe,
   Post,
   Query,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { ok } from '@shared/responses/api-response';
-import {
-  ApiOkResponse,
-  ApiOperation,
-  ApiRequestTimeoutResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { RankGuard } from '@shared/decorators/rank-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
@@ -40,7 +37,6 @@ import {
   LectureListResponse,
   LectureSingleResponse,
   LectureDetailResponseDto,
-  LectureDetailListResponse,
   LectureDetailSingleResponse,
   LectureAutoAssignResponseDto,
   LectureEnrollEligibleResponseDto,
@@ -80,26 +76,42 @@ export class LectureController {
   @ApiOperation({ summary: '최신 수련회 참석자 중 미배정 사용자 검색' })
   @ApiSuccessResponse({ type: UserSearchResponseDto, isArray: true })
   async getEligibleUsers(
-    @Query('termId', ParseIntPipe) termId: number,
+    @Query('termId') termIdRaw: string | string[] | undefined,
+    @Req() req: Request,
     @Query('name') name?: string,
     @Query('retreatId') retreatIdRaw?: string,
     @Query('limit') limitRaw?: string,
   ) {
+    // Debug: confirm raw query payload during validation issues
+    // Debug: confirm raw query payload during validation issues
+    const termId = Array.isArray(termIdRaw) ? termIdRaw[0] : termIdRaw;
+    const trimmedTermId = termId?.trim();
+    if (!trimmedTermId) {
+      throw new BadRequestException(
+        'termId is required and must be a numeric string',
+      );
+    }
+    if (!/^\d+$/.test(trimmedTermId)) {
+      throw new BadRequestException('termId must be a numeric string');
+    }
+    const resolvedTermId = Number(trimmedTermId);
     const trimmedName = name?.trim();
     const retreatId = retreatIdRaw ? Number(retreatIdRaw) : undefined;
     const limit = limitRaw ? Number(limitRaw) : undefined;
     const resolvedRetreatId =
-      typeof retreatId === 'number' && Number.isFinite(retreatId) && retreatId > 0
+      typeof retreatId === 'number' &&
+      Number.isFinite(retreatId) &&
+      retreatId > 0
         ? retreatId
         : undefined;
     const resolvedLimit =
       typeof limit === 'number' && Number.isFinite(limit) && limit > 0
         ? limit
         : trimmedName
-        ? 50
-        : undefined;
+          ? 50
+          : undefined;
     const users = await this.lectureService.searchEligibleUsers(
-      termId,
+      resolvedTermId,
       trimmedName,
       resolvedRetreatId,
       resolvedLimit,

@@ -2,14 +2,17 @@
 import admin from 'firebase-admin';
 import { MulticastMessage, TopicMessage } from 'firebase-admin/messaging';
 
+import { Logger } from '@nestjs/common';
+
 export class FcmMessageSender {
+  private readonly logger = new Logger(FcmMessageSender.name);
   // async send(message: MulticastMessage): Promise<void>;
   // async send(message: TopicMessage): Promise<void>;
 
   async send(message: MulticastMessage | TopicMessage): Promise<void> {
     if ('topic' in message) {
       const response = await admin.messaging().send(message);
-      console.log('Topic message sending success:', response);
+      this.logger.log('토픽 메시지 전송 성공:', response);
       return;
     }
     const response = await admin.messaging().sendEachForMulticast(message);
@@ -29,7 +32,7 @@ export class FcmMessageSender {
     });
 
     if (invalidTokens.length > 0) {
-      console.log('Invalid tokens:', invalidTokens);
+      this.logger.warn('유효하지 않은 토큰 발견:', invalidTokens);
       // token 삭제 처리
     }
   }

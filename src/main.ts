@@ -4,8 +4,13 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '@shared/filters/http-exception.filter';
 import { AppModule } from './app.module';
 
+import { KSTLogger } from '@shared/loggers/kst.logger';
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  process.env.TZ = 'Asia/Seoul';
+  const app = await NestFactory.create(AppModule, {
+    logger: new KSTLogger(),
+  });
   // renew 백엔드 서버 프리픽스 임시 적용
   app.setGlobalPrefix('api/v2');
   app.useGlobalPipes(
