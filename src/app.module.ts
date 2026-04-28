@@ -18,6 +18,7 @@ import { LectureModule } from '@modules/lecture/lecture.module';
 import { DashboardModule } from '@modules/dashboard/dashboard.module';
 import { TermModule } from '@modules/term/term.module';
 import { ApplicationModule } from '@modules/application/application.module';
+import { RetreatModule } from '@modules/retreat/retreat.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -48,6 +49,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     TermModule,
     DashboardModule,
     ApplicationModule,
+    RetreatModule,
     ScheduleModule.forRoot(),
   ],
 })
