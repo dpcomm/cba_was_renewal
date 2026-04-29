@@ -10,13 +10,16 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       useFactory: (configService: ConfigService) => ({
         type: 'mysql',
         url: configService.get<string>('DATABASE_URL'),
-        entities: [__dirname + '/../../modules/**/domain/entities/*.entity.{ts,js}'],
+        entities: [
+          __dirname + '/../../modules/**/domain/entities/*.entity.{ts,js}',
+        ],
         synchronize: true,
         logging: ['prod', 'production'].includes(
           configService.get<string>('NODE_ENV') || 'dev',
         )
           ? ['error', 'warn']
-          : true,
+          : ['query', 'error', 'warn', 'schema'],
+        maxQueryExecutionTime: 1,
       }),
     }),
   ],
