@@ -9,29 +9,21 @@ import {
 import { ok } from '@shared/responses/api-response';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
-import { RankGuard } from '@shared/decorators/rank-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 import { User } from '@shared/decorators/user.decorator';
 import { User as UserEntity } from '@modules/user/domain/entities/user.entity';
-import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
 
 import { ApplicationService } from '@modules/application/application/services/application.service';
-import { CheckInDto } from '../dto/check-in.dto';
 import { PlayEventDto } from '../dto/play-event.dto';
-import { AdminScanResponseDto } from '../dto/admin-scan.response.dto';
 import { ApplicationDetailResponseDto } from '../dto/application-detail.response.dto';
 import {
   CheckApplicationPaidResponseDto,
   CheckApplicationResponseDto,
 } from '../dto/check-application.response.dto';
 import { ApplicationHistoryResponseDto } from '../dto/application-history.response.dto';
-import { CheckInResponseDto } from '../dto/check-in.response.dto';
 import { PlayEventResponseDto } from '../dto/play-event.response.dto';
-import { AdminApplicationListDto } from '../dto/admin-application-list.dto';
-import { AdminApplicationListResponseDto } from '../dto/admin-application-list.response.dto';
-import { Query } from '@nestjs/common';
 
 @ApiTags('Application')
 @Controller('application')
@@ -100,45 +92,6 @@ export class ApplicationController {
       retreatId,
     );
     return ok(application, 'Success get my application detail');
-  }
-
-  @Get('admin/scan/:userId/:retreatId')
-  @RankGuard(UserRank.ADMIN)
-  @ApiOperation({ summary: '[관리자] QR 스캔 시 사용자 정보 조회' })
-  @ApiSuccessResponse({ type: AdminScanResponseDto })
-  @ApiFailureResponse(404, ERROR_MESSAGES.APPLICATION_NOT_FOUND)
-  async adminScan(
-    @Param('userId') userId: string,
-    @Param('retreatId', ParseIntPipe) retreatId: number,
-  ) {
-    const result = await this.applicationService.adminScan(userId, retreatId);
-    return ok<AdminScanResponseDto>(result, 'Success admin scan');
-  }
-
-  @Get('admin/list')
-  @RankGuard(UserRank.ADMIN)
-  @ApiOperation({ summary: '[관리자] 수련회 신청자 목록 조회 (검색/필터)' })
-  @ApiSuccessResponse({ type: AdminApplicationListResponseDto, isArray: true })
-  async getApplicationList(@Query() query: AdminApplicationListDto) {
-    const list = await this.applicationService.getApplicationList(query);
-    return ok<AdminApplicationListResponseDto[]>(
-      list,
-      'Success get application list',
-    );
-  }
-
-  @Post('admin/check-in')
-  @RankGuard(UserRank.ADMIN)
-  @ApiOperation({ summary: '[관리자] 체크인 확정 처리' })
-  @ApiSuccessResponse({ type: CheckInResponseDto })
-  @ApiFailureResponse(404, ERROR_MESSAGES.APPLICATION_NOT_FOUND)
-  async adminCheckIn(@User() admin: UserEntity, @Body() dto: CheckInDto) {
-    const result = await this.applicationService.checkIn(
-      dto.userId,
-      dto.retreatId,
-      admin.userId,
-    );
-    return ok<CheckInResponseDto>(result, 'Success check-in');
   }
 
   @Post('event')

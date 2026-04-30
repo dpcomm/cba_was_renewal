@@ -3,7 +3,11 @@ import { ApplicationService } from './application.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Application } from '@modules/application/domain/entities/application.entity';
 import { DataSource } from 'typeorm';
-import { ConflictException, ForbiddenException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { ApplicationStatus } from '../../domain/enum/application.enum';
 
 describe('ApplicationService', () => {
@@ -73,9 +77,19 @@ describe('ApplicationService', () => {
   });
 
   describe('checkIn', () => {
+    it('should throw NotFoundException if application not found', async () => {
+      mockApplicationRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.checkIn('user1', 1, 'admin1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
     it('should throw ConflictException if already checked in', async () => {
       mockApplicationRepository.findOne.mockResolvedValue({
+        id: 1,
         checkedInAt: new Date(),
+        user: { name: 'TargetUser' },
       });
 
       await expect(service.checkIn('user1', 1, 'admin1')).rejects.toThrow(
@@ -85,10 +99,9 @@ describe('ApplicationService', () => {
 
     it('should update status and checkedInAt on success', async () => {
       mockApplicationRepository.findOne.mockResolvedValue({
+        id: 1,
         checkedInAt: null,
-      });
-      mockApplicationRepository.manager.findOne.mockResolvedValue({
-        name: 'TargetUser',
+        user: { name: 'TargetUser' },
       });
 
       const result = await service.checkIn('user1', 1, 'admin1');
@@ -97,6 +110,7 @@ describe('ApplicationService', () => {
         { userId: 'user1', retreatId: 1 },
         expect.objectContaining({
           status: ApplicationStatus.CHECKED_IN,
+          checkedInAt: expect.any(Date),
         }),
       );
       expect(result.checkedInAt).toBeDefined();
@@ -104,30 +118,55 @@ describe('ApplicationService', () => {
   });
 
   describe('playEvent', () => {
-    it('should throw ForbiddenException if not checked in', async () => {
-      const mockManager = {
-        findOne: jest.fn().mockResolvedValue({
-          status: ApplicationStatus.SUBMITTED,
-        }),
+    let mockManager: any;
+
+    beforeEach(() => {
+      mockManager = {
+        findOne: jest.fn(),
+        count: jest.fn(),
+        update: jest.fn(),
       };
       mockDataSource.transaction.mockImplementation((cb) => cb(mockManager));
+    });
+
+    it('should throw NotFoundException if application not found', async () => {
+      mockManager.findOne.mockResolvedValueOnce(null); // application 조회를 null로
+
+      await expect(service.playEvent('user1', 1)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw ForbiddenException if not checked in', async () => {
+      mockManager.findOne.mockResolvedValueOnce({
+        status: ApplicationStatus.SUBMITTED,
+      });
 
       await expect(service.playEvent('user1', 1)).rejects.toThrow(
         ForbiddenException,
       );
     });
 
-    it('should update eventResult and eventParticipatedAt on success', async () => {
-      const mockApp = {
+    it('should throw ConflictException if already participated', async () => {
+      mockManager.findOne.mockResolvedValueOnce({
         status: ApplicationStatus.CHECKED_IN,
-        eventResult: null,
-      };
-      const mockManager = {
-        findOne: jest.fn().mockResolvedValue(mockApp),
-        count: jest.fn().mockResolvedValue(0),
-        update: jest.fn(),
-      };
-      mockDataSource.transaction.mockImplementation((cb) => cb(mockManager));
+        eventResult: 'WIN', // 이미 참여함
+      });
+
+      await expect(service.playEvent('user1', 1)).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('should update eventResult and eventParticipatedAt on success', async () => {
+      mockManager.findOne
+        .mockResolvedValueOnce({
+          status: ApplicationStatus.CHECKED_IN,
+          eventResult: null, // 미참여 상태
+        })
+        .mockResolvedValueOnce({ name: 'User1' }); // 로그용 User 조회
+
+      mockManager.count.mockResolvedValue(0); // 당첨자 0명 상태
 
       const result = await service.playEvent('user1', 1);
 
@@ -135,6 +174,7 @@ describe('ApplicationService', () => {
         Application,
         { userId: 'user1', retreatId: 1 },
         expect.objectContaining({
+          eventResult: expect.any(String), // WIN or LOSE
           eventParticipatedAt: expect.any(Date),
         }),
       );

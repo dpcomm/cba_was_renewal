@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Application } from './domain/entities/application.entity';
 import { ApplicationController } from './presentation/controller/application.controller';
+import { ApplicationAdminController } from './presentation/controller/application-admin.controller';
 import { ApplicationService } from './application/services/application.service';
 import { Survey } from './domain/entities/survey.entity';
 import { Question } from './domain/entities/question.entity';
@@ -16,8 +17,23 @@ import { AdminSurveyController } from './presentation/controller/survey.admin.co
 import { AdminQuestionController } from './presentation/controller/question.admin.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Application, Survey, Question, QuestionOption])],
-  controllers: [ApplicationController, SurveyController, QuestionController, AdminSurveyController, AdminQuestionController],
-  providers: [ApplicationService, SurveyService, QuestionService, SurveyMapper, QuestionMapper],
+  imports: [
+    TypeOrmModule.forFeature([Application, Survey, Question, QuestionOption]),
+  ],
+  controllers: [
+    ApplicationController,
+    ApplicationAdminController,
+    SurveyController,
+    QuestionController,
+    AdminSurveyController,
+    AdminQuestionController,
+  ],
+  providers: [
+    ApplicationService,
+    SurveyService,
+    QuestionService,
+    SurveyMapper,
+    QuestionMapper,
+  ],
 })
 export class ApplicationModule {}
