@@ -100,4 +100,57 @@ export class User {
 
   @OneToMany(() => LectureEnrollment, (enrollment) => enrollment.user)
   enrollments: LectureEnrollment[];
+
+  /**
+   * 프로필 정보 수정
+   */
+  updateProfile(fields: {
+    name?: string;
+    group?: string;
+    phone?: string;
+    birth?: Date;
+    gender?: string;
+  }): void {
+    if (fields.name !== undefined) this.name = fields.name;
+    if (fields.group !== undefined) this.group = fields.group;
+    if (fields.phone !== undefined) this.phone = fields.phone;
+    if (fields.birth !== undefined) this.birth = fields.birth;
+    if (fields.gender !== undefined) this.gender = fields.gender;
+  }
+
+  /**
+   * 비밀번호 변경 (해싱된 비밀번호를 받음)
+   */
+  changePassword(hashedPassword: string): void {
+    this.password = hashedPassword;
+  }
+
+  /**
+   * 이메일 변경 + 인증 상태 초기화
+   */
+  changeEmail(newEmail: string): void {
+    this.email = newEmail;
+    this.emailVerifiedAt = null as unknown as Date;
+  }
+
+  /**
+   * 이메일 인증 완료 처리
+   */
+  verifyEmail(): void {
+    this.emailVerifiedAt = new Date();
+  }
+
+  /**
+   * 회원 탈퇴 (Soft Delete)
+   */
+  softDelete(): void {
+    this.isDeleted = true;
+  }
+
+  /**
+   * 관리자용 등급 변경
+   */
+  changeRank(rank: string): void {
+    this.rank = rank;
+  }
 }

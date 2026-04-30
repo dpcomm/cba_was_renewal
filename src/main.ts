@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { HttpExceptionFilter } from '@shared/filters/http-exception.filter';
+import { TypeOrmExceptionFilter } from '@shared/filters/typeorm-exception.filter';
 import { AppModule } from './app.module';
 
 import { KSTLogger } from '@shared/loggers/kst.logger';
@@ -21,7 +22,7 @@ async function bootstrap() {
       transformOptions: { enableImplicitConversion: true },
     }),
   );
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new TypeOrmExceptionFilter(), new HttpExceptionFilter());
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('CBA Connect Renewal API')
