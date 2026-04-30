@@ -28,4 +28,10 @@ export const ERROR_MESSAGES = {
   LECTURE_CAPACITY_EXCEEDED: 'Selected users exceed remaining lecture capacity',
   LECTURE_ELIGIBLE_USER_REQUIRED:
     'Ineligible user included for lecture enrollment',
+  SURVEY_NOT_FOUND: 'Survey not found',
+  QUESTION_NOT_FOUND: 'Question not found',
+  INVALID_QUESTION_ID: 'Invalid Question Ids',
+  INVALID_QUESTION_OPTIONS_FOR_SUBJECTIVE: 'SUBJECTIVE type cannot have options',
+  QUESTION_OPTIONS_REQUIRED: 'Options are required for select type',
+  DUPLICATE_QUESTION_OPTION_LABELS: 'Duplicate option labels',
 } as const;
