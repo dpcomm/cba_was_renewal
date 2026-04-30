@@ -1,11 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsArray,
-  IsBoolean,
-  IsDateString,
-  IsInt,
-  IsOptional,
-} from 'class-validator';
+import { IsArray, IsBoolean, IsDateString, IsInt, IsOptional } from 'class-validator';
 
 export class noticePushRequestDto {
   @ApiPropertyOptional({

@@ -16,7 +16,8 @@ export class reservationPushNotificationResponseDto {
   @ApiProperty({
     type: [Number],
     example: [12, 34, 56],
-    description: '특정 사용자에게만 발송할 경우 userId 목록 (미입력 시 전체)',
+    description:
+      '특정 사용자에게만 발송할 경우 userId 목록 (미입력 시 전체)',
   })
   target?: number[];
 

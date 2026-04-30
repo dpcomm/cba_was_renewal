@@ -1,9 +1,9 @@
-import { Body, Controller, Get, Put, Logger } from '@nestjs/common';
+import { Body, Controller, Get, Put } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 import { ok } from '@shared/responses/api-response';
-import { SystemService } from '../../application/services/system.service';
+import { SystemService } from '@modules/system/application/services/system.service';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { RankGuard } from '@shared/decorators/rank-guard.decorator';
 import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
@@ -13,8 +13,6 @@ import { UpdateSystemConfigDto } from '../dto/update-system-config.request.dto';
 @ApiTags('System')
 @Controller('system')
 export class SystemController {
-  private readonly logger = new Logger(SystemController.name);
-
   constructor(private readonly systemService: SystemService) {}
 
   @Get()

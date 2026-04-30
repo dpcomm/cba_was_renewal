@@ -1,8 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  ApplicationStatus,
-  PaymentStatus,
-} from '../../domain/enum/application.enum';
 
 export class AdminScanResponseDto {
   @ApiProperty({ example: 'profitia', description: '사용자 ID' })
@@ -17,19 +13,11 @@ export class AdminScanResponseDto {
   @ApiProperty({ example: '총무팀', description: '중그룹' })
   group: string;
 
-  @ApiProperty({
-    enum: PaymentStatus,
-    example: PaymentStatus.PAID,
-    description: '납부 상태',
-  })
-  paymentStatus: PaymentStatus;
+  @ApiProperty({ example: true, description: '납부 완료 여부' })
+  feePaid: boolean;
 
-  @ApiProperty({
-    enum: ApplicationStatus,
-    example: ApplicationStatus.CHECKED_IN,
-    description: '신청/참석 상태',
-  })
-  status: ApplicationStatus;
+  @ApiProperty({ example: true, description: '참석 여부' })
+  attended: boolean;
 
   @ApiProperty({
     example: '2025-01-30T10:00:00.000Z',

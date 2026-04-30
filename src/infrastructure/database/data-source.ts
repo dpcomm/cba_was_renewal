@@ -18,14 +18,6 @@ import { Lecture } from '@modules/lecture/domain/entities/lecture.entity';
 import { LectureEnrollment } from '@modules/lecture/domain/entities/lectureEnrollment.entity';
 import { Term } from '@modules/term/domain/entities/term.entity';
 import { SystemConfig } from '@modules/system/domain/entities/system-config.entity';
-import { RetreatMeal } from '../../modules/retreat/domain/entities/retreat_meal.entity';
-import { RetreatTransport } from '../../modules/retreat/domain/entities/retreat_transport.entity';
-import { Survey } from '../../modules/application/domain/entities/survey.entity';
-import { Question } from '../../modules/application/domain/entities/question.entity';
-import { QuestionOption } from '../../modules/application/domain/entities/question_option.entity';
-import { ApplicationMeal } from '../../modules/application/domain/entities/application_meal.entity';
-import { ApplicationTransport } from '../../modules/application/domain/entities/application_transport.entity';
-import { Answer } from '../../modules/application/domain/entities/answer.entity';
 
 const envFile = process.env.NODE_ENV === 'prod' ? '.env.prod' : '.env.dev';
 dotenv.config({ path: envFile });
@@ -53,14 +45,6 @@ export const AppDataSource = new DataSource({
     LectureEnrollment,
     Term,
     SystemConfig,
-    RetreatMeal,
-    RetreatTransport,
-    Survey,
-    Question,
-    QuestionOption,
-    ApplicationMeal,
-    ApplicationTransport,
-    Answer,
   ],
   migrations: [join(__dirname, 'migrations', '*{.ts,.js}')],
   subscribers: [],
