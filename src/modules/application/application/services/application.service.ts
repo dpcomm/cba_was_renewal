@@ -109,6 +109,18 @@ export class ApplicationService {
     const application = await this.applicationRepository.findOne({
       where: { userId, retreatId },
       relations: ['user'],
+      select: {
+        id: true,
+        userId: true,
+        paymentStatus: true,
+        status: true,
+        checkedInAt: true,
+        user: {
+          name: true,
+          phone: true,
+          group: true,
+        },
+      },
     });
 
     if (!application) {
@@ -140,6 +152,14 @@ export class ApplicationService {
   ): Promise<{ checkedInAt: Date }> {
     const application = await this.applicationRepository.findOne({
       where: { userId: targetUserId, retreatId },
+      relations: ['user'],
+      select: {
+        id: true,
+        checkedInAt: true,
+        user: {
+          name: true,
+        },
+      },
     });
 
     if (!application) {
@@ -159,17 +179,8 @@ export class ApplicationService {
       },
     );
 
-    const targetUser = await this.applicationRepository.manager.findOne(User, {
-      where: { userId: targetUserId },
-      select: ['name'],
-    });
-    const adminUser = await this.applicationRepository.manager.findOne(User, {
-      where: { userId: adminUserId },
-      select: ['name'],
-    });
-
     this.logger.log(
-      `체크인 완료: ${targetUser?.name ?? '알수없음'}(${targetUserId}) by ${adminUser?.name ?? '알수없음'}(${adminUserId})`,
+      `체크인 완료: ${application.user.name}(${targetUserId}) - 승인 계정 ID: ${adminUserId}`,
     );
 
     return { checkedInAt: now };
@@ -268,7 +279,18 @@ export class ApplicationService {
       query.andWhere('app.eventResult = :eventResult', { eventResult: 'WIN' });
     }
 
-    const applications = await query.getMany();
+    const applications = await query
+      .select([
+        'app.userId',
+        'user.name',
+        'user.phone',
+        'user.group',
+        'app.paymentStatus',
+        'app.status',
+        'app.checkedInAt',
+        'app.eventResult',
+      ])
+      .getMany();
 
     return applications.map((app) => ({
       userId: app.userId,
