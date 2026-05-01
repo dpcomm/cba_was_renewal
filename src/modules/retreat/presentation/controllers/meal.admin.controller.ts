@@ -36,8 +36,8 @@ import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 
 @ApiTags('Admin Meal')
 @Controller('admin/meals')
-//@RankGuard(UserRank.ADMIN)
-//@JwtGuard()
+@RankGuard(UserRank.ADMIN)
+@JwtGuard()
 export class AdminMealController {
   constructor(
     private readonly createMealUseCase: CreateMealUseCase,
