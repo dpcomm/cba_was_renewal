@@ -16,13 +16,13 @@ import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 import {
   UserSearchListResponse,
   UserSearchResponseDto,
-} from './dto/user.search.response.dto';
-import { AdminUserListQueryDto } from './dto/admin-user-list-query.dto';
+} from './dto/response/user-search.response.dto';
+import { AdminUserListQueryDto } from './dto/request/admin-user-list-query.request.dto';
 import {
   AdminUserResponseDto,
   AdminUserListResponseDto,
-} from './dto/admin-user-response.dto';
-import { AdminUpdateUserDto } from './dto/admin-update-user.dto';
+} from './dto/response/admin-user.response.dto';
+import { AdminUpdateUserDto } from './dto/request/admin-update-user.request.dto';
 import { GetUserQuery } from '../application/queries/get-user.query';
 import { GetAdminUsersQuery } from '../application/queries/get-admin-users.query';
 import { SearchUsersQuery } from '../application/queries/search-users.query';
@@ -46,12 +46,12 @@ export class UserAdminController {
   @ApiSuccessResponse({ type: AdminUserListResponseDto })
   async findAll(@Query() query: AdminUserListQueryDto) {
     const { items, total } = await this.getAdminUsersQuery.execute(query);
-    const payload: AdminUserListResponseDto = {
-      items: items.map((user) => new AdminUserResponseDto(user)),
+    const payload = new AdminUserListResponseDto(
+      items.map((user) => new AdminUserResponseDto(user)),
       total,
-      page: query.page ?? 1,
-      limit: query.limit ?? 10,
-    };
+      query.page ?? 1,
+      query.limit ?? 10,
+    );
     return ok(payload, 'Success fetch admin user list');
   }
 
@@ -60,12 +60,7 @@ export class UserAdminController {
   @ApiSuccessResponse({ type: UserSearchResponseDto, isArray: true })
   async searchUsers(@Query('name') name: string) {
     const users = await this.searchUsersQuery.searchByName(name ?? '');
-    const payload = users.map((user) => ({
-      id: user.id,
-      name: user.name,
-      group: user.group,
-      phone: user.phone,
-    }));
+    const payload = users.map((user) => new UserSearchResponseDto(user));
     return ok<UserSearchListResponse>(payload, 'Success search users');
   }
 

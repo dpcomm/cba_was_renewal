@@ -71,4 +71,16 @@ export class AdminUserListResponseDto {
 
   @ApiProperty()
   limit: number;
+
+  constructor(
+    items: AdminUserResponseDto[],
+    total: number,
+    page: number,
+    limit: number,
+  ) {
+    this.items = items;
+    this.total = total;
+    this.page = page;
+    this.limit = limit;
+  }
 }

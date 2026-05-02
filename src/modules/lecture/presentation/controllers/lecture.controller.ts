@@ -45,7 +45,7 @@ import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
 import {
   UserSearchListResponse,
   UserSearchResponseDto,
-} from '@modules/user/presentation/dto/user.search.response.dto';
+} from '@modules/user/presentation/dto/response/user-search.response.dto';
 
 @ApiTags('Lecture')
 @Controller('lecture')
