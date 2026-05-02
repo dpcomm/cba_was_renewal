@@ -12,7 +12,7 @@ import { Pray } from '@modules/pray/domain/entities/pray.entity';
 import { CarpoolRoom } from '@modules/carpool/domain/entities/carpool-room.entity';
 import { CarpoolMember } from '@modules/carpool/domain/entities/carpool-member.entity';
 import { Chat } from '@modules/chat/domain/entities/chat.entity';
-import { FcmToken } from '@modules/fcm/domain/entities/fcm-token.entity';
+
 import { ChatReport } from '@modules/chat/domain/entities/chat-report.entity';
 import { Consent } from '@modules/consent/domain/entities/consent.entity';
 import { LectureEnrollment } from '@modules/lecture/domain/entities/lectureEnrollment.entity';
@@ -85,9 +85,6 @@ export class User {
 
   @OneToMany(() => Chat, (chat) => chat.sender)
   chats: Chat[];
-
-  @OneToMany(() => FcmToken, (token) => token.user)
-  tokens: FcmToken[];
 
   @OneToMany(() => ChatReport, (report) => report.reporter)
   reportsMade: ChatReport[];
