@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository, DataSource, Between } from 'typeorm';
 import { CarpoolRoom } from '../../domain/entities/carpool-room.entity';
@@ -12,8 +12,11 @@ import {
 import { User } from '@modules/user/domain/entities/user.entity';
 import { CarpoolStatus } from '@modules/carpool/domain/carpool-status.enum';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
-import { ExpoNotificationService } from '@modules/push-notification/application/services/expo-notification/ExpoNotification.service';
-import { ExpoPushTokenService } from '@modules/expo-push-token/application/services/expo-push-token.service';
+import {
+  PUSH_SENDER_PORT,
+  IPushSenderPort,
+} from '@modules/push-notification/application/ports/push-sender.port';
+import { PushTokenService } from '@modules/push-token/application/push-token.service';
 import {
   CarpoolDeleteNotificationDto,
   CarpoolJoinNotificationDto,
@@ -21,7 +24,7 @@ import {
   CarpoolReadyNotificationDto,
   CarpoolStartNotificationDto,
   CarpoolUpdateNotificationDto,
-} from '@modules/push-notification/application/dto/carpool-notification.dto';
+} from '../dto/carpool-notification.dto';
 import {
   CarpoolDetailResponseDto,
   CarpoolWithDriverInfoResponseDto,
@@ -40,8 +43,9 @@ export class CarpoolService {
     private carpoolMemberRepository: Repository<CarpoolMember>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly expoMessageService: ExpoNotificationService,
-    private readonly expoTokenService: ExpoPushTokenService,
+    @Inject(PUSH_SENDER_PORT)
+    private readonly pushSender: IPushSenderPort,
+    private readonly pushTokenService: PushTokenService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -367,11 +371,11 @@ export class CarpoolService {
     const members = await this.getCarpoolMembers(result.id);
     const notificationTarget = members.filter((v) => v != result.driverId);
 
-    const tokens = await this.expoTokenService.getTokens(notificationTarget);
+    const tokens = await this.pushTokenService.getTokens(notificationTarget);
 
     const notification = new CarpoolUpdateNotificationDto();
 
-    await this.expoMessageService.send(tokens, notification);
+    await this.pushSender.send(tokens, notification);
 
     this.logger.log(`카풀 수정 완료 - 방 ID: ${result.id}`);
 
@@ -393,7 +397,7 @@ export class CarpoolService {
     const notificationTarget = members.filter((v) => v != room.driverId);
 
     // 토큰 조회
-    const tokens = await this.expoTokenService.getTokens(notificationTarget);
+    const tokens = await this.pushTokenService.getTokens(notificationTarget);
 
     // 알림 생성
     const notification = new CarpoolDeleteNotificationDto();
@@ -414,7 +418,7 @@ export class CarpoolService {
     });
 
     // 카풀 삭제 알림 전송
-    await this.expoMessageService.send(tokens, notification);
+    await this.pushSender.send(tokens, notification);
 
     this.logger.log(`카풀 삭제 완료 - 방 ID: ${roomId}`);
   }
@@ -475,7 +479,7 @@ export class CarpoolService {
       });
 
       // 토큰 조회
-      const tokens = await this.expoTokenService.getTokens(joinedRoom.driverId);
+      const tokens = await this.pushTokenService.getTokens(joinedRoom.driverId);
 
       // 참여자 이름 조회
       const user = await this.userRepository.findOne({
@@ -491,7 +495,7 @@ export class CarpoolService {
       const notification = new CarpoolJoinNotificationDto(userName);
 
       // 카풀 join 알림 전송
-      await this.expoMessageService.send(tokens, notification);
+      await this.pushSender.send(tokens, notification);
 
       this.logger.log(
         `카풀 참여 완료 - 사용자: ${userName} (ID: ${dto.userId}), 방 ID: ${dto.roomId}`,
@@ -555,7 +559,7 @@ export class CarpoolService {
       });
 
       // 토큰 조회
-      const tokens = await this.expoTokenService.getTokens(leavedRoom.driverId);
+      const tokens = await this.pushTokenService.getTokens(leavedRoom.driverId);
 
       // 이름 조회
       const user = await this.userRepository.findOne({
@@ -571,7 +575,7 @@ export class CarpoolService {
       const notification = new CarpoolLeaveNotificationDto(userName);
 
       // 카풀 leave 알림 전송
-      await this.expoMessageService.send(tokens, notification);
+      await this.pushSender.send(tokens, notification);
 
       this.logger.log(
         `카풀 나가기 완료 - 사용자: ${userName} (${dto.userId}), 방 ID: ${dto.roomId}`,
@@ -634,10 +638,10 @@ export class CarpoolService {
     for (const carpool of readyCarpoolList) {
       try {
         const driverId = carpool.driverId;
-        const tokens = await this.expoTokenService.getTokens(driverId);
+        const tokens = await this.pushTokenService.getTokens(driverId);
         const notification = new CarpoolReadyNotificationDto();
 
-        await this.expoMessageService.send(tokens, notification);
+        await this.pushSender.send(tokens, notification);
         this.logger.log(`Notification sent to driverId: ${driverId}`);
       } catch (err) {
         this.logger.error(
@@ -678,12 +682,12 @@ export class CarpoolService {
     const members = await this.getCarpoolMembers(id);
     const notificationTarget = members.filter((v) => v != carpool.driverId);
 
-    const tokens = await this.expoTokenService.getTokens(notificationTarget);
+    const tokens = await this.pushTokenService.getTokens(notificationTarget);
 
     const driverName = await this.getDriverName(id);
     const notification = new CarpoolStartNotificationDto(driverName);
 
-    await this.expoMessageService.send(tokens, notification);
+    await this.pushSender.send(tokens, notification);
     this.logger.log(`카풀 운행 시작 - 방 ID: ${id}`);
   }
 

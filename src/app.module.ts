@@ -10,7 +10,7 @@ import { AuthModule } from '@modules/auth/auth.module';
 import { MailModule } from '@infrastructure/mail/mail.module';
 import { UserModule } from '@modules/user/user.module';
 import { SystemModule } from '@modules/system/system.module';
-import { ExpoPushTokenModule } from '@modules/expo-push-token/expo-push-token.module';
+import { PushTokenModule } from '@modules/push-token/push-token.module';
 import { NoticeModule } from '@modules/notice/notice.module';
 import { PushNotificationModule } from '@modules/push-notification/push-notification.module';
 import { LectureModule } from '@modules/lecture/lecture.module';
@@ -40,7 +40,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ChatModule,
 
     MailModule,
-    ExpoPushTokenModule,
+    PushTokenModule,
     PushNotificationModule,
     NoticeModule,
     LectureModule,

@@ -1,5 +1,5 @@
 import { AppDataSource } from '../src/infrastructure/database/data-source';
-import { ExpoPushToken } from '../src/modules/expo-push-token/domain/entities/expo-push-token.entity';
+import { PushToken } from '../src/modules/push-token/domain/entities/push-token.entity';
 
 const USER_ID = parseInt(process.argv[2] || '16', 10);
 
@@ -8,7 +8,7 @@ async function deleteExpoPushTokens() {
     await AppDataSource.initialize();
     console.log('Data Source has been initialized!');
 
-    const repository = AppDataSource.getRepository(ExpoPushToken);
+    const repository = AppDataSource.getRepository(PushToken);
     const result = await repository.delete({ userId: USER_ID });
 
     console.log('Delete result:', result);
