@@ -17,7 +17,7 @@ import { RedisClientType } from 'redis';
 import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
 import { RegisterDto } from './dto/register.dto';
 import { AuthResponseDto } from '../presentation/dto/auth.response.dto';
-import { UserResponseDto } from '@modules/user/presentation/dto/user.response.dto';
+import { UserResponseDto } from '@modules/user/presentation/dto/response/user.response.dto';
 import { ResetPasswordDto } from '../presentation/dto/reset-password.dto';
 import { EmailVerificationType } from '../domain/enums/email-verification-type.enum';
 import { maskString } from '../../../shared/utils/mask.util';
