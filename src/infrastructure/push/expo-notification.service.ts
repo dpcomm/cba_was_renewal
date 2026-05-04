@@ -8,18 +8,24 @@ import {
   ReservationData,
   ReservationResult,
 } from '@modules/push-notification/application/ports/push-sender.port';
+import {
+  REDIS_CLIENT_TOKEN,
+  REDIS_KEYS,
+} from '@shared/constants/redis.constants';
 
 @Injectable()
 export class ExpoNotificationService implements IPushSenderPort {
   private expo: Expo;
   private readonly logger = new Logger(ExpoNotificationService.name);
 
-  private readonly RESERVATION_ZSET_KEY = 'notification:reservation:zset';
-  private readonly RESERVATION_DATA_KEY = (id: number) =>
-    `notification:reservation:data:${id}`;
-
-  constructor(@Inject('REDIS_CLIENT') private readonly redis: RedisClientType) {
+  constructor(
+    @Inject(REDIS_CLIENT_TOKEN) private readonly redis: RedisClientType,
+  ) {
     this.expo = new Expo();
+  }
+
+  private parseReservationId(member: string): number {
+    return Number(member.split(':').at(-1));
   }
 
   async send(
@@ -60,15 +66,15 @@ export class ExpoNotificationService implements IPushSenderPort {
     }
   }
 
-  // Notification Reservation
-  // notification 스케줄 관리는 redis를 활용
-  // notification send의 실행은 일정 주기별 cron에서 동작
+  // Push Reservation
+  // push 스케줄 관리는 redis를 활용
+  // push send의 실행은 일정 주기별 cron에서 동작
   // scheduler의 관리는 ZSet를 이용
-  // - notification:reservation:zset
+  // - push:reservation:zset
   // -   score = reserveTime (timestamp, ms)
-  // -   member = reservation:{id}
-  // notification의 정보에 저장은 hash를 이용
-  // - notification:reservation:data:{id}
+  // -   member = push:reservation:{id}
+  // push 정보 저장은 hash를 이용
+  // - push:reservation:data:{id}
   // -   title
   // -   body
   // -   target
@@ -76,11 +82,11 @@ export class ExpoNotificationService implements IPushSenderPort {
 
   async reserve(dto: ReservationData): Promise<ReservationResult> {
     // ID 발급 (간단 & 충돌 없음)
-    const id = await this.redis.incr('notification:reservation:id');
+    const id = await this.redis.incr(REDIS_KEYS.PUSH_RESERVATION_ID_SEQUENCE);
 
     const reserveTimeMs = new Date(dto.reserveTime).getTime();
-    const dataKey = this.RESERVATION_DATA_KEY(id);
-    const member = `reservation:${id}`;
+    const dataKey = REDIS_KEYS.PUSH_RESERVATION_DATA(id);
+    const member = REDIS_KEYS.PUSH_RESERVATION_MEMBER(id);
 
     await this.redis
       .multi()
@@ -90,7 +96,7 @@ export class ExpoNotificationService implements IPushSenderPort {
         reserveTime: dto.reserveTime,
         target: dto.target ? JSON.stringify(dto.target) : '',
       })
-      .zAdd(this.RESERVATION_ZSET_KEY, {
+      .zAdd(REDIS_KEYS.PUSH_RESERVATION_ZSET, {
         score: reserveTimeMs,
         value: member,
       })
@@ -106,7 +112,7 @@ export class ExpoNotificationService implements IPushSenderPort {
 
   async getReservations(): Promise<ReservationResult[]> {
     const items = await this.redis.zRangeWithScores(
-      this.RESERVATION_ZSET_KEY,
+      REDIS_KEYS.PUSH_RESERVATION_ZSET,
       0,
       -1,
     );
@@ -114,9 +120,9 @@ export class ExpoNotificationService implements IPushSenderPort {
     const results: ReservationResult[] = [];
 
     for (const item of items) {
-      const member = item.value; // reservation:{id}
-      const id = Number(member.split(':')[1]);
-      const dataKey = this.RESERVATION_DATA_KEY(id);
+      const member = item.value; // push:reservation:{id}
+      const id = this.parseReservationId(member);
+      const dataKey = REDIS_KEYS.PUSH_RESERVATION_DATA(id);
 
       const data = await this.redis.hGetAll(dataKey);
       if (!data || !data.title) continue;
@@ -134,8 +140,8 @@ export class ExpoNotificationService implements IPushSenderPort {
   }
 
   async cancelReservation(reservationId: number): Promise<ReservationResult> {
-    const dataKey = this.RESERVATION_DATA_KEY(reservationId);
-    const member = `reservation:${reservationId}`;
+    const dataKey = REDIS_KEYS.PUSH_RESERVATION_DATA(reservationId);
+    const member = REDIS_KEYS.PUSH_RESERVATION_MEMBER(reservationId);
 
     const data = await this.redis.hGetAll(dataKey);
     if (!data || !data.title) {
@@ -150,7 +156,7 @@ export class ExpoNotificationService implements IPushSenderPort {
 
     await this.redis
       .multi()
-      .zRem(this.RESERVATION_ZSET_KEY, member)
+      .zRem(REDIS_KEYS.PUSH_RESERVATION_ZSET, member)
       .del(dataKey)
       .exec();
 
@@ -165,7 +171,7 @@ export class ExpoNotificationService implements IPushSenderPort {
   async popDueReservations(nowMs: number): Promise<ReservationResult[]> {
     // 실행 대상 조회
     const members = await this.redis.zRangeByScore(
-      this.RESERVATION_ZSET_KEY,
+      REDIS_KEYS.PUSH_RESERVATION_ZSET,
       0,
       nowMs,
     );
@@ -175,8 +181,8 @@ export class ExpoNotificationService implements IPushSenderPort {
     const results: ReservationResult[] = [];
 
     for (const member of members) {
-      const id = Number(member.split(':')[1]);
-      const dataKey = this.RESERVATION_DATA_KEY(id);
+      const id = this.parseReservationId(member);
+      const dataKey = REDIS_KEYS.PUSH_RESERVATION_DATA(id);
 
       const data = await this.redis.hGetAll(dataKey);
       if (!data || !data.title) continue;
@@ -191,13 +197,13 @@ export class ExpoNotificationService implements IPushSenderPort {
     }
 
     const dataKeys = members.map((m) =>
-      this.RESERVATION_DATA_KEY(Number(m.split(':')[1])),
+      REDIS_KEYS.PUSH_RESERVATION_DATA(this.parseReservationId(m)),
     );
 
     // 실행된 예약 제거
     await this.redis
       .multi()
-      .zRem(this.RESERVATION_ZSET_KEY, members)
+      .zRem(REDIS_KEYS.PUSH_RESERVATION_ZSET, members)
       .del(dataKeys)
       .exec();
 

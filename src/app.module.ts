@@ -19,6 +19,7 @@ import { TermModule } from '@modules/term/term.module';
 import { ApplicationModule } from '@modules/application/application.module';
 import { RetreatModule } from '@modules/retreat/retreat.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { RabbitMqModule } from '@infrastructure/rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     }),
     DatabaseModule,
     RedisModule,
+    RabbitMqModule,
     AuthModule,
     UserModule,
     SystemModule,

@@ -6,6 +6,7 @@ import { PUSH_SENDER_PORT } from './ports/push-sender.port';
 import { PushTokenService } from '@modules/push-token/application/push-token.service';
 import { Notice } from '@modules/notice/domain/entities/notice.entity';
 import { PushToken } from '@modules/push-token/domain/entities/push-token.entity';
+import { RabbitMqProducerService } from '@infrastructure/rabbitmq/rabbitmq.producer.service';
 
 // ── Mock Dependencies ───────────────────────────────────────────
 const mockNoticeRepository = {
@@ -24,6 +25,10 @@ const mockPushSender = {
 
 const mockTokenService = {
   getTokens: jest.fn(),
+};
+
+const mockRabbitMqProducer = {
+  publish: jest.fn().mockResolvedValue(undefined),
 };
 
 // ── Helpers ─────────────────────────────────────────────────────
@@ -67,6 +72,10 @@ describe('NoticePushService', () => {
           provide: PushTokenService,
           useValue: mockTokenService,
         },
+        {
+          provide: RabbitMqProducerService,
+          useValue: mockRabbitMqProducer,
+        },
       ],
     }).compile();
 
@@ -107,6 +116,7 @@ describe('NoticePushService', () => {
           channelId: 'notice',
         }),
       );
+      expect(mockRabbitMqProducer.publish).toHaveBeenCalled();
       expect(mockPushSender.reserve).not.toHaveBeenCalled();
     });
 
@@ -167,6 +177,7 @@ describe('NoticePushService', () => {
           reserveTime: '2026-06-01T10:00:00.000Z',
         }),
       );
+      expect(mockRabbitMqProducer.publish).toHaveBeenCalled();
       expect(mockPushSender.send).not.toHaveBeenCalled();
       expect(mockTokenService.getTokens).not.toHaveBeenCalled();
     });

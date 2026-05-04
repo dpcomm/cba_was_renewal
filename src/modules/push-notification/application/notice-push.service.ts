@@ -5,6 +5,12 @@ import { Notice } from '@modules/notice/domain/entities/notice.entity';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 import { PUSH_SENDER_PORT, IPushSenderPort } from './ports/push-sender.port';
 import { PushTokenService } from '@modules/push-token/application/push-token.service';
+import { RabbitMqProducerService } from '@infrastructure/rabbitmq/rabbitmq.producer.service';
+import {
+  RABBITMQ_QUEUES,
+  RABBITMQ_ROUTING_KEYS,
+} from '@shared/constants/rabbitmq.constants';
+import { PushNoticeRequestedMessage } from '@infrastructure/rabbitmq/rabbitmq.messages';
 
 @Injectable()
 export class NoticePushService {
@@ -16,6 +22,7 @@ export class NoticePushService {
     @Inject(PUSH_SENDER_PORT)
     private readonly pushSender: IPushSenderPort,
     private readonly tokenService: PushTokenService,
+    private readonly rabbitMqProducer: RabbitMqProducerService,
   ) {}
 
   async sendNoticePush(
@@ -40,6 +47,22 @@ export class NoticePushService {
       body: includeBody ? notice.body : '',
       channelId: 'notice',
     };
+
+    const message: PushNoticeRequestedMessage = {
+      noticeId: id,
+      title: notice.title,
+      body: includeBody ? notice.body : '',
+      target: options.target,
+      reserveTime: options.reserveTime,
+      includeBody,
+      requestedAt: new Date().toISOString(),
+    };
+
+    await this.rabbitMqProducer.publish({
+      queue: RABBITMQ_QUEUES.PUSH_NOTICE_REQUESTED,
+      routingKey: RABBITMQ_ROUTING_KEYS.PUSH_NOTICE_REQUESTED,
+      payload: message,
+    });
 
     if (options.reserveTime) {
       await this.pushSender.reserve({
