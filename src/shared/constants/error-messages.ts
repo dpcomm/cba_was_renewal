@@ -11,8 +11,7 @@ export const ERROR_MESSAGES = {
   CARPOOL_ALREADY_JOINED: 'Carpool already joined',
   CARPOOL_NOT_MEMBER: 'Carpool not member',
   CARPOOL_NO_SEAT: 'No seat left in carpool',
-  FCM_TOKEN_NOT_FOUND: 'FCM Token not found',
-  FCM_TOKEN_ALREADY_REGISTED: 'Token is already registered to another account.',
+
   NOTICE_NOT_FOUND: 'Notice not found',
   EMAIL_ALREADY_EXISTS: 'Email already exists',
   EMAIL_NOT_REGISTERED: 'Email not registered',
@@ -28,4 +27,14 @@ export const ERROR_MESSAGES = {
   LECTURE_CAPACITY_EXCEEDED: 'Selected users exceed remaining lecture capacity',
   LECTURE_ELIGIBLE_USER_REQUIRED:
     'Ineligible user included for lecture enrollment',
+  SURVEY_NOT_FOUND: 'Survey not found',
+  QUESTION_NOT_FOUND: 'Question not found',
+  INVALID_QUESTION_ID: 'Invalid Question Ids',
+  INVALID_QUESTION_OPTIONS_FOR_SUBJECTIVE:
+    'SUBJECTIVE type cannot have options',
+  QUESTION_OPTIONS_REQUIRED: 'Options are required for select type',
+  DUPLICATE_QUESTION_OPTION_LABELS: 'Duplicate option labels',
+  TRANSPORT_ALREADY_EXISTS: 'The transport option already exists',
+  TRANSPORT_NOT_FOUND: 'Transport option not found',
+  CANNOT_DELETE_TRANSPORT_WITH_APPLICATIONS: 'Cannot delete transport with applications',
 } as const;

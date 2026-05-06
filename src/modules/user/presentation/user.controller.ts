@@ -1,41 +1,35 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Patch,
-  Query,
-  Req,
-} from '@nestjs/common';
-import { UserService } from '../application/user.service';
+import { Body, Controller, Delete, Get, Patch, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody } from '@nestjs/swagger';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
-import { UserResponseDto } from './dto/user.response.dto';
-import { ok } from '@shared/responses/api-response';
-import { UpdateUserDto } from '../application/dto/update-user.dto';
-import { UpdateEmailDto } from '../application/dto/update-email.dto';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
+import { UserResponseDto } from './dto/response/user.response.dto';
+import { ok } from '@shared/responses/api-response';
+import { UpdateUserDto } from './dto/request/update-user.request.dto';
+import { UpdateEmailDto } from './dto/request/update-email.request.dto';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
-import { RankGuard } from '@shared/decorators/rank-guard.decorator';
-import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
-import {
-  UserSearchListResponse,
-  UserSearchResponseDto,
-} from './dto/user.search.response.dto';
+import { GetUserQuery } from '../application/queries/get-user.query';
+import { UpdateUserProfileUseCase } from '../application/usecases/update-user-profile.usecase';
+import { UpdateUserEmailUseCase } from '../application/usecases/update-user-email.usecase';
+import { DeleteAccountUseCase } from '../application/usecases/delete-account.usecase';
 
 @ApiTags('Users')
 @Controller('users')
 @JwtGuard()
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly getUserQuery: GetUserQuery,
+    private readonly updateUserProfile: UpdateUserProfileUseCase,
+    private readonly updateUserEmail: UpdateUserEmailUseCase,
+    private readonly deleteAccountUseCase: DeleteAccountUseCase,
+  ) {}
 
   @Get('me')
   @ApiOperation({ summary: '내 정보 조회' })
   @ApiSuccessResponse({ type: UserResponseDto })
   @ApiFailureResponse(404, ERROR_MESSAGES.USER_NOT_FOUND)
   async getProfile(@Req() req) {
-    const user = await this.userService.findOneById(req.user.id);
+    const user = await this.getUserQuery.byId(req.user.id);
     return ok(new UserResponseDto(user), 'Success fetch profile');
   }
 
@@ -44,7 +38,7 @@ export class UserController {
   @ApiSuccessResponse({ type: UserResponseDto })
   @ApiFailureResponse(404, ERROR_MESSAGES.USER_NOT_FOUND)
   async updateUser(@Req() req, @Body() dto: UpdateUserDto) {
-    const user = await this.userService.updateUser(req.user.id, dto);
+    const user = await this.updateUserProfile.execute(req.user.id, dto);
     return ok(new UserResponseDto(user), 'Success update profile');
   }
 
@@ -56,7 +50,7 @@ export class UserController {
   @ApiFailureResponse(404, ERROR_MESSAGES.USER_NOT_FOUND)
   @ApiBody({ type: UpdateEmailDto })
   async updateEmail(@Req() req, @Body() dto: UpdateEmailDto) {
-    const user = await this.userService.updateEmail(req.user.id, dto);
+    const user = await this.updateUserEmail.execute(req.user.id, dto);
     return ok(new UserResponseDto(user), 'Success update email');
   }
 
@@ -65,22 +59,7 @@ export class UserController {
   @ApiSuccessResponse({})
   @ApiFailureResponse(404, ERROR_MESSAGES.USER_NOT_FOUND)
   async deleteAccount(@Req() req) {
-    await this.userService.deleteAccount(req.user.id);
+    await this.deleteAccountUseCase.execute(req.user.id);
     return ok(null, 'Success delete account');
-  }
-
-  @Get('search')
-  @RankGuard(UserRank.ADMIN)
-  @ApiOperation({ summary: '이름으로 사용자 검색' })
-  @ApiSuccessResponse({ type: UserSearchResponseDto, isArray: true })
-  async searchUsers(@Query('name') name: string) {
-    const users = await this.userService.searchUsersByName(name ?? '');
-    const payload = users.map((user) => ({
-      id: user.id,
-      name: user.name,
-      group: user.group,
-      phone: user.phone,
-    }));
-    return ok<UserSearchListResponse>(payload, 'Success search users');
   }
 }

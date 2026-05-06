@@ -20,7 +20,7 @@ import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { ApiTags, ApiOperation, ApiBody, ApiHeader } from '@nestjs/swagger';
 import { AuthResponseDto } from './dto/auth.response.dto';
 import { RefreshResponseDto } from './dto/refresh.response.dto';
-import { UserResponseDto } from '@modules/user/presentation/dto/user.response.dto';
+import { UserResponseDto } from '@modules/user/presentation/dto/response/user.response.dto';
 import { FindIdResponseDto } from './dto/find-id.response.dto';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';

@@ -6,8 +6,7 @@ import { RedisModule } from '@infrastructure/redis/redis.module';
 import { CarpoolModule } from '@modules/carpool/carpool.module';
 import { ChatModule } from '@modules/chat/chat.module';
 import { AuthModule } from '@modules/auth/auth.module';
-import { FirebaseModule } from '@infrastructure/firebase/firebase.module';
-import { FcmTokenModule } from '@modules/fcm/fcm-token.module';
+
 import { MailModule } from '@infrastructure/mail/mail.module';
 import { UserModule } from '@modules/user/user.module';
 import { SystemModule } from '@modules/system/system.module';
@@ -18,6 +17,7 @@ import { LectureModule } from '@modules/lecture/lecture.module';
 import { DashboardModule } from '@modules/dashboard/dashboard.module';
 import { TermModule } from '@modules/term/term.module';
 import { ApplicationModule } from '@modules/application/application.module';
+import { RetreatModule } from '@modules/retreat/retreat.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -38,8 +38,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ConsentModule,
     CarpoolModule,
     ChatModule,
-    FirebaseModule,
-    FcmTokenModule,
+
     MailModule,
     ExpoPushTokenModule,
     PushNotificationModule,
@@ -48,6 +47,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     TermModule,
     DashboardModule,
     ApplicationModule,
+    RetreatModule,
     ScheduleModule.forRoot(),
   ],
 })
