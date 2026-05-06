@@ -22,7 +22,9 @@ pipeline {
         ]) {
           sh '''
             set -e
+            rm -f .env.dev
             cp "$ENV_DEV" .env.dev
+            chmod 600 .env.dev
           '''
         }
       }
