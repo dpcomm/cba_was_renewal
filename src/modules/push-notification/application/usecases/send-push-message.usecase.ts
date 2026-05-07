@@ -11,9 +11,7 @@ import { PushMessageRequestedMessage } from '@infrastructure/rabbitmq/rabbitmq.m
 export class SendPushMessageUseCase {
   private readonly logger = new Logger(SendPushMessageUseCase.name);
 
-  constructor(
-    private readonly rabbitMqProducer: RabbitMqProducerService,
-  ) {}
+  constructor(private readonly rabbitMqProducer: RabbitMqProducerService) {}
 
   async execute(dto: {
     title: string;
