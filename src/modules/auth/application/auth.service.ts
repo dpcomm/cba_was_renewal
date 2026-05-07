@@ -5,7 +5,6 @@ import {
   Inject,
   Logger,
 } from '@nestjs/common';
-import { MailService } from '@infrastructure/mail/mail.service';
 import { GetUserQuery } from '@modules/user/application/queries/get-user.query';
 import { SearchUsersQuery } from '@modules/user/application/queries/search-users.query';
 import { CreateUserUseCase } from '@modules/user/application/usecases/create-user.usecase';
@@ -14,6 +13,7 @@ import { User } from '@modules/user/domain/entities/user.entity';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { RedisClientType } from 'redis';
+import { randomUUID } from 'crypto';
 import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
 import { RegisterDto } from './dto/register.dto';
 import { AuthResponseDto } from '../presentation/dto/auth.response.dto';
@@ -49,7 +49,6 @@ export class AuthService {
     private readonly updateUserProfile: UpdateUserProfileUseCase,
     private readonly jwtService: JwtService,
     @Inject(REDIS_CLIENT_TOKEN) private readonly redis: RedisClientType,
-    private readonly mailService: MailService,
     private readonly rabbitMqProducer: RabbitMqProducerService,
   ) {}
 
@@ -200,18 +199,28 @@ export class AuthService {
     await this.redis.set(redisKey, code, {
       EX: REDIS_TTL_SECONDS.EMAIL_VERIFICATION_CODE,
     });
+    const occurredAt = new Date().toISOString();
     const message: EmailVerificationRequestedMessage = {
-      email,
-      code,
-      verificationType: type,
-      requestedAt: new Date().toISOString(),
+      messageId: randomUUID(),
+      jobId: randomUUID(),
+      eventType: RABBITMQ_ROUTING_KEYS.EMAIL_VERIFICATION_REQUESTED,
+      occurredAt,
+      producer: 'cba-was-renewal-api',
+      version: 1,
+      data: {
+        email,
+        code,
+        verificationType: type,
+      },
+      meta: {
+        retryCount: 0,
+      },
     };
     await this.rabbitMqProducer.publish({
       queue: RABBITMQ_QUEUES.EMAIL_VERIFICATION_REQUESTED,
       routingKey: RABBITMQ_ROUTING_KEYS.EMAIL_VERIFICATION_REQUESTED,
       payload: message,
     });
-    await this.mailService.sendVerificationEmail(email, code);
   }
 
   async verifyEmail(

@@ -6,8 +6,6 @@ import { RedisModule } from '@infrastructure/redis/redis.module';
 import { CarpoolModule } from '@modules/carpool/carpool.module';
 import { ChatModule } from '@modules/chat/chat.module';
 import { AuthModule } from '@modules/auth/auth.module';
-
-import { MailModule } from '@infrastructure/mail/mail.module';
 import { UserModule } from '@modules/user/user.module';
 import { SystemModule } from '@modules/system/system.module';
 import { PushTokenModule } from '@modules/push-token/push-token.module';
@@ -20,16 +18,13 @@ import { ApplicationModule } from '@modules/application/application.module';
 import { RetreatModule } from '@modules/retreat/retreat.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RabbitMqModule } from '@infrastructure/rabbitmq/rabbitmq.module';
+import { getEnvFilePath } from '@shared/config/env-file-path';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['prod', 'production'].includes(
-        process.env.NODE_ENV || 'dev',
-      )
-        ? '.env.prod'
-        : '.env.dev',
+      envFilePath: getEnvFilePath(),
     }),
     DatabaseModule,
     RedisModule,
@@ -40,8 +35,6 @@ import { RabbitMqModule } from '@infrastructure/rabbitmq/rabbitmq.module';
     ConsentModule,
     CarpoolModule,
     ChatModule,
-
-    MailModule,
     PushTokenModule,
     PushNotificationModule,
     NoticeModule,

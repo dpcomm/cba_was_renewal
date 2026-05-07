@@ -1,10 +1,9 @@
-import { Injectable, NotFoundException, Logger, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { randomUUID } from 'crypto';
 import { Notice } from '@modules/notice/domain/entities/notice.entity';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
-import { PUSH_SENDER_PORT, IPushSenderPort } from './ports/push-sender.port';
-import { PushTokenService } from '@modules/push-token/application/push-token.service';
 import { RabbitMqProducerService } from '@infrastructure/rabbitmq/rabbitmq.producer.service';
 import {
   RABBITMQ_QUEUES,
@@ -19,9 +18,6 @@ export class NoticePushService {
   constructor(
     @InjectRepository(Notice)
     private readonly noticeRepository: Repository<Notice>,
-    @Inject(PUSH_SENDER_PORT)
-    private readonly pushSender: IPushSenderPort,
-    private readonly tokenService: PushTokenService,
     private readonly rabbitMqProducer: RabbitMqProducerService,
   ) {}
 
@@ -48,36 +44,34 @@ export class NoticePushService {
       channelId: 'notice',
     };
 
+    const occurredAt = new Date().toISOString();
     const message: PushNoticeRequestedMessage = {
-      noticeId: id,
-      title: notice.title,
-      body: includeBody ? notice.body : '',
-      target: options.target,
-      reserveTime: options.reserveTime,
-      includeBody,
-      requestedAt: new Date().toISOString(),
+      messageId: randomUUID(),
+      jobId: randomUUID(),
+      eventType: RABBITMQ_ROUTING_KEYS.PUSH_NOTICE_REQUESTED,
+      occurredAt,
+      producer: 'cba-was-renewal-api',
+      version: 1,
+      data: {
+        noticeId: id,
+        title: notice.title,
+        body: includeBody ? notice.body : '',
+        target: options.target,
+        reserveTime: options.reserveTime,
+        includeBody,
+      },
+      meta: {
+        retryCount: 0,
+      },
     };
 
     await this.rabbitMqProducer.publish({
-      queue: RABBITMQ_QUEUES.PUSH_NOTICE_REQUESTED,
+      queue: RABBITMQ_QUEUES.PUSH_REQUESTED,
       routingKey: RABBITMQ_ROUTING_KEYS.PUSH_NOTICE_REQUESTED,
       payload: message,
     });
-
-    if (options.reserveTime) {
-      await this.pushSender.reserve({
-        title: notice.title,
-        body: includeBody ? notice.body : '',
-        reserveTime: options.reserveTime,
-        target: options.target,
-      });
-      return;
-    }
-
-    const tokens = await this.tokenService.getTokens(options.target);
-    await this.pushSender.send(tokens, notification);
     this.logger.log(
-      `공지 푸시 발송: "${notice.title}" (공지ID: ${id}, 타겟: ${options.target ? options.target.join(',') : '전체'}, 토큰수: ${tokens?.length ?? 0})`,
+      `공지 푸시 큐 발행: "${notification.title}" (공지ID: ${id}, 타겟: ${options.target ? options.target.join(',') : '전체'})`,
     );
   }
 }

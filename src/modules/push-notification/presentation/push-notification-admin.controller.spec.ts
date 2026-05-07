@@ -1,9 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { PushNotificationAdminController } from './push-notification-admin.controller';
 import { PUSH_SENDER_PORT } from '@modules/push-notification/application/ports/push-sender.port';
-import { PushTokenService } from '@modules/push-token/application/push-token.service';
 import { NoticePushService } from '@modules/push-notification/application/notice-push.service';
-import { PushToken } from '@modules/push-token/domain/entities/push-token.entity';
+import { RabbitMqProducerService } from '@infrastructure/rabbitmq/rabbitmq.producer.service';
+import {
+  RABBITMQ_QUEUES,
+  RABBITMQ_ROUTING_KEYS,
+} from '@shared/constants/rabbitmq.constants';
 
 // ── Mock Dependencies ───────────────────────────────────────────
 const mockPushSender = {
@@ -23,24 +26,13 @@ const mockPushSender = {
   }),
 };
 
-const mockTokenService = {
-  getTokens: jest.fn().mockResolvedValue([]),
-};
-
 const mockNoticePushService = {
   sendNoticePush: jest.fn().mockResolvedValue(undefined),
 };
 
-// ── Helpers ─────────────────────────────────────────────────────
-function createToken(token: string): PushToken {
-  const entity = new PushToken();
-  entity.id = 1;
-  entity.userId = 1;
-  entity.token = token;
-  entity.provider = 'expo';
-  entity.createdAt = new Date();
-  return entity;
-}
+const mockRabbitMqProducer = {
+  publish: jest.fn().mockResolvedValue(undefined),
+};
 
 // ── Tests ───────────────────────────────────────────────────────
 describe('PushNotificationAdminController', () => {
@@ -53,8 +45,8 @@ describe('PushNotificationAdminController', () => {
       controllers: [PushNotificationAdminController],
       providers: [
         { provide: PUSH_SENDER_PORT, useValue: mockPushSender },
-        { provide: PushTokenService, useValue: mockTokenService },
         { provide: NoticePushService, useValue: mockNoticePushService },
+        { provide: RabbitMqProducerService, useValue: mockRabbitMqProducer },
       ],
     }).compile();
 
@@ -63,33 +55,51 @@ describe('PushNotificationAdminController', () => {
 
   // ── create() ────────────────────────────────────────────────
   describe('create()', () => {
-    it('토큰을 조회한 후 푸시 메시지를 발송해야 한다', async () => {
-      const tokens = [createToken('ExponentPushToken[valid]')];
-      mockTokenService.getTokens.mockResolvedValue(tokens);
-
+    it('단일 푸시 메시지를 큐로 발행해야 한다', async () => {
       const dto = { title: '테스트', body: '본문', target: [1] };
       const result = await controller.create(dto);
 
-      expect(mockTokenService.getTokens).toHaveBeenCalledWith([1]);
-      expect(mockPushSender.send).toHaveBeenCalledWith(
-        tokens,
-        expect.objectContaining({ title: '테스트', body: '본문' }),
+      expect(mockRabbitMqProducer.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          queue: RABBITMQ_QUEUES.PUSH_REQUESTED,
+          routingKey: RABBITMQ_ROUTING_KEYS.PUSH_MESSAGE_REQUESTED,
+          payload: expect.objectContaining({
+            eventType: RABBITMQ_ROUTING_KEYS.PUSH_MESSAGE_REQUESTED,
+            data: expect.objectContaining({
+              title: '테스트',
+              body: '본문',
+              target: [1],
+              channelId: 'default',
+            }),
+            meta: expect.objectContaining({
+              retryCount: 0,
+            }),
+          }),
+        }),
       );
+      expect(mockPushSender.send).not.toHaveBeenCalled();
       expect(result.data).toBeNull();
     });
 
-    it('target 미지정 시 전체 토큰을 조회해야 한다', async () => {
-      mockTokenService.getTokens.mockResolvedValue([]);
-
+    it('target 미지정 시 전체 대상 큐 메시지를 발행해야 한다', async () => {
       const dto = { title: '전체', body: '본문' };
       await controller.create(dto as any);
 
-      expect(mockTokenService.getTokens).toHaveBeenCalledWith(undefined);
+      expect(mockRabbitMqProducer.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            data: expect.objectContaining({
+              target: undefined,
+            }),
+          }),
+        }),
+      );
     });
 
-    it('발송 서비스에서 에러 발생 시 예외가 전파되어야 한다', async () => {
-      mockTokenService.getTokens.mockResolvedValue([]);
-      mockPushSender.send.mockRejectedValueOnce(new Error('Service Error'));
+    it('큐 발행에서 에러 발생 시 예외가 전파되어야 한다', async () => {
+      mockRabbitMqProducer.publish.mockRejectedValueOnce(
+        new Error('Service Error'),
+      );
 
       const dto = { title: '에러', body: '본문' };
       await expect(controller.create(dto as any)).rejects.toThrow(

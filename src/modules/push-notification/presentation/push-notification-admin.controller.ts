@@ -9,6 +9,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { ok } from '@shared/responses/api-response';
+import { randomUUID } from 'crypto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   PUSH_SENDER_PORT,
@@ -20,12 +21,17 @@ import {
 } from './dto/response/push-notification-request.dto';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
-import { PushTokenService } from '@modules/push-token/application/push-token.service';
 import { ReservationPushNotificationResponseDto } from './dto/response/push-notification-response.dto';
 import { NoticePushRequestDto } from './dto/request/notice-push-request.dto';
 import { NoticePushService } from '@modules/push-notification/application/notice-push.service';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 import { AdminGuard } from '@shared/decorators/admin-guard.decorator';
+import { RabbitMqProducerService } from '@infrastructure/rabbitmq/rabbitmq.producer.service';
+import {
+  RABBITMQ_QUEUES,
+  RABBITMQ_ROUTING_KEYS,
+} from '@shared/constants/rabbitmq.constants';
+import { PushMessageRequestedMessage } from '@infrastructure/rabbitmq/rabbitmq.messages';
 
 @ApiTags('Admin - Push Notifications')
 @Controller('admin/push-notification')
@@ -34,8 +40,8 @@ export class PushNotificationAdminController {
   constructor(
     @Inject(PUSH_SENDER_PORT)
     private readonly pushSender: IPushSenderPort,
-    private readonly pushTokenService: PushTokenService,
     private readonly noticePushService: NoticePushService,
+    private readonly rabbitMqProducer: RabbitMqProducerService,
   ) {}
 
   @Post()
@@ -46,12 +52,29 @@ export class PushNotificationAdminController {
   })
   @ApiSuccessResponse({})
   async create(@Body() dto: CreatePushNotificationDto) {
-    const tokens = await this.pushTokenService.getTokens(dto.target);
+    const occurredAt = new Date().toISOString();
+    const message: PushMessageRequestedMessage = {
+      messageId: randomUUID(),
+      jobId: randomUUID(),
+      eventType: RABBITMQ_ROUTING_KEYS.PUSH_MESSAGE_REQUESTED,
+      occurredAt,
+      producer: 'cba-was-renewal-api',
+      version: 1,
+      data: {
+        title: dto.title,
+        body: dto.body,
+        target: dto.target,
+        channelId: 'default',
+      },
+      meta: {
+        retryCount: 0,
+      },
+    };
 
-    await this.pushSender.send(tokens, {
-      title: dto.title,
-      body: dto.body,
-      channelId: 'default',
+    await this.rabbitMqProducer.publish({
+      queue: RABBITMQ_QUEUES.PUSH_REQUESTED,
+      routingKey: RABBITMQ_ROUTING_KEYS.PUSH_MESSAGE_REQUESTED,
+      payload: message,
     });
 
     return ok<null>(null, 'Success send push message');

@@ -2,29 +2,16 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { NoticePushService } from './notice-push.service';
-import { PUSH_SENDER_PORT } from './ports/push-sender.port';
-import { PushTokenService } from '@modules/push-token/application/push-token.service';
 import { Notice } from '@modules/notice/domain/entities/notice.entity';
-import { PushToken } from '@modules/push-token/domain/entities/push-token.entity';
 import { RabbitMqProducerService } from '@infrastructure/rabbitmq/rabbitmq.producer.service';
+import {
+  RABBITMQ_QUEUES,
+  RABBITMQ_ROUTING_KEYS,
+} from '@shared/constants/rabbitmq.constants';
 
 // ── Mock Dependencies ───────────────────────────────────────────
 const mockNoticeRepository = {
   findOne: jest.fn(),
-};
-
-const mockPushSender = {
-  send: jest.fn().mockResolvedValue(undefined),
-  reserve: jest.fn().mockResolvedValue({
-    id: 1,
-    title: 'test',
-    body: 'body',
-    reserveTime: '2026-06-01T10:00:00.000Z',
-  }),
-};
-
-const mockTokenService = {
-  getTokens: jest.fn(),
 };
 
 const mockRabbitMqProducer = {
@@ -40,16 +27,6 @@ function createNotice(overrides?: Partial<Notice>): Notice {
   return notice;
 }
 
-function createToken(token: string, userId = 1): PushToken {
-  const entity = new PushToken();
-  entity.id = userId;
-  entity.userId = userId;
-  entity.token = token;
-  entity.provider = 'expo';
-  entity.createdAt = new Date();
-  return entity;
-}
-
 // ── Tests ───────────────────────────────────────────────────────
 describe('NoticePushService', () => {
   let service: NoticePushService;
@@ -63,14 +40,6 @@ describe('NoticePushService', () => {
         {
           provide: getRepositoryToken(Notice),
           useValue: mockNoticeRepository,
-        },
-        {
-          provide: PUSH_SENDER_PORT,
-          useValue: mockPushSender,
-        },
-        {
-          provide: PushTokenService,
-          useValue: mockTokenService,
         },
         {
           provide: RabbitMqProducerService,
@@ -91,78 +60,92 @@ describe('NoticePushService', () => {
         NotFoundException,
       );
 
-      expect(mockPushSender.send).not.toHaveBeenCalled();
-      expect(mockPushSender.reserve).not.toHaveBeenCalled();
+      expect(mockRabbitMqProducer.publish).not.toHaveBeenCalled();
     });
 
-    it('즉시 발송: 제목과 본문을 포함하여 전체 사용자에게 발송해야 한다', async () => {
+    it('즉시 발송: 제목과 본문을 포함하여 전체 사용자 대상 큐 메시지를 발행해야 한다', async () => {
       const notice = createNotice();
       mockNoticeRepository.findOne.mockResolvedValue(notice);
-
-      const tokens = [
-        createToken('ExponentPushToken[a]', 1),
-        createToken('ExponentPushToken[b]', 2),
-      ];
-      mockTokenService.getTokens.mockResolvedValue(tokens);
 
       await service.sendNoticePush(1, {});
 
-      expect(mockTokenService.getTokens).toHaveBeenCalledWith(undefined);
-      expect(mockPushSender.send).toHaveBeenCalledWith(
-        tokens,
+      expect(mockRabbitMqProducer.publish).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: '공지 제목',
-          body: '공지 본문 내용입니다.',
-          channelId: 'notice',
+          queue: RABBITMQ_QUEUES.PUSH_REQUESTED,
+          routingKey: RABBITMQ_ROUTING_KEYS.PUSH_NOTICE_REQUESTED,
+          payload: expect.objectContaining({
+            eventType: RABBITMQ_ROUTING_KEYS.PUSH_NOTICE_REQUESTED,
+            data: expect.objectContaining({
+              noticeId: 1,
+              title: '공지 제목',
+              body: '공지 본문 내용입니다.',
+              target: undefined,
+              reserveTime: undefined,
+              includeBody: true,
+            }),
+            meta: expect.objectContaining({
+              retryCount: 0,
+            }),
+          }),
         }),
       );
-      expect(mockRabbitMqProducer.publish).toHaveBeenCalled();
-      expect(mockPushSender.reserve).not.toHaveBeenCalled();
     });
 
-    it('즉시 발송: target이 지정되면 해당 사용자에게만 토큰을 조회해야 한다', async () => {
+    it('즉시 발송: target이 지정되면 큐 메시지에 target을 포함해야 한다', async () => {
       const notice = createNotice();
       mockNoticeRepository.findOne.mockResolvedValue(notice);
-      mockTokenService.getTokens.mockResolvedValue([]);
 
       await service.sendNoticePush(1, { target: [10, 20] });
 
-      expect(mockTokenService.getTokens).toHaveBeenCalledWith([10, 20]);
+      expect(mockRabbitMqProducer.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            data: expect.objectContaining({
+              target: [10, 20],
+            }),
+          }),
+        }),
+      );
     });
 
-    it('includeBody: false → 본문 없이 제목만 발송해야 한다', async () => {
+    it('includeBody: false → 본문 없이 제목만 큐 메시지로 발행해야 한다', async () => {
       const notice = createNotice();
       mockNoticeRepository.findOne.mockResolvedValue(notice);
-      mockTokenService.getTokens.mockResolvedValue([]);
 
       await service.sendNoticePush(1, { includeBody: false });
 
-      expect(mockPushSender.send).toHaveBeenCalledWith(
-        expect.anything(),
+      expect(mockRabbitMqProducer.publish).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: '공지 제목',
-          body: '',
-          channelId: 'notice',
+          payload: expect.objectContaining({
+            data: expect.objectContaining({
+              title: '공지 제목',
+              body: '',
+              includeBody: false,
+            }),
+          }),
         }),
       );
     });
 
-    it('includeBody 미지정(기본값) → 본문을 포함하여 발송해야 한다', async () => {
+    it('includeBody 미지정(기본값) → 본문을 포함하여 큐 메시지를 발행해야 한다', async () => {
       const notice = createNotice();
       mockNoticeRepository.findOne.mockResolvedValue(notice);
-      mockTokenService.getTokens.mockResolvedValue([]);
 
       await service.sendNoticePush(1, {});
 
-      expect(mockPushSender.send).toHaveBeenCalledWith(
-        expect.anything(),
+      expect(mockRabbitMqProducer.publish).toHaveBeenCalledWith(
         expect.objectContaining({
-          body: '공지 본문 내용입니다.',
+          payload: expect.objectContaining({
+            data: expect.objectContaining({
+              body: '공지 본문 내용입니다.',
+              includeBody: true,
+            }),
+          }),
         }),
       );
     });
 
-    it('예약 발송: reserveTime이 있으면 reserve()를 호출하고 send()는 호출하지 않아야 한다', async () => {
+    it('예약 발송: reserveTime이 있으면 예약 큐 메시지를 발행해야 한다', async () => {
       const notice = createNotice();
       mockNoticeRepository.findOne.mockResolvedValue(notice);
 
@@ -170,19 +153,20 @@ describe('NoticePushService', () => {
         reserveTime: '2026-06-01T10:00:00.000Z',
       });
 
-      expect(mockPushSender.reserve).toHaveBeenCalledWith(
+      expect(mockRabbitMqProducer.publish).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: '공지 제목',
-          body: '공지 본문 내용입니다.',
-          reserveTime: '2026-06-01T10:00:00.000Z',
+          payload: expect.objectContaining({
+            data: expect.objectContaining({
+              title: '공지 제목',
+              body: '공지 본문 내용입니다.',
+              reserveTime: '2026-06-01T10:00:00.000Z',
+            }),
+          }),
         }),
       );
-      expect(mockRabbitMqProducer.publish).toHaveBeenCalled();
-      expect(mockPushSender.send).not.toHaveBeenCalled();
-      expect(mockTokenService.getTokens).not.toHaveBeenCalled();
     });
 
-    it('예약 발송 + includeBody: false → 본문 없이 예약해야 한다', async () => {
+    it('예약 발송 + includeBody: false → 본문 없이 예약 큐 메시지를 발행해야 한다', async () => {
       const notice = createNotice();
       mockNoticeRepository.findOne.mockResolvedValue(notice);
 
@@ -191,15 +175,19 @@ describe('NoticePushService', () => {
         includeBody: false,
       });
 
-      expect(mockPushSender.reserve).toHaveBeenCalledWith(
+      expect(mockRabbitMqProducer.publish).toHaveBeenCalledWith(
         expect.objectContaining({
-          title: '공지 제목',
-          body: '',
+          payload: expect.objectContaining({
+            data: expect.objectContaining({
+              title: '공지 제목',
+              body: '',
+            }),
+          }),
         }),
       );
     });
 
-    it('예약 발송 + target 지정 → target이 예약 데이터에 포함되어야 한다', async () => {
+    it('예약 발송 + target 지정 → target이 예약 큐 메시지에 포함되어야 한다', async () => {
       const notice = createNotice();
       mockNoticeRepository.findOne.mockResolvedValue(notice);
 
@@ -208,9 +196,13 @@ describe('NoticePushService', () => {
         target: [5, 10],
       });
 
-      expect(mockPushSender.reserve).toHaveBeenCalledWith(
+      expect(mockRabbitMqProducer.publish).toHaveBeenCalledWith(
         expect.objectContaining({
-          target: [5, 10],
+          payload: expect.objectContaining({
+            data: expect.objectContaining({
+              target: [5, 10],
+            }),
+          }),
         }),
       );
     });
