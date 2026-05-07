@@ -11,7 +11,7 @@ RUN --mount=type=cache,target=/root/.npm npm ci
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN npm run build && npm run build:email-worker && npm run build:push-worker
 
 FROM base AS runner
 ENV NODE_ENV=production

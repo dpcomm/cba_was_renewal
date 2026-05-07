@@ -5,7 +5,6 @@ import {
   Inject,
   Logger,
 } from '@nestjs/common';
-import { MailService } from '@infrastructure/mail/mail.service';
 import { GetUserQuery } from '@modules/user/application/queries/get-user.query';
 import { SearchUsersQuery } from '@modules/user/application/queries/search-users.query';
 import { CreateUserUseCase } from '@modules/user/application/usecases/create-user.usecase';
@@ -14,6 +13,7 @@ import { User } from '@modules/user/domain/entities/user.entity';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { RedisClientType } from 'redis';
+import { randomUUID } from 'crypto';
 import { ERROR_MESSAGES } from '../../../shared/constants/error-messages';
 import { RegisterDto } from './dto/register.dto';
 import { AuthResponseDto } from '../presentation/dto/auth.response.dto';
@@ -26,6 +26,17 @@ import {
   generateMailVerificationToken,
   validateMailVerificationToken,
 } from '@shared/utils/mail-verification.util';
+import { RabbitMqProducerService } from '@infrastructure/rabbitmq/rabbitmq.producer.service';
+import {
+  RABBITMQ_QUEUES,
+  RABBITMQ_ROUTING_KEYS,
+} from '@shared/constants/rabbitmq.constants';
+import { EmailVerificationRequestedMessage } from '@infrastructure/rabbitmq/rabbitmq.messages';
+import {
+  REDIS_CLIENT_TOKEN,
+  REDIS_KEYS,
+  REDIS_TTL_SECONDS,
+} from '@shared/constants/redis.constants';
 
 @Injectable()
 export class AuthService {
@@ -37,8 +48,8 @@ export class AuthService {
     private readonly createUserUseCase: CreateUserUseCase,
     private readonly updateUserProfile: UpdateUserProfileUseCase,
     private readonly jwtService: JwtService,
-    @Inject('REDIS_CLIENT') private readonly redis: RedisClientType,
-    private readonly mailService: MailService,
+    @Inject(REDIS_CLIENT_TOKEN) private readonly redis: RedisClientType,
+    private readonly rabbitMqProducer: RabbitMqProducerService,
   ) {}
 
   async validateUser(userId: string, password: string): Promise<User> {
@@ -62,7 +73,9 @@ export class AuthService {
       { id: user.id, userId: user.userId, rank: user.rank },
       { expiresIn },
     );
-    await this.redis.set(String(user.id), refreshToken, { EX: expiresIn });
+    await this.redis.set(REDIS_KEYS.AUTH_REFRESH_TOKEN(user.id), refreshToken, {
+      EX: expiresIn,
+    });
 
     this.logger.log(
       `로그인 성공 - 사용자: ${user.name} (${user.userId}, ID: ${user.id})`,
@@ -75,7 +88,11 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto): Promise<UserResponseDto> {
-    validateMailVerificationToken(this.jwtService, dto.verificationToken, dto.email);
+    validateMailVerificationToken(
+      this.jwtService,
+      dto.verificationToken,
+      dto.email,
+    );
 
     const emailExists = await this.getUserQuery
       .byEmail(dto.email)
@@ -113,7 +130,7 @@ export class AuthService {
 
   async logout(user: User): Promise<void> {
     if (!user) throw new BadRequestException(ERROR_MESSAGES.USER_NOT_FOUND);
-    await this.redis.del(String(user.id));
+    await this.redis.del(REDIS_KEYS.AUTH_REFRESH_TOKEN(user.id));
     this.logger.log(`로그아웃 완료 - 사용자 ID: ${user.userId}`);
   }
 
@@ -122,7 +139,9 @@ export class AuthService {
       const payload = this.jwtService.verify(refreshToken);
       const userId = Number(payload.id);
 
-      const storedRefreshToken = await this.redis.get(String(userId));
+      const storedRefreshToken = await this.redis.get(
+        REDIS_KEYS.AUTH_REFRESH_TOKEN(userId),
+      );
       if (storedRefreshToken !== refreshToken) {
         throw new UnauthorizedException(ERROR_MESSAGES.INVAILD_REFRESH_TOKEN);
       }
@@ -173,19 +192,42 @@ export class AuthService {
     }
 
     const code = generateMailVerificationCode();
-    const redisKey = `email_verification:${email}`;
+    const redisKey = REDIS_KEYS.AUTH_EMAIL_VERIFICATION_CODE(email);
     this.logger.log(`[인증번호 생성] 이메일: ${email}, 코드: ${code}`);
 
     // 3분(180초) 유효
-    await this.redis.set(redisKey, code, { EX: 180 });
-    await this.mailService.sendVerificationEmail(email, code);
+    await this.redis.set(redisKey, code, {
+      EX: REDIS_TTL_SECONDS.EMAIL_VERIFICATION_CODE,
+    });
+    const occurredAt = new Date().toISOString();
+    const message: EmailVerificationRequestedMessage = {
+      messageId: randomUUID(),
+      jobId: randomUUID(),
+      eventType: RABBITMQ_ROUTING_KEYS.EMAIL_VERIFICATION_REQUESTED,
+      occurredAt,
+      producer: 'cba-was-renewal-api',
+      version: 1,
+      data: {
+        email,
+        code,
+        verificationType: type,
+      },
+      meta: {
+        retryCount: 0,
+      },
+    };
+    await this.rabbitMqProducer.publish({
+      queue: RABBITMQ_QUEUES.EMAIL_VERIFICATION_REQUESTED,
+      routingKey: RABBITMQ_ROUTING_KEYS.EMAIL_VERIFICATION_REQUESTED,
+      payload: message,
+    });
   }
 
   async verifyEmail(
     email: string,
     code: string,
   ): Promise<{ verificationToken: string }> {
-    const redisKey = `email_verification:${email}`;
+    const redisKey = REDIS_KEYS.AUTH_EMAIL_VERIFICATION_CODE(email);
     const storedCode = await this.redis.get(redisKey);
 
     if (!storedCode) {
@@ -217,7 +259,11 @@ export class AuthService {
   }
 
   async resetPassword(dto: ResetPasswordDto): Promise<void> {
-    validateMailVerificationToken(this.jwtService, dto.verificationToken, dto.email);
+    validateMailVerificationToken(
+      this.jwtService,
+      dto.verificationToken,
+      dto.email,
+    );
 
     const user = await this.getUserQuery.byEmail(dto.email);
     await this.updateUserProfile.execute(user.id, {

@@ -1,11 +1,12 @@
 import { Module, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient } from 'redis';
+import { REDIS_CLIENT_TOKEN } from '@shared/constants/redis.constants';
 
 @Module({
   providers: [
     {
-      provide: 'REDIS_CLIENT',
+      provide: REDIS_CLIENT_TOKEN,
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
         const logger = new Logger('RedisModule');
@@ -18,6 +19,6 @@ import { createClient } from 'redis';
       },
     },
   ],
-  exports: ['REDIS_CLIENT'],
+  exports: [REDIS_CLIENT_TOKEN],
 })
 export class RedisModule {}

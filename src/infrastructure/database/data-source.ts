@@ -12,7 +12,7 @@ import { Retreat } from '../../modules/retreat/domain/entities/retreat.entity';
 import { Youtube } from '../../modules/youtube/domain/entities/youtube.entity';
 
 import { Consent } from '../../modules/consent/domain/entities/consent.entity';
-import { ExpoPushToken } from '@modules/expo-push-token/domain/entities/expo-push-token.entity';
+import { PushToken } from '@modules/push-token/domain/entities/push-token.entity';
 import { Notice } from '@modules/notice/domain/entities/notice.entity';
 import { Lecture } from '@modules/lecture/domain/entities/lecture.entity';
 import { LectureEnrollment } from '@modules/lecture/domain/entities/lectureEnrollment.entity';
@@ -47,7 +47,7 @@ export const AppDataSource = new DataSource({
     Youtube,
 
     Consent,
-    ExpoPushToken,
+    PushToken,
     Notice,
     Lecture,
     LectureEnrollment,

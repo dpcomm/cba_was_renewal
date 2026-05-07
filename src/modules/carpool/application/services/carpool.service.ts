@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository, DataSource, Between } from 'typeorm';
+import { DeepPartial, Repository, DataSource } from 'typeorm';
+import { randomUUID } from 'crypto';
 import { CarpoolRoom } from '../../domain/entities/carpool-room.entity';
 import { CarpoolMember } from '@modules/carpool/domain/entities/carpool-member.entity';
 import {
@@ -12,8 +13,6 @@ import {
 import { User } from '@modules/user/domain/entities/user.entity';
 import { CarpoolStatus } from '@modules/carpool/domain/carpool-status.enum';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
-import { ExpoNotificationService } from '@modules/push-notification/application/services/expo-notification/ExpoNotification.service';
-import { ExpoPushTokenService } from '@modules/expo-push-token/application/services/expo-push-token.service';
 import {
   CarpoolDeleteNotificationDto,
   CarpoolJoinNotificationDto,
@@ -21,12 +20,18 @@ import {
   CarpoolReadyNotificationDto,
   CarpoolStartNotificationDto,
   CarpoolUpdateNotificationDto,
-} from '@modules/push-notification/application/dto/carpool-notification.dto';
+} from '../dto/carpool-notification.dto';
 import {
   CarpoolDetailResponseDto,
   CarpoolWithDriverInfoResponseDto,
 } from '@modules/carpool/presentation/dto/carpool.response.dto';
-import { maskPhone } from '@shared/utils/maskPhone.util';
+import { RabbitMqProducerService } from '@infrastructure/rabbitmq/rabbitmq.producer.service';
+import {
+  RABBITMQ_QUEUES,
+  RABBITMQ_ROUTING_KEYS,
+} from '@shared/constants/rabbitmq.constants';
+import { PushMessageRequestedMessage } from '@infrastructure/rabbitmq/rabbitmq.messages';
+import { PushMessage } from '@modules/push-notification/application/ports/push-sender.port';
 
 // redis
 
@@ -40,10 +45,48 @@ export class CarpoolService {
     private carpoolMemberRepository: Repository<CarpoolMember>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private readonly expoMessageService: ExpoNotificationService,
-    private readonly expoTokenService: ExpoPushTokenService,
+    private readonly rabbitMqProducer: RabbitMqProducerService,
     private readonly dataSource: DataSource,
   ) {}
+
+  private async publishCarpoolPush(
+    target: number | number[],
+    notification: PushMessage,
+  ): Promise<void> {
+    const targetIds = Array.isArray(target) ? target : [target];
+    if (targetIds.length === 0) return;
+
+    const message: PushMessageRequestedMessage = {
+      messageId: randomUUID(),
+      jobId: randomUUID(),
+      eventType: RABBITMQ_ROUTING_KEYS.PUSH_MESSAGE_REQUESTED,
+      occurredAt: new Date().toISOString(),
+      producer: 'cba-was-renewal-api',
+      version: 1,
+      data: {
+        title: notification.title,
+        body: notification.body,
+        target: targetIds,
+        channelId: notification.channelId,
+      },
+      meta: {
+        retryCount: 0,
+      },
+    };
+
+    try {
+      await this.rabbitMqProducer.publish({
+        queue: RABBITMQ_QUEUES.PUSH_REQUESTED,
+        routingKey: RABBITMQ_ROUTING_KEYS.PUSH_MESSAGE_REQUESTED,
+        payload: message,
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to queue carpool push: target=${targetIds.join(',')}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    }
+  }
 
   async getAllCarpoolRooms(): Promise<CarpoolRoom[]> {
     const carpools = await this.carpoolRoomRepository
@@ -367,11 +410,9 @@ export class CarpoolService {
     const members = await this.getCarpoolMembers(result.id);
     const notificationTarget = members.filter((v) => v != result.driverId);
 
-    const tokens = await this.expoTokenService.getTokens(notificationTarget);
-
     const notification = new CarpoolUpdateNotificationDto();
 
-    await this.expoMessageService.send(tokens, notification);
+    await this.publishCarpoolPush(notificationTarget, notification);
 
     this.logger.log(`카풀 수정 완료 - 방 ID: ${result.id}`);
 
@@ -392,9 +433,6 @@ export class CarpoolService {
     // 알림 대상. 운전자 제외
     const notificationTarget = members.filter((v) => v != room.driverId);
 
-    // 토큰 조회
-    const tokens = await this.expoTokenService.getTokens(notificationTarget);
-
     // 알림 생성
     const notification = new CarpoolDeleteNotificationDto();
 
@@ -414,7 +452,7 @@ export class CarpoolService {
     });
 
     // 카풀 삭제 알림 전송
-    await this.expoMessageService.send(tokens, notification);
+    await this.publishCarpoolPush(notificationTarget, notification);
 
     this.logger.log(`카풀 삭제 완료 - 방 ID: ${roomId}`);
   }
@@ -422,165 +460,151 @@ export class CarpoolService {
   async joinCarpoolRoom(
     dto: participationCarpoolRequestDto,
   ): Promise<CarpoolRoom> {
-    try {
-      // transaction으로 처리
-      const joinedRoom = await this.dataSource.transaction(async (manager) => {
-        // 카풀 존재 여부 확인
-        const room = await manager.findOne(CarpoolRoom, {
-          where: { id: dto.roomId },
-          select: ['id', 'seatsLeft'],
-        });
+    // transaction으로 처리
+    const joinedRoom = await this.dataSource.transaction(async (manager) => {
+      // 카풀 존재 여부 확인
+      const room = await manager.findOne(CarpoolRoom, {
+        where: { id: dto.roomId },
+        select: ['id', 'seatsLeft'],
+      });
 
-        if (!room) {
-          throw new NotFoundException(ERROR_MESSAGES.CARPOOL_NOT_FOUND);
-        }
+      if (!room) {
+        throw new NotFoundException(ERROR_MESSAGES.CARPOOL_NOT_FOUND);
+      }
 
-        //member에 있는지 확인
-        const isMember = await manager.exists(CarpoolMember, {
-          where: {
-            userId: dto.userId,
-            roomId: dto.roomId,
-          },
-        });
-        if (isMember) {
-          throw new Error(ERROR_MESSAGES.CARPOOL_ALREADY_JOINED);
-        }
-
-        // 잔여석 조건부 감소. 잔여석이 음수가 되지 않도록.
-        const result = await manager
-          .createQueryBuilder()
-          .update(CarpoolRoom)
-          .set({
-            seatsLeft: () => 'seatsLeft - 1',
-          })
-          .where('id = :roomId', { roomId: dto.roomId })
-          .andWhere('seatsLeft > 0')
-          .execute();
-
-        if (result.affected === 0) {
-          throw new Error(ERROR_MESSAGES.CARPOOL_NO_SEAT);
-        }
-
-        // 멤버 추가
-        await manager.insert(CarpoolMember, {
+      //member에 있는지 확인
+      const isMember = await manager.exists(CarpoolMember, {
+        where: {
           userId: dto.userId,
           roomId: dto.roomId,
-        });
-        // 최신 상태 조회
-        const updatedRoom = await manager.findOneOrFail(CarpoolRoom, {
-          where: { id: dto.roomId },
-        });
-
-        return updatedRoom;
+        },
       });
-
-      // 토큰 조회
-      const tokens = await this.expoTokenService.getTokens(joinedRoom.driverId);
-
-      // 참여자 이름 조회
-      const user = await this.userRepository.findOne({
-        where: { id: dto.userId },
-        select: ['name'],
-      });
-      if (!user) {
-        throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
+      if (isMember) {
+        throw new Error(ERROR_MESSAGES.CARPOOL_ALREADY_JOINED);
       }
-      const userName = user.name;
 
-      // 알림 생성
-      const notification = new CarpoolJoinNotificationDto(userName);
+      // 잔여석 조건부 감소. 잔여석이 음수가 되지 않도록.
+      const result = await manager
+        .createQueryBuilder()
+        .update(CarpoolRoom)
+        .set({
+          seatsLeft: () => 'seatsLeft - 1',
+        })
+        .where('id = :roomId', { roomId: dto.roomId })
+        .andWhere('seatsLeft > 0')
+        .execute();
 
-      // 카풀 join 알림 전송
-      await this.expoMessageService.send(tokens, notification);
+      if (result.affected === 0) {
+        throw new Error(ERROR_MESSAGES.CARPOOL_NO_SEAT);
+      }
 
-      this.logger.log(
-        `카풀 참여 완료 - 사용자: ${userName} (ID: ${dto.userId}), 방 ID: ${dto.roomId}`,
-      );
+      // 멤버 추가
+      await manager.insert(CarpoolMember, {
+        userId: dto.userId,
+        roomId: dto.roomId,
+      });
+      // 최신 상태 조회
+      const updatedRoom = await manager.findOneOrFail(CarpoolRoom, {
+        where: { id: dto.roomId },
+      });
 
-      return joinedRoom;
-    } catch (err) {
-      throw err;
+      return updatedRoom;
+    });
+
+    // 참여자 이름 조회
+    const user = await this.userRepository.findOne({
+      where: { id: dto.userId },
+      select: ['name'],
+    });
+    if (!user) {
+      throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
     }
+    const userName = user.name;
+
+    // 알림 생성
+    const notification = new CarpoolJoinNotificationDto(userName);
+
+    // 카풀 join 알림 전송
+    await this.publishCarpoolPush(joinedRoom.driverId, notification);
+
+    this.logger.log(
+      `카풀 참여 완료 - 사용자: ${userName} (ID: ${dto.userId}), 방 ID: ${dto.roomId}`,
+    );
+
+    return joinedRoom;
   }
 
   async leaveCarpoolRoom(
     dto: participationCarpoolRequestDto,
   ): Promise<CarpoolRoom> {
-    try {
-      const leavedRoom = await this.dataSource.transaction(async (manager) => {
-        // 카풀 존재 여부 확인
-        const room = await manager.findOne(CarpoolRoom, {
-          where: { id: dto.roomId },
-          select: ['id'],
-        });
+    const leavedRoom = await this.dataSource.transaction(async (manager) => {
+      // 카풀 존재 여부 확인
+      const room = await manager.findOne(CarpoolRoom, {
+        where: { id: dto.roomId },
+        select: ['id'],
+      });
 
-        if (!room) {
-          throw new NotFoundException(ERROR_MESSAGES.CARPOOL_NOT_FOUND);
-        }
+      if (!room) {
+        throw new NotFoundException(ERROR_MESSAGES.CARPOOL_NOT_FOUND);
+      }
 
-        // 멤버 여부 확인
-        const isMember = await manager.exists(CarpoolMember, {
-          where: {
-            userId: dto.userId,
-            roomId: dto.roomId,
-          },
-        });
-
-        if (!isMember) {
-          throw new Error(ERROR_MESSAGES.CARPOOL_NOT_MEMBER);
-        }
-
-        // 멤버 삭제
-        await manager.delete(CarpoolMember, {
+      // 멤버 여부 확인
+      const isMember = await manager.exists(CarpoolMember, {
+        where: {
           userId: dto.userId,
           roomId: dto.roomId,
-        });
-
-        // 좌석 증가
-        await manager
-          .createQueryBuilder()
-          .update(CarpoolRoom)
-          .set({
-            seatsLeft: () => 'seatsLeft + 1',
-            isArrived: false,
-          })
-          .where('id = :roomId', { roomId: dto.roomId })
-          .execute();
-        // 최신 상태 조회
-        const updatedRoom = await manager.findOneOrFail(CarpoolRoom, {
-          where: { id: dto.roomId },
-        });
-
-        return updatedRoom;
+        },
       });
 
-      // 토큰 조회
-      const tokens = await this.expoTokenService.getTokens(leavedRoom.driverId);
-
-      // 이름 조회
-      const user = await this.userRepository.findOne({
-        where: { id: dto.userId },
-        select: ['name'],
-      });
-      if (!user) {
-        throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
+      if (!isMember) {
+        throw new Error(ERROR_MESSAGES.CARPOOL_NOT_MEMBER);
       }
-      const userName = user.name;
 
-      // 알림 생성
-      const notification = new CarpoolLeaveNotificationDto(userName);
+      // 멤버 삭제
+      await manager.delete(CarpoolMember, {
+        userId: dto.userId,
+        roomId: dto.roomId,
+      });
 
-      // 카풀 leave 알림 전송
-      await this.expoMessageService.send(tokens, notification);
+      // 좌석 증가
+      await manager
+        .createQueryBuilder()
+        .update(CarpoolRoom)
+        .set({
+          seatsLeft: () => 'seatsLeft + 1',
+          isArrived: false,
+        })
+        .where('id = :roomId', { roomId: dto.roomId })
+        .execute();
+      // 최신 상태 조회
+      const updatedRoom = await manager.findOneOrFail(CarpoolRoom, {
+        where: { id: dto.roomId },
+      });
 
-      this.logger.log(
-        `카풀 나가기 완료 - 사용자: ${userName} (${dto.userId}), 방 ID: ${dto.roomId}`,
-      );
+      return updatedRoom;
+    });
 
-      return leavedRoom;
-    } catch (err) {
-      throw err;
+    // 이름 조회
+    const user = await this.userRepository.findOne({
+      where: { id: dto.userId },
+      select: ['name'],
+    });
+    if (!user) {
+      throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND);
     }
+    const userName = user.name;
+
+    // 알림 생성
+    const notification = new CarpoolLeaveNotificationDto(userName);
+
+    // 카풀 leave 알림 전송
+    await this.publishCarpoolPush(leavedRoom.driverId, notification);
+
+    this.logger.log(
+      `카풀 나가기 완료 - 사용자: ${userName} (${dto.userId}), 방 ID: ${dto.roomId}`,
+    );
+
+    return leavedRoom;
   }
 
   async updateCarpoolStatus(
@@ -634,11 +658,10 @@ export class CarpoolService {
     for (const carpool of readyCarpoolList) {
       try {
         const driverId = carpool.driverId;
-        const tokens = await this.expoTokenService.getTokens(driverId);
         const notification = new CarpoolReadyNotificationDto();
 
-        await this.expoMessageService.send(tokens, notification);
-        this.logger.log(`Notification sent to driverId: ${driverId}`);
+        await this.publishCarpoolPush(driverId, notification);
+        this.logger.log(`Notification queued to driverId: ${driverId}`);
       } catch (err) {
         this.logger.error(
           `Failed to send notification for carpoolId: ${carpool.id}`,
@@ -652,7 +675,7 @@ export class CarpoolService {
     const baseTime = new Date(currentTime);
     baseTime.setDate(baseTime.getDate() - 1);
 
-    const result = await this.carpoolRoomRepository
+    await this.carpoolRoomRepository
       .createQueryBuilder()
       .update(CarpoolRoom)
       .set({
@@ -678,12 +701,10 @@ export class CarpoolService {
     const members = await this.getCarpoolMembers(id);
     const notificationTarget = members.filter((v) => v != carpool.driverId);
 
-    const tokens = await this.expoTokenService.getTokens(notificationTarget);
-
     const driverName = await this.getDriverName(id);
     const notification = new CarpoolStartNotificationDto(driverName);
 
-    await this.expoMessageService.send(tokens, notification);
+    await this.publishCarpoolPush(notificationTarget, notification);
     this.logger.log(`카풀 운행 시작 - 방 ID: ${id}`);
   }
 
