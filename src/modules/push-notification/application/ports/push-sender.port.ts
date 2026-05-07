@@ -38,16 +38,4 @@ export interface IPushSenderPort {
     message: PushMessage,
     data?: Record<string, any>,
   ): Promise<void>;
-
-  /** 예약 발송 등록 */
-  reserve(data: ReservationData): Promise<ReservationResult>;
-
-  /** 예약 목록 조회 */
-  getReservations(): Promise<ReservationResult[]>;
-
-  /** 예약 취소 */
-  cancelReservation(reservationId: number): Promise<ReservationResult>;
-
-  /** 시간이 도래한 예약들을 꺼내고 삭제 */
-  popDueReservations(nowMs: number): Promise<ReservationResult[]>;
 }

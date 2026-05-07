@@ -7,7 +7,8 @@ import {
   IPushSenderPort,
   PUSH_SENDER_PORT,
 } from '@modules/push-notification/application/ports/push-sender.port';
-import { PushTokenService } from '@modules/push-token/application/push-token.service';
+import { ReservePushUseCase } from '@modules/push-notification/application/usecases/reserve-push.usecase';
+import { GetPushTokensQuery } from '@modules/push-token/application/queries/get-push-tokens.query';
 import {
   RABBITMQ_QUEUES,
   RABBITMQ_ROUTING_KEYS,
@@ -43,7 +44,8 @@ export class PushNoticeWorkerController {
   constructor(
     @Inject(PUSH_SENDER_PORT)
     private readonly pushSender: IPushSenderPort,
-    private readonly pushTokenService: PushTokenService,
+    private readonly getPushTokensQuery: GetPushTokensQuery,
+    private readonly reservePushUseCase: ReservePushUseCase,
     private readonly rabbitMqProducer: RabbitMqProducerService,
     @Inject(REDIS_CLIENT_TOKEN) private readonly redis: RedisClientType,
   ) {}
@@ -122,14 +124,14 @@ export class PushNoticeWorkerController {
       });
 
       if (data.reserveTime) {
-        await this.pushSender.reserve({
+        await this.reservePushUseCase.execute({
           title: data.title,
           body: data.body,
           reserveTime: data.reserveTime,
           target: data.target,
         });
       } else {
-        const tokens = await this.pushTokenService.getTokens(data.target);
+        const tokens = await this.getPushTokensQuery.execute(data.target);
         await this.pushSender.send(tokens, {
           title: data.title,
           body: data.body,

@@ -12,8 +12,8 @@ import {
 import { PushNoticeRequestedMessage } from '@infrastructure/rabbitmq/rabbitmq.messages';
 
 @Injectable()
-export class NoticePushService {
-  private readonly logger = new Logger(NoticePushService.name);
+export class SendNoticePushUseCase {
+  private readonly logger = new Logger(SendNoticePushUseCase.name);
 
   constructor(
     @InjectRepository(Notice)
@@ -21,7 +21,7 @@ export class NoticePushService {
     private readonly rabbitMqProducer: RabbitMqProducerService,
   ) {}
 
-  async sendNoticePush(
+  async execute(
     id: number,
     options: {
       target?: number[];
@@ -38,18 +38,12 @@ export class NoticePushService {
     }
 
     const includeBody = options.includeBody !== false;
-    const notification = {
-      title: notice.title,
-      body: includeBody ? notice.body : '',
-      channelId: 'notice',
-    };
 
-    const occurredAt = new Date().toISOString();
     const message: PushNoticeRequestedMessage = {
       messageId: randomUUID(),
       jobId: randomUUID(),
       eventType: RABBITMQ_ROUTING_KEYS.PUSH_NOTICE_REQUESTED,
-      occurredAt,
+      occurredAt: new Date().toISOString(),
       producer: 'cba-was-renewal-api',
       version: 1,
       data: {
@@ -71,7 +65,7 @@ export class NoticePushService {
       payload: message,
     });
     this.logger.log(
-      `공지 푸시 큐 발행: "${notification.title}" (공지ID: ${id}, 타겟: ${options.target ? options.target.join(',') : '전체'})`,
+      `공지 푸시 큐 발행: "${notice.title}" (공지ID: ${id}, 타겟: ${options.target ? options.target.join(',') : '전체'})`,
     );
   }
 }

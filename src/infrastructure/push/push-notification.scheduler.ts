@@ -5,7 +5,8 @@ import {
   IPushSenderPort,
   PushMessage,
 } from '@modules/push-notification/application/ports/push-sender.port';
-import { PushTokenService } from '@modules/push-token/application/push-token.service';
+import { PopDueReservationsUseCase } from '@modules/push-notification/application/usecases/pop-due-reservations.usecase';
+import { GetPushTokensQuery } from '@modules/push-token/application/queries/get-push-tokens.query';
 
 @Injectable()
 export class PushNotificationScheduler {
@@ -14,19 +15,20 @@ export class PushNotificationScheduler {
   constructor(
     @Inject(PUSH_SENDER_PORT)
     private readonly pushSender: IPushSenderPort,
-    private readonly tokenService: PushTokenService,
+    private readonly getPushTokensQuery: GetPushTokensQuery,
+    private readonly popDueReservationsUseCase: PopDueReservationsUseCase,
   ) {}
 
   @Cron('* * * * *')
   async pollReservation() {
     const now = Date.now();
 
-    const reservations = await this.pushSender.popDueReservations(now);
+    const reservations = await this.popDueReservationsUseCase.execute(now);
     if (reservations.length === 0) return;
 
     for (const r of reservations) {
       try {
-        const tokens = await this.tokenService.getTokens(r.target);
+        const tokens = await this.getPushTokensQuery.execute(r.target);
 
         const message: PushMessage = {
           title: r.title,

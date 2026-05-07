@@ -3,18 +3,12 @@ import {
   Controller,
   Delete,
   Get,
-  Inject,
   Param,
   ParseIntPipe,
   Post,
 } from '@nestjs/common';
 import { ok } from '@shared/responses/api-response';
-import { randomUUID } from 'crypto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import {
-  PUSH_SENDER_PORT,
-  IPushSenderPort,
-} from '@modules/push-notification/application/ports/push-sender.port';
 import {
   CreatePushNotificationDto,
   ReservePushNotificationDto,
@@ -23,25 +17,24 @@ import { ApiSuccessResponse } from '@shared/decorators/api-success-response.deco
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 import { ReservationPushNotificationResponseDto } from './dto/response/push-notification-response.dto';
 import { NoticePushRequestDto } from './dto/request/notice-push-request.dto';
-import { NoticePushService } from '@modules/push-notification/application/notice-push.service';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 import { AdminGuard } from '@shared/decorators/admin-guard.decorator';
-import { RabbitMqProducerService } from '@infrastructure/rabbitmq/rabbitmq.producer.service';
-import {
-  RABBITMQ_QUEUES,
-  RABBITMQ_ROUTING_KEYS,
-} from '@shared/constants/rabbitmq.constants';
-import { PushMessageRequestedMessage } from '@infrastructure/rabbitmq/rabbitmq.messages';
+import { SendPushMessageUseCase } from '../application/usecases/send-push-message.usecase';
+import { SendNoticePushUseCase } from '../application/usecases/send-notice-push.usecase';
+import { ReservePushUseCase } from '../application/usecases/reserve-push.usecase';
+import { CancelReservationUseCase } from '../application/usecases/cancel-reservation.usecase';
+import { GetReservationsQuery } from '../application/queries/get-reservations.query';
 
 @ApiTags('Admin - Push Notifications')
 @Controller('admin/push-notification')
 @AdminGuard()
 export class PushNotificationAdminController {
   constructor(
-    @Inject(PUSH_SENDER_PORT)
-    private readonly pushSender: IPushSenderPort,
-    private readonly noticePushService: NoticePushService,
-    private readonly rabbitMqProducer: RabbitMqProducerService,
+    private readonly sendPushMessageUseCase: SendPushMessageUseCase,
+    private readonly sendNoticePushUseCase: SendNoticePushUseCase,
+    private readonly reservePushUseCase: ReservePushUseCase,
+    private readonly cancelReservationUseCase: CancelReservationUseCase,
+    private readonly getReservationsQuery: GetReservationsQuery,
   ) {}
 
   @Post()
@@ -52,29 +45,11 @@ export class PushNotificationAdminController {
   })
   @ApiSuccessResponse({})
   async create(@Body() dto: CreatePushNotificationDto) {
-    const occurredAt = new Date().toISOString();
-    const message: PushMessageRequestedMessage = {
-      messageId: randomUUID(),
-      jobId: randomUUID(),
-      eventType: RABBITMQ_ROUTING_KEYS.PUSH_MESSAGE_REQUESTED,
-      occurredAt,
-      producer: 'cba-was-renewal-api',
-      version: 1,
-      data: {
-        title: dto.title,
-        body: dto.body,
-        target: dto.target,
-        channelId: 'default',
-      },
-      meta: {
-        retryCount: 0,
-      },
-    };
-
-    await this.rabbitMqProducer.publish({
-      queue: RABBITMQ_QUEUES.PUSH_REQUESTED,
-      routingKey: RABBITMQ_ROUTING_KEYS.PUSH_MESSAGE_REQUESTED,
-      payload: message,
+    await this.sendPushMessageUseCase.execute({
+      title: dto.title,
+      body: dto.body,
+      target: dto.target,
+      channelId: 'default',
     });
 
     return ok<null>(null, 'Success send push message');
@@ -87,7 +62,7 @@ export class PushNotificationAdminController {
   })
   @ApiSuccessResponse({ type: ReservationPushNotificationResponseDto })
   async reserve(@Body() dto: ReservePushNotificationDto) {
-    const notification = await this.pushSender.reserve({
+    const notification = await this.reservePushUseCase.execute({
       title: dto.title,
       body: dto.body,
       reserveTime: dto.reserveTime,
@@ -110,7 +85,7 @@ export class PushNotificationAdminController {
     isArray: true,
   })
   async getReservations() {
-    const notifications = await this.pushSender.getReservations();
+    const notifications = await this.getReservationsQuery.execute();
 
     return ok<ReservationPushNotificationResponseDto[]>(
       notifications,
@@ -125,7 +100,8 @@ export class PushNotificationAdminController {
   })
   @ApiSuccessResponse({ type: ReservationPushNotificationResponseDto })
   async cancelReservation(@Param('id', ParseIntPipe) reservationId: number) {
-    const notification = await this.pushSender.cancelReservation(reservationId);
+    const notification =
+      await this.cancelReservationUseCase.execute(reservationId);
 
     return ok<ReservationPushNotificationResponseDto>(
       notification,
@@ -144,7 +120,7 @@ export class PushNotificationAdminController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: NoticePushRequestDto,
   ) {
-    await this.noticePushService.sendNoticePush(id, {
+    await this.sendNoticePushUseCase.execute(id, {
       target: dto.target,
       reserveTime: dto.reserveTime,
       includeBody: dto.includeBody,

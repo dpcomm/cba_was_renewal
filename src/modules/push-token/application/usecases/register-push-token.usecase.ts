@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository } from 'typeorm';
 import { PushToken } from '@modules/push-token/domain/entities/push-token.entity';
 import { User } from '@modules/user/domain/entities/user.entity';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 @Injectable()
-export class PushTokenService {
+export class RegisterPushTokenUseCase {
   constructor(
     @InjectRepository(PushToken)
     private pushTokenRepository: Repository<PushToken>,
@@ -14,7 +14,7 @@ export class PushTokenService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async registToken(userId: number, token: string): Promise<PushToken> {
+  async execute(userId: number, token: string): Promise<PushToken> {
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });
@@ -48,33 +48,5 @@ export class PushTokenService {
     });
 
     return await this.pushTokenRepository.save(newToken);
-  }
-
-  async deleteToken(token: string): Promise<void> {
-    await this.pushTokenRepository.delete({ token });
-  }
-
-  async getTokens(userIds?: number | number[]): Promise<PushToken[]> {
-    if (userIds == null) {
-      return this.pushTokenRepository.find();
-    }
-
-    const ids = Array.isArray(userIds) ? userIds : [userIds];
-
-    if (ids.length === 0) {
-      return [];
-    }
-
-    return this.pushTokenRepository.find({
-      where: { userId: In(ids) },
-    });
-  }
-
-  async deleteInvalidTokens(tokens: string[]): Promise<void> {
-    if (!tokens || tokens.length === 0) {
-      return;
-    }
-
-    await this.pushTokenRepository.delete(tokens.map((t) => ({ token: t })));
   }
 }
