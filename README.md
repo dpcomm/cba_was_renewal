@@ -91,6 +91,7 @@ npm install
 ```
 - Node.js 22 LTS 이상 권장
 - `.env.dev`, `.env.prod`, `serviceAccountKey.json` 체크
+- RabbitMQ Producer 사용 시 `RABBITMQ_URL` 설정 (예: `amqp://localhost:5672`)
 
 ### 실행
 ```bash
