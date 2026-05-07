@@ -14,10 +14,10 @@ async function deleteExpoPushTokens() {
     console.log('Delete result:', result);
     if (result.affected && result.affected > 0) {
       console.log(
-        `Successfully deleted ${result.affected} ExpoPushToken(s) for userId: ${USER_ID}`,
+        `Successfully deleted ${result.affected} PushToken(s) for userId: ${USER_ID}`,
       );
     } else {
-      console.log(`No ExpoPushToken found for userId: ${USER_ID}`);
+      console.log(`No PushToken found for userId: ${USER_ID}`);
     }
   } catch (err) {
     console.error('Error during deletion:', err);

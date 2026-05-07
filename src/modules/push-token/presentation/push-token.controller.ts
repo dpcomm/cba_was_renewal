@@ -5,6 +5,7 @@ import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 import { PushTokenService } from '@modules/push-token/application/push-token.service';
+import { User as AuthUser } from '@shared/decorators/user.decorator';
 import {
   RegisterPushTokenDto,
   DeletePushTokenDto,
@@ -23,9 +24,12 @@ export class PushTokenController {
   @ApiOperation({ summary: '푸시 토큰 등록' })
   @ApiSuccessResponse({ type: PushTokenResponseDto })
   @ApiFailureResponse(404, ERROR_MESSAGES.USER_NOT_FOUND)
-  async regist(@Body() dto: RegisterPushTokenDto) {
+  async regist(
+    @AuthUser() user: { id: number; userId: string; rank: string },
+    @Body() dto: RegisterPushTokenDto,
+  ) {
     const pushToken = await this.pushTokenService.registToken(
-      dto.userId,
+      user.id,
       dto.token,
     );
     return ok<PushTokenResponseDto>(

@@ -9,8 +9,8 @@ import {
 } from 'typeorm';
 import { User } from '@modules/user/domain/entities/user.entity';
 
-@Entity('ExpoPushToken')
-@Index('ExpoPushToken_userId_idx', ['userId'])
+@Entity('PushToken')
+@Index('PushToken_userId_idx', ['userId'])
 export class PushToken {
   @PrimaryGeneratedColumn()
   id: number;
@@ -19,7 +19,7 @@ export class PushToken {
   userId: number;
 
   @Column({ length: 191 })
-  @Index('ExpoPushToken_token_key', { unique: true })
+  @Index('PushToken_token_key', { unique: true })
   token: string;
 
   @Column({ default: 'expo' })
