@@ -77,4 +77,23 @@ export class RetreatTransport {
     (applicationTransport) => applicationTransport.retreatTransport,
   )
   applicationTransports: ApplicationTransport[];
+
+  /**
+   * 교통 옵션 정보 수정
+   */
+  update(fields: {
+    direction?: TransportDirection;
+    transportType?: TransportType;
+    name?: string;
+    isRemarkRequired?: boolean;
+    isVehicleRequired?: boolean;
+  }): void {
+    if (fields.direction !== undefined) this.direction = fields.direction;
+    if (fields.transportType !== undefined) this.transportType = fields.transportType;
+    if (fields.name !== undefined) this.name = fields.name;
+    if (fields.isRemarkRequired !== undefined)
+      this.isRemarkRequired = fields.isRemarkRequired;
+    if (fields.isVehicleRequired !== undefined)
+      this.isVehicleRequired = fields.isVehicleRequired;
+  }
 }
