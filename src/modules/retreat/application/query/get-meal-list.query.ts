@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { RetreatMeal } from '@modules/retreat/domain/entities/retreat_meal.entity'; 
-import { MealListRequestDto } from '../dto/meal.get.request.dto';
+import { MealListRequestDto } from '../../presentation/dto/request/meal-get.request.dto';
 
 @Injectable()
 export class GetMealListQuery {

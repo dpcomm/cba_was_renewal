@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { RetreatMeal } from '@modules/retreat/domain/entities/retreat_meal.entity'; 
-import { MealUpdateRequestDto } from '../dto/meal.update.request.dto';
+import { MealUpdateRequestDto } from '../../presentation/dto/request/meal-update.request.dto';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 @Injectable()

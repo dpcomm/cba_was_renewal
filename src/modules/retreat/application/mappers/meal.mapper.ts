@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { RetreatMeal } from '@modules/retreat/domain/entities/retreat_meal.entity'; 
 import { MealDto } from '@modules/retreat/presentation/dto/meal.dto';
-import { MealCountResponseDto } from '@modules/retreat/presentation/dto/meal-count.response.dto';
+import { MealCountResponseDto } from '@modules/retreat/presentation/dto/response/meal-count.response.dto';
 
 @Injectable()
 export class MealMapper {

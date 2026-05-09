@@ -23,12 +23,12 @@ import { GetMealCountQuery } from '@modules/retreat/application/query/get-meal-c
 
 import { MealMapper } from '@modules/retreat/application/mappers/meal.mapper';
 
-import { MealCreateRequestDto } from '@modules/retreat/application/dto/meal.create.request.dto';
-import { MealUpdateRequestDto } from '@modules/retreat/application/dto/meal.update.request.dto';
-import { MealListRequestDto } from '@modules/retreat/application/dto/meal.get.request.dto';
+import { MealCreateRequestDto } from '@modules/retreat/presentation/dto/request/meal-create.request.dto';
+import { MealUpdateRequestDto } from '@modules/retreat/presentation/dto/request/meal-update.request.dto';
+import { MealListRequestDto } from '@modules/retreat/presentation/dto/request/meal-get.request.dto';
 
 import { MealDto } from '../dto/meal.dto';
-import { MealCountResponseDto } from '../dto/meal-count.response.dto';
+import { MealCountResponseDto } from '../dto/response/meal-count.response.dto';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { RankGuard } from '@shared/decorators/rank-guard.decorator';
 import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
