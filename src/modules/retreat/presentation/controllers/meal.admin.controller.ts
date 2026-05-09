@@ -33,6 +33,7 @@ import { ApiSuccessResponse } from '@shared/decorators/api-success-response.deco
 import { RankGuard } from '@shared/decorators/rank-guard.decorator';
 import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
+import { ok } from '@shared/responses/api-response';
 
 @ApiTags('Admin Meal')
 @Controller('admin/meals')
@@ -53,9 +54,9 @@ export class AdminMealController {
   @ApiSuccessResponse({ status: 201, type: MealDto })
   async create(
     @Body() dto: MealCreateRequestDto,
-  ): Promise<MealDto> {
+  ) {
     const result = await this.createMealUseCase.execute(dto);
-    return this.mealMapper.toDto(result);
+    return ok(this.mealMapper.toDto(result), 'Success create meal slot');
   }
 
   @Patch()
@@ -63,9 +64,9 @@ export class AdminMealController {
   @ApiSuccessResponse({ status: 200, type: MealDto })
   async update(
     @Body() dto: MealUpdateRequestDto,
-  ): Promise<MealDto> {
+  ) {
     const result = await this.updateMealUseCase.execute(dto);
-    return this.mealMapper.toDto(result);
+    return ok(this.mealMapper.toDto(result), 'Success update meal slot');
   }
 
   @Delete(':id')
@@ -73,9 +74,9 @@ export class AdminMealController {
   @ApiSuccessResponse({ status: 200, description: '삭제 성공' })
   async delete(
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<{ message: string }> {
+  ) {
     await this.deleteMealUseCase.execute(id);
-    return { message: '삭제 완료' };
+    return ok(null, 'Success delete meal slot');
   }
 
   @Get()
@@ -83,9 +84,9 @@ export class AdminMealController {
   @ApiSuccessResponse({ status: 200, type: MealDto, isArray: true })
   async getList(
     @Query() dto: MealListRequestDto,
-  ): Promise<MealDto[]> {
+  ) {
     const result = await this.getMealListQuery.execute(dto);
-    return this.mealMapper.toDtoList(result);
+    return ok(this.mealMapper.toDtoList(result), 'Success get meal list');
   }
 
   @Get('count/:retreatId')
@@ -93,8 +94,8 @@ export class AdminMealController {
   @ApiSuccessResponse({ status: 200, type: MealCountResponseDto, isArray: true })
   async getCount(
     @Param('retreatId', ParseIntPipe) retreatId: number,
-  ): Promise<MealCountResponseDto[]> {
+  ) {
     const result = await this.getMealCountQuery.execute(retreatId);
-    return this.mealMapper.toMealCountDtoList(result);
+    return ok(this.mealMapper.toMealCountDtoList(result), 'Success get meal count');
   }
 }
