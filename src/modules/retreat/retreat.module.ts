@@ -7,6 +7,13 @@ import { RetreatService } from './application/services/retreat.service';
 import { RetreatController } from './presentation/controllers/retreat.controller';
 import { TransportController } from './presentation/controllers/transport.controller';
 import { RetreatMapper } from './application/mappers/retreat.mapper';
+import { GetMealCountQuery } from './application/query/get-meal-count.query';
+import { GetMealListQuery } from './application/query/get-meal-list.query';
+import { CreateMealUseCase } from './application/usecase/meal.create.usecase';
+import { DeleteMealUseCase } from './application/usecase/meal.delete.usecase';
+import { UpdateMealUseCase } from './application/usecase/meal.update.usecase';
+import { RetreatMeal } from './domain/entities/retreat_meal.entity';
+import { ApplicationMeal } from '@modules/application/domain/entities/application_meal.entity';
 
 import { CreateTransportUseCase } from './application/usecases/transport-create.usecase';
 import { UpdateTransportUseCase } from './application/usecases/transport-update.usecase';
@@ -16,7 +23,13 @@ import { GetTransportQuery } from './application/queries/get-transport.query';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Retreat, RetreatTransport, ApplicationTransport]),
+    TypeOrmModule.forFeature([
+      Retreat,
+      RetreatTransport,
+      ApplicationTransport,
+      RetreatMeal,
+      ApplicationMeal,
+    ]),
   ],
   controllers: [RetreatController, TransportController],
   providers: [
@@ -27,6 +40,11 @@ import { GetTransportQuery } from './application/queries/get-transport.query';
     DeleteTransportUseCase,
     GetTransportQuery,
     GetTransportListQuery,
+    GetMealCountQuery,
+    GetMealListQuery,
+    CreateMealUseCase,
+    DeleteMealUseCase,
+    UpdateMealUseCase,
   ],
   exports: [RetreatService],
 })

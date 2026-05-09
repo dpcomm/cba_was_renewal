@@ -34,7 +34,11 @@ export const ERROR_MESSAGES = {
     'SUBJECTIVE type cannot have options',
   QUESTION_OPTIONS_REQUIRED: 'Options are required for select type',
   DUPLICATE_QUESTION_OPTION_LABELS: 'Duplicate option labels',
+  MEAL_SLOT_ALREADY_EXISTS: 'The meal slot already exists',
+  MEAL_NOT_FOUND: 'Meal not found',
+  CANNOT_DELETE_MEAL_WITH_APPLICATIONS: 'Cannot delete meal with applications',
   TRANSPORT_ALREADY_EXISTS: 'The transport option already exists',
   TRANSPORT_NOT_FOUND: 'Transport option not found',
-  CANNOT_DELETE_TRANSPORT_WITH_APPLICATIONS: 'Cannot delete transport with applications',
+  CANNOT_DELETE_TRANSPORT_WITH_APPLICATIONS:
+    'Cannot delete transport with applications',
 } as const;
