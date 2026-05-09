@@ -7,8 +7,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { RetreatMeal } from '@modules/retreat/domain/entities/retreat_meal.entity'; 
-import { MealCreateRequestDto } from '../../presentation/dto/request/meal-create.request.dto';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
+import { MealType } from '@modules/retreat/domain/enum/retreat-meal.enum';
 
 @Injectable()
 export class CreateMealUseCase {
@@ -19,7 +19,7 @@ export class CreateMealUseCase {
     private readonly mealRepository: Repository<RetreatMeal>,
   ) {}
 
-  async execute(dto: MealCreateRequestDto): Promise<RetreatMeal> {
+  async execute(dto: {retreatId: number, mealDay: string, mealType: MealType, mealTable?: string[]}): Promise<RetreatMeal> {
     const existing = await this.mealRepository.findOne({
       where: {
         retreatId: dto.retreatId,
