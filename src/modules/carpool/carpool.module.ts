@@ -6,16 +6,10 @@ import { CarpoolService } from './application/services/carpool.service';
 import { CarpoolController } from './presentation/controllers/carpool.controller';
 import { CarpoolMapper } from './application/mappers/carpool.mapper';
 import { User } from '@modules/user/domain/entities/user.entity';
-import { PushNotificationModule } from '@modules/push-notification/push-notification.module';
-import { ExpoPushTokenModule } from '@modules/expo-push-token/expo-push-token.module';
 import { CarpoolSchedulerService } from './application/services/carpool.schedule.service';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([CarpoolMember, CarpoolRoom, User]),
-    PushNotificationModule,
-    ExpoPushTokenModule,
-  ],
+  imports: [TypeOrmModule.forFeature([CarpoolMember, CarpoolRoom, User])],
   controllers: [CarpoolController],
   providers: [CarpoolService, CarpoolMapper, CarpoolSchedulerService],
   exports: [CarpoolService],

@@ -1,30 +1,26 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ExpoNotificationService } from './application/services/expo-notification/ExpoNotification.service';
-import { FcmNotificationService } from './application/services/FCM/FCMnotification.service';
-import { CarpoolRoom } from '@modules/carpool/domain/entities/carpool-room.entity';
-import { CarpoolMember } from '@modules/carpool/domain/entities/carpool-member.entity';
-import { User } from '@modules/user/domain/entities/user.entity';
-import { ExpoPushToken } from '@modules/expo-push-token/domain/entities/expo-push-token.entity';
-import { PushNofiticationController } from './presentation/controllers/push-notification.controller';
-import { ExpoPushTokenModule } from '@modules/expo-push-token/expo-push-token.module';
-import { RedisModule } from '@infrastructure/redis/redis.module';
-import { ExpoNotificationScheduleService } from './application/services/expo-notification/expoNotification.schedule.service';
+import { PushNotificationAdminController } from './presentation/push-notification-admin.controller';
 import { Notice } from '@modules/notice/domain/entities/notice.entity';
-import { NoticePushService } from './application/services/notice-push.service';
+import { RedisModule } from '@infrastructure/redis/redis.module';
+import { SendNoticePushUseCase } from './application/usecases/send-notice-push.usecase';
+import { SendPushMessageUseCase } from './application/usecases/send-push-message.usecase';
+import { ReservePushUseCase } from './application/usecases/reserve-push.usecase';
+import { CancelReservationUseCase } from './application/usecases/cancel-reservation.usecase';
+import { PopDueReservationsUseCase } from './application/usecases/pop-due-reservations.usecase';
+import { GetReservationsQuery } from './application/queries/get-reservations.query';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Notice]),
-    ExpoPushTokenModule,
-    RedisModule,
-  ],
-  controllers: [PushNofiticationController],
+  imports: [TypeOrmModule.forFeature([Notice]), RedisModule],
+  controllers: [PushNotificationAdminController],
   providers: [
-    ExpoNotificationService,
-    ExpoNotificationScheduleService,
-    NoticePushService,
+    SendNoticePushUseCase,
+    SendPushMessageUseCase,
+    ReservePushUseCase,
+    CancelReservationUseCase,
+    PopDueReservationsUseCase,
+    GetReservationsQuery,
   ],
-  exports: [ExpoNotificationService],
+  exports: [ReservePushUseCase, PopDueReservationsUseCase],
 })
 export class PushNotificationModule {}
