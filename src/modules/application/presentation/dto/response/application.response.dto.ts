@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   ApplicationStatus,
   PaymentStatus,
-} from '../../domain/enum/application.enum';
+} from '@modules/application/domain/enum/application.enum';
 
 export class ApplicationResponseDto {
   @ApiProperty({ example: 1, required: true })

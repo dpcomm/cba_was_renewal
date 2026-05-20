@@ -17,11 +17,11 @@ import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 import { User } from '@shared/decorators/user.decorator';
 import { User as UserEntity } from '@modules/user/domain/entities/user.entity';
 
-import { AdminScanResponseDto } from '../dto/admin-scan.response.dto';
-import { AdminApplicationListDto } from '../dto/admin-application-list.dto';
-import { AdminApplicationListResponseDto } from '../dto/admin-application-list.response.dto';
-import { CheckInDto } from '../dto/check-in.dto';
-import { CheckInResponseDto } from '../dto/check-in.response.dto';
+import { AdminScanResponseDto } from '../dto/response/admin-scan.response.dto';
+import { AdminApplicationListDto } from '../dto/request/admin-application-list.request.dto';
+import { AdminApplicationListResponseDto } from '../dto/response/admin-application-list.response.dto';
+import { CheckInDto } from '../dto/request/check-in.request.dto';
+import { CheckInResponseDto } from '../dto/response/check-in.response.dto';
 
 @ApiTags('Admin / Application')
 @Controller('admin/application')

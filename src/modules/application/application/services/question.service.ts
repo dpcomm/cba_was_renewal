@@ -14,7 +14,7 @@ import {
   CreateQuestionRequestDto,
   UpdateQuestionRequestDto,
   ReorderQuestionRequestDto,
-} from '../dto/question.request.dto';
+} from '../../presentation/dto/request/question.request.dto';
 
 import { QuestionMapper } from '../mappers/question.mapper';
 import { AnswerType } from '@modules/application/domain/enum/survey.enum';

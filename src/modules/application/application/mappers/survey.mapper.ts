@@ -5,7 +5,7 @@ import {
   SurveySummaryResponseDto,
   SurveyResponseDto,
   SurveyPreviewResponseDto,
-} from '../../presentation/dto/survey.response.dto';
+} from '../../presentation/dto/response/survey.response.dto';
 
 import { QuestionMapper } from './question.mapper';
 

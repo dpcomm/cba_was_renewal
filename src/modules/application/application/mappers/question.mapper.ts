@@ -6,7 +6,7 @@ import {
   QuestionSummaryResponseDto,
   QuestionDetailResponseDto,
   QuestionOptionResponseDto,
-} from '../../presentation/dto/question.response.dto';
+} from '../../presentation/dto/response/question.response.dto';
 
 @Injectable()
 export class QuestionMapper {

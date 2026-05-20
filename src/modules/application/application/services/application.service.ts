@@ -2,22 +2,19 @@ import {
   Injectable,
   Logger,
   NotFoundException,
-  ForbiddenException,
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository } from 'typeorm';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 import { Application } from '@modules/application/domain/entities/application.entity';
 import {
-  EventResult,
   ApplicationStatus,
   PaymentStatus,
 } from '@modules/application/domain/enum/application.enum';
-import { AdminApplicationListDto } from '@modules/application/presentation/dto/admin-application-list.dto';
-import { AdminApplicationListResponseDto } from '@modules/application/presentation/dto/admin-application-list.response.dto';
-import { User } from '@modules/user/domain/entities/user.entity';
+import { AdminApplicationListDto } from '@modules/application/presentation/dto/request/admin-application-list.request.dto';
+import { AdminApplicationListResponseDto } from '@modules/application/presentation/dto/response/admin-application-list.response.dto';
 
 @Injectable()
 export class ApplicationService {
@@ -26,70 +23,7 @@ export class ApplicationService {
   constructor(
     @InjectRepository(Application)
     private applicationRepository: Repository<Application>,
-    private readonly dataSource: DataSource,
   ) {}
-
-  async checkApplication(userId: string, retreatId: number): Promise<boolean> {
-    const application = await this.applicationRepository.findOne({
-      where: {
-        userId: userId,
-        retreatId: retreatId,
-      },
-      select: ['id'],
-    });
-
-    return !!application;
-  }
-
-  async checkApplicatinoPaid(
-    userId: string,
-    retreatId: number,
-  ): Promise<boolean> {
-    const application = await this.applicationRepository.findOne({
-      where: {
-        userId: userId,
-        retreatId: retreatId,
-      },
-      select: ['paymentStatus'],
-    });
-
-    if (!application) {
-      throw new NotFoundException(ERROR_MESSAGES.APPLICATION_NOT_FOUND);
-    }
-
-    return application.paymentStatus === PaymentStatus.PAID;
-  }
-
-  async getApplicationsByUserId(userId: string): Promise<number[]> {
-    const applications = await this.applicationRepository.find({
-      where: { userId },
-      select: ['retreatId'],
-      order: { createdAt: 'ASC' },
-    });
-
-    return applications.map((app) => app.retreatId);
-  }
-
-  /**
-   * 내 등록 정보 상세 조회 (User)
-   */
-  async getApplicationDetail(
-    userId: string,
-    retreatId: number,
-  ): Promise<Application | null> {
-    return this.applicationRepository.findOne({
-      where: { userId, retreatId },
-      relations: [
-        'applicationMeals',
-        'applicationMeals.retreatMeal',
-        'applicationTransports',
-        'applicationTransports.retreatTransport',
-        'answers',
-        'answers.question',
-        'answers.questionOption',
-      ],
-    });
-  }
 
   /**
    * 관리자 스캔 조회 (Admin)
@@ -184,67 +118,6 @@ export class ApplicationService {
     );
 
     return { checkedInAt: now };
-  }
-
-  /**
-   * 이벤트 참여 (User)
-   */
-  async playEvent(
-    userId: string,
-    retreatId: number,
-  ): Promise<{ eventResult: EventResult }> {
-    return this.dataSource.transaction(async (manager) => {
-      const application = await manager.findOne(Application, {
-        where: { userId, retreatId },
-        lock: { mode: 'pessimistic_write' },
-      });
-
-      if (!application) {
-        throw new NotFoundException(ERROR_MESSAGES.APPLICATION_NOT_FOUND);
-      }
-
-      if (application.status !== ApplicationStatus.CHECKED_IN) {
-        throw new ForbiddenException('체크인 후 이벤트 참여가 가능합니다.');
-      }
-
-      if (application.eventResult) {
-        throw new ConflictException('이미 이벤트에 참여하셨습니다.');
-      }
-
-      let result = EventResult.LOSE;
-      const winnerCount = await manager.count(Application, {
-        where: {
-          retreatId,
-          eventResult: EventResult.WIN,
-        },
-      });
-
-      if (winnerCount < 10) {
-        const isWin = Math.random() < 0.1;
-        if (isWin) {
-          result = EventResult.WIN;
-        }
-      }
-
-      await manager.update(
-        Application,
-        { userId, retreatId },
-        {
-          eventResult: result,
-          eventParticipatedAt: new Date(),
-        },
-      );
-
-      const user = await manager.findOne(User, {
-        where: { userId: userId },
-        select: ['name'],
-      });
-      this.logger.log(
-        `이벤트 참여: ${user?.name ?? '알수없음'}(${userId}) -> 결과: ${result}`,
-      );
-
-      return { eventResult: result };
-    });
   }
 
   /**

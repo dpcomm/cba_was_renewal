@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   ApplicationStatus,
   PaymentStatus,
-} from '../../domain/enum/application.enum';
+} from '@modules/application/domain/enum/application.enum';
 
 export class AdminScanResponseDto {
   @ApiProperty({ example: 'profitia', description: '사용자 ID' })

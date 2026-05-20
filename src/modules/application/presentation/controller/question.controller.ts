@@ -1,28 +1,7 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Param,
-  ParseIntPipe,
-  Patch,
-  Post,
-  Get,
-} from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-
+import { Controller, Param, ParseIntPipe, Get } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { QuestionService } from '../../application/services/question.service';
-
-import {
-  CreateQuestionRequestDto,
-  UpdateQuestionRequestDto,
-  ReorderQuestionRequestDto,
-  GetQuestionRequestDto,
-} from '../../application/dto/question.request.dto';
-
-import {
-  QuestionDetailResponseDto,
-  QuestionSummaryResponseDto,
-} from '../dto/question.response.dto';
+import { QuestionDetailResponseDto } from '../dto/response/question.response.dto';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ok } from '@shared/responses/api-response';
@@ -39,9 +18,7 @@ export class QuestionController {
   @Get(':questionId')
   @ApiOperation({ summary: '질문 단건 조회' })
   @ApiSuccessResponse({ type: QuestionDetailResponseDto })
-  async getQuestion(
-    @Param('questionId', ParseIntPipe) questionId: number,
-  ) {
+  async getQuestion(@Param('questionId', ParseIntPipe) questionId: number) {
     const result = await this.questionService.getQuestion(questionId);
     return ok(result, 'Success get question');
   }
@@ -53,6 +30,5 @@ export class QuestionController {
   ) {
     const result = await this.questionService.getQuestionsBySurvey(surveyId);
     return ok(result, 'Success get question list by survey Id');
-  }  
-
+  }
 }
