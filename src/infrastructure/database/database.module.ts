@@ -13,7 +13,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         entities: [
           __dirname + '/../../modules/**/domain/entities/*.entity.{ts,js}',
         ],
-        synchronize: true,
+        synchronize: false,
         logging: ['prod', 'production'].includes(
           configService.get<string>('NODE_ENV') || 'dev',
         )

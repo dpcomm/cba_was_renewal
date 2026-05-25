@@ -1,31 +1,11 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  ParseIntPipe,
-  Patch,
-  Post,
-  Query,
-} from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-
+import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SurveyService } from '../../application/services/survey.service';
-
-import {
-  CreateSurveyRequestDto,
-  UpdateSurveyPeriodRequestDto,
-  GetSurveyByRetreatRequestDto,
-  PreviewSurveyRequestDto,
-  DeleteSurveyRequestDto,
-} from '../../application/dto/survey.request.dto';
-
 import {
   SurveySummaryResponseDto,
   SurveyResponseDto,
   SurveyPreviewResponseDto,
-} from '../dto/survey.response.dto';
+} from '../dto/response/survey.response.dto';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ok } from '@shared/responses/api-response';
@@ -55,9 +35,7 @@ export class SurveyController {
   @Get(':surveyId')
   @ApiOperation({ summary: '설문 상세 조회 (질문 포함)' })
   @ApiSuccessResponse({ type: SurveyResponseDto })
-  async getSurvey(
-    @Param('surveyId', ParseIntPipe) surveyId: number,
-  ) {
+  async getSurvey(@Param('surveyId', ParseIntPipe) surveyId: number) {
     const result = await this.surveyService.getSurvey(surveyId);
     return ok(result, 'Success get survey detail by surveyId');
   }
@@ -68,11 +46,8 @@ export class SurveyController {
   @Get(':surveyId/preview')
   @ApiOperation({ summary: '설문 미리보기 (옵션 포함)' })
   @ApiSuccessResponse({ type: SurveyPreviewResponseDto })
-  async previewSurvey(
-    @Param('surveyId', ParseIntPipe) surveyId: number,
-  ) {
+  async previewSurvey(@Param('surveyId', ParseIntPipe) surveyId: number) {
     const result = await this.surveyService.previewSurvey(surveyId);
     return ok(result, 'Success get survey overview');
   }
-
 }

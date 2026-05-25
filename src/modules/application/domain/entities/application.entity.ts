@@ -25,6 +25,11 @@ import { Survey } from './survey.entity';
 @Entity('Application')
 @Unique('Application_userId_retreatId_key', ['userId', 'retreatId'])
 @Index('idx_application_retreat_status', ['retreatId', 'status'])
+@Index('idx_application_retreat_status_payment', [
+  'retreatId',
+  'status',
+  'paymentStatus',
+])
 @Index('idx_application_survey_id', ['surveyId'])
 @Index('idx_application_user_id', ['userId'])
 @Index('idx_application_retreat_payment', ['retreatId', 'paymentStatus'])

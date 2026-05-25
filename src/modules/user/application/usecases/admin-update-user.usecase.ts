@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { User } from '../../domain/entities/user.entity';
 import { GetUserQuery } from '../queries/get-user.query';
 import * as bcrypt from 'bcryptjs';
+import { UserGroup } from '../../domain/enums/user-group.enum';
 
 @Injectable()
 export class AdminUpdateUserUseCase {
@@ -19,7 +20,7 @@ export class AdminUpdateUserUseCase {
     userId: number,
     dto: {
       name?: string;
-      group?: string;
+      group?: UserGroup;
       phone?: string;
       birth?: string;
       gender?: string;

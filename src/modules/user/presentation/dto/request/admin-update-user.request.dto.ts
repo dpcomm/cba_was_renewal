@@ -8,6 +8,7 @@ import {
 } from 'class-validator';
 import { UserGender } from '@modules/user/domain/enums/user-gender.enum';
 import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
+import { UserGroup } from '@modules/user/domain/enums/user-group.enum';
 
 export class AdminUpdateUserDto {
   @ApiProperty({ required: false, example: '홍길동' })
@@ -15,10 +16,10 @@ export class AdminUpdateUserDto {
   @IsOptional()
   name?: string;
 
-  @ApiProperty({ required: false, example: '배윤희&김준영' })
-  @IsString()
+  @ApiProperty({ required: false, enum: UserGroup, example: UserGroup.BRIDGE })
+  @IsEnum(UserGroup)
   @IsOptional()
-  group?: string;
+  group?: UserGroup;
 
   @ApiProperty({ required: false, example: '010-1234-5678' })
   @IsString()
