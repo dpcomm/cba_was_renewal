@@ -55,7 +55,7 @@ describe('Application QR Check-in & Event (e2e)', () => {
       name: 'AdminUser',
       rank: UserRank.ADMIN, // 'A'
       phone: '010-0000-0000',
-      group: 'Staff',
+      group: '기타',
       email: `admin_${Date.now()}@test.com`,
     });
     adminToken = jwtService.sign({ id: admin.id, rank: admin.rank });
@@ -68,7 +68,7 @@ describe('Application QR Check-in & Event (e2e)', () => {
       name: 'NormalUser',
       rank: UserRank.MEMBER, // 'M'
       phone: '010-1111-1111',
-      group: 'Member',
+      group: '브릿지',
       email: `user_${Date.now()}@test.com`,
     });
     userToken = jwtService.sign({ id: user.id, rank: user.rank });
@@ -118,9 +118,9 @@ describe('Application QR Check-in & Event (e2e)', () => {
   });
 
   describe('Admin Flow: Check-in', () => {
-    it('GET /application/admin/scan/:userId/:retreatId - Should return user info', async () => {
+    it('GET /admin/applications/scan/:userId/:retreatId - Should return user info', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/application/admin/scan/${userId}/${retreatId}`)
+        .get(`/admin/applications/scan/${userId}/${retreatId}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
@@ -130,9 +130,9 @@ describe('Application QR Check-in & Event (e2e)', () => {
       expect(response.body.data.checkedInAt).toBeNull();
     });
 
-    it('POST /application/admin/check-in - Should succeed', async () => {
+    it('POST /admin/applications/check-in - Should succeed', async () => {
       const response = await request(app.getHttpServer())
-        .post('/application/admin/check-in')
+        .post('/admin/applications/check-in')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ userId, retreatId })
         .expect(201); // Created
@@ -141,18 +141,18 @@ describe('Application QR Check-in & Event (e2e)', () => {
       expect(response.body.data.checkedInAt).toBeDefined();
     });
 
-    it('GET /application/admin/scan... - Should show checkedInAt timestamp', async () => {
+    it('GET /admin/applications/scan... - Should show checkedInAt timestamp', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/application/admin/scan/${userId}/${retreatId}`)
+        .get(`/admin/applications/scan/${userId}/${retreatId}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
       expect(response.body.data.checkedInAt).not.toBeNull();
     });
 
-    it('POST /application/admin/check-in - Should fail if already checked in', async () => {
+    it('POST /admin/applications/check-in - Should fail if already checked in', async () => {
       await request(app.getHttpServer())
-        .post('/application/admin/check-in')
+        .post('/admin/applications/check-in')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ userId, retreatId })
         .expect(409); // Conflict
@@ -193,12 +193,12 @@ describe('Application QR Check-in & Event (e2e)', () => {
   describe('Security Check', () => {
     it('Ordinary user cannot access admin APIs', async () => {
       await request(app.getHttpServer())
-        .get(`/application/admin/scan/${userId}/${retreatId}`)
+        .get(`/admin/applications/scan/${userId}/${retreatId}`)
         .set('Authorization', `Bearer ${userToken}`)
         .expect(403);
 
       await request(app.getHttpServer())
-        .post('/application/admin/check-in')
+        .post('/admin/applications/check-in')
         .set('Authorization', `Bearer ${userToken}`)
         .send({ userId, retreatId })
         .expect(403);

@@ -5,7 +5,9 @@ import {
   IsOptional,
   IsString,
   IsNotEmpty,
+  IsEnum,
 } from 'class-validator';
+import { UserGroup } from '@modules/user/domain/enums/user-group.enum';
 
 export class RegisterDto {
   @ApiProperty({ example: 'testuser' })
@@ -23,10 +25,13 @@ export class RegisterDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ example: '배윤희&김준영' })
-  @IsString()
+  @ApiProperty({
+    enum: UserGroup,
+    example: UserGroup.BAE_YOON_HEE_AND_KIM_JUN_YOUNG_M,
+  })
+  @IsEnum(UserGroup)
   @IsNotEmpty()
-  group: string;
+  group: UserGroup;
 
   @ApiProperty({ example: '010-1234-5678' })
   @IsString()

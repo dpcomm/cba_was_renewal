@@ -62,7 +62,7 @@ describe('Application Event Limit (E2E)', () => {
         rank: UserRank.MEMBER,
         phone: `010-0000-000${i}`,
         email: `${uid}@test.com`,
-        group: 'WinnerGroup',
+        group: '브릿지',
       });
 
       await appRepo.save({
@@ -86,7 +86,7 @@ describe('Application Event Limit (E2E)', () => {
       rank: UserRank.MEMBER,
       phone: '010-9999-9999',
       email: `${targetUserIdStr}@test.com`,
-      group: 'TargetGroup',
+      group: '기타',
     });
     // IMPORTANT: Include userId in payload as per previous fix
     targetUserToken = jwtService.sign({

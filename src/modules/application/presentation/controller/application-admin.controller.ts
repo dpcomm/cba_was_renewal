@@ -8,7 +8,6 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
-import { ApplicationService } from '@modules/application/application/services/application.service';
 import { AdminGuard } from '@shared/decorators/admin-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
@@ -22,12 +21,19 @@ import { AdminApplicationListDto } from '../dto/request/admin-application-list.r
 import { AdminApplicationListResponseDto } from '../dto/response/admin-application-list.response.dto';
 import { CheckInDto } from '../dto/request/check-in.request.dto';
 import { CheckInResponseDto } from '../dto/response/check-in.response.dto';
+import { ScanApplicationQuery } from '@modules/application/application/queries/admin/scan-application.query';
+import { GetAdminApplicationListQuery } from '@modules/application/application/queries/admin/get-admin-application-list.query';
+import { CheckInApplicationUseCase } from '@modules/application/application/usecases/admin/check-in-application.usecase';
 
 @ApiTags('Admin / Application')
-@Controller('admin/application')
+@Controller('admin/applications')
 @AdminGuard()
 export class ApplicationAdminController {
-  constructor(private readonly applicationService: ApplicationService) {}
+  constructor(
+    private readonly scanApplicationQuery: ScanApplicationQuery,
+    private readonly getAdminApplicationListQuery: GetAdminApplicationListQuery,
+    private readonly checkInApplicationUseCase: CheckInApplicationUseCase,
+  ) {}
 
   @Get('scan/:userId/:retreatId')
   @ApiOperation({ summary: '[관리자] QR 스캔 시 사용자 정보 조회' })
@@ -37,17 +43,17 @@ export class ApplicationAdminController {
     @Param('userId') userId: string,
     @Param('retreatId', ParseIntPipe) retreatId: number,
   ) {
-    const result = await this.applicationService.adminScan(userId, retreatId);
+    const result = await this.scanApplicationQuery.execute(userId, retreatId);
     return ok<AdminScanResponseDto>(result, 'Success admin scan');
   }
 
-  @Get('list')
+  @Get()
   @ApiOperation({ summary: '[관리자] 수련회 신청자 목록 조회 (검색/필터)' })
-  @ApiSuccessResponse({ type: AdminApplicationListResponseDto, isArray: true })
+  @ApiSuccessResponse({ type: AdminApplicationListResponseDto })
   async getApplicationList(@Query() query: AdminApplicationListDto) {
-    const list = await this.applicationService.getApplicationList(query);
-    return ok<AdminApplicationListResponseDto[]>(
-      list,
+    const result = await this.getAdminApplicationListQuery.execute(query);
+    return ok<AdminApplicationListResponseDto>(
+      result,
       'Success get application list',
     );
   }
@@ -57,7 +63,7 @@ export class ApplicationAdminController {
   @ApiSuccessResponse({ type: CheckInResponseDto })
   @ApiFailureResponse(404, ERROR_MESSAGES.APPLICATION_NOT_FOUND)
   async adminCheckIn(@User() admin: UserEntity, @Body() dto: CheckInDto) {
-    const result = await this.applicationService.checkIn(
+    const result = await this.checkInApplicationUseCase.execute(
       dto.userId,
       dto.retreatId,
       admin.userId,

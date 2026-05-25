@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { UserGroup } from '@modules/user/domain/enums/user-group.enum';
 
 export class CheckUserDto {
   @ApiProperty({ example: 'user123' })
@@ -23,9 +24,9 @@ export class CheckUserDto {
   @IsString()
   phone: string;
 
-  @ApiProperty({ example: 'Group A' })
-  @IsString()
-  group: string;
+  @ApiProperty({ enum: UserGroup, example: UserGroup.BRIDGE })
+  @IsEnum(UserGroup)
+  group: UserGroup;
 
   @ApiProperty({ example: '2000-01-01' })
   @IsString()

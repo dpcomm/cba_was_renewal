@@ -3,7 +3,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Application } from './domain/entities/application.entity';
 import { ApplicationController } from './presentation/controller/application.controller';
 import { ApplicationAdminController } from './presentation/controller/application-admin.controller';
-import { ApplicationService } from './application/services/application.service';
 import { Survey } from './domain/entities/survey.entity';
 import { Question } from './domain/entities/question.entity';
 import { QuestionOption } from './domain/entities/question_option.entity';
@@ -20,6 +19,9 @@ import { CheckMyApplicationPaidQuery } from './application/queries/me/check-my-a
 import { GetMyApplicationHistoryQuery } from './application/queries/me/get-my-application-history.query';
 import { GetMyApplicationDetailQuery } from './application/queries/me/get-my-application-detail.query';
 import { PlayEventUseCase } from './application/usecases/me/play-event.usecase';
+import { ScanApplicationQuery } from './application/queries/admin/scan-application.query';
+import { GetAdminApplicationListQuery } from './application/queries/admin/get-admin-application-list.query';
+import { CheckInApplicationUseCase } from './application/usecases/admin/check-in-application.usecase';
 
 @Module({
   imports: [
@@ -34,12 +36,14 @@ import { PlayEventUseCase } from './application/usecases/me/play-event.usecase';
     AdminQuestionController,
   ],
   providers: [
-    ApplicationService,
     CheckMyApplicationQuery,
     CheckMyApplicationPaidQuery,
     GetMyApplicationHistoryQuery,
     GetMyApplicationDetailQuery,
     PlayEventUseCase,
+    ScanApplicationQuery,
+    GetAdminApplicationListQuery,
+    CheckInApplicationUseCase,
     SurveyService,
     QuestionService,
     SurveyMapper,

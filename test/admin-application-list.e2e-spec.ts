@@ -6,6 +6,11 @@ import { DataSource } from 'typeorm';
 import { User } from '../src/modules/user/domain/entities/user.entity';
 import { Retreat } from '../src/modules/retreat/domain/entities/retreat.entity';
 import { Application } from '../src/modules/application/domain/entities/application.entity';
+import {
+  ApplicationStatus,
+  PaymentStatus,
+} from '../src/modules/application/domain/enum/application.enum';
+import { UserGroup } from '../src/modules/user/domain/enums/user-group.enum';
 import { UserRank } from '../src/modules/user/domain/enums/user-rank.enum';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
@@ -58,7 +63,7 @@ describe('Admin Application List (E2E)', () => {
       rank: UserRank.ADMIN,
       phone: '010-0000-0000',
       email: `admin_list_${Date.now()}@test.com`,
-      group: 'Staff',
+      group: UserGroup.ETC,
     });
     adminToken = jwtService.sign({
       id: adminUser.id,
@@ -74,7 +79,7 @@ describe('Admin Application List (E2E)', () => {
       rank: UserRank.MEMBER,
       phone: '010-1111-1111',
       email: `member_list_${Date.now()}@test.com`,
-      group: 'Member',
+      group: UserGroup.ETC,
     });
     memberToken = jwtService.sign({
       id: memberUser.id,
@@ -92,14 +97,15 @@ describe('Admin Application List (E2E)', () => {
       rank: 'M',
       phone: '010-1234-5678',
       email: `userA_${Date.now()}@test.com`,
-      group: 'A',
+      group: UserGroup.KWON_SOON_YOUNG_AND_LIM_KANG_MI_M,
     });
     await appRepo.save({
       user: userA,
       retreat,
       idn: 'A001',
       surveyData: {},
-      feePaid: true,
+      paymentStatus: PaymentStatus.PAID,
+      status: ApplicationStatus.CHECKED_IN,
       checkedInAt: new Date(),
     });
 
@@ -111,14 +117,15 @@ describe('Admin Application List (E2E)', () => {
       rank: 'M',
       phone: '010-2345-6789',
       email: `userB_${Date.now()}@test.com`,
-      group: 'B',
+      group: UserGroup.NOH_SI_EUN_AND_YOON_SEUNG_O_M,
     });
     await appRepo.save({
       user: userB,
       retreat,
       idn: 'B001',
       surveyData: {},
-      feePaid: true,
+      paymentStatus: PaymentStatus.PAID,
+      status: ApplicationStatus.SUBMITTED,
       checkedInAt: null,
     });
 
@@ -130,21 +137,22 @@ describe('Admin Application List (E2E)', () => {
       rank: 'M',
       phone: '010-3456-7890',
       email: `userC_${Date.now()}@test.com`,
-      group: 'C',
+      group: UserGroup.BRIDGE,
     });
     await appRepo.save({
       user: userC,
       retreat,
       idn: 'C001',
       surveyData: {},
-      feePaid: false,
+      paymentStatus: PaymentStatus.PENDING,
+      status: ApplicationStatus.SUBMITTED,
       checkedInAt: null,
     });
   }
 
   it('Should fail if not admin', async () => {
     await request(app.getHttpServer())
-      .get('/application/admin/list')
+      .get('/admin/applications')
       .query({ retreatId })
       .set('Authorization', `Bearer ${memberToken}`)
       .expect(403);
@@ -152,13 +160,16 @@ describe('Admin Application List (E2E)', () => {
 
   it('Should return all applications (default)', async () => {
     const response = await request(app.getHttpServer())
-      .get('/application/admin/list')
+      .get('/admin/applications')
       .query({ retreatId })
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
     expect(response.body.success).toBe(true);
-    const data = response.body.data;
+    const data = response.body.data.items;
+    expect(response.body.data.meta.page).toBe(1);
+    expect(response.body.data.meta.limit).toBe(20);
+    expect(response.body.data.meta.total).toBeGreaterThanOrEqual(3);
     expect(data.length).toBeGreaterThanOrEqual(3);
 
     const names = data.map((d: any) => d.name);
@@ -169,36 +180,36 @@ describe('Admin Application List (E2E)', () => {
 
   it('Should filter by search (Name)', async () => {
     const response = await request(app.getHttpServer())
-      .get('/application/admin/list')
+      .get('/admin/applications')
       .query({ retreatId, search: 'Alice' })
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
-    const data = response.body.data;
+    const data = response.body.data.items;
     expect(data.length).toBe(1);
     expect(data[0].name).toBe('Alice');
   });
 
-  it('Should filter by search (Phone)', async () => {
+  it('Should filter by search (Group)', async () => {
     const response = await request(app.getHttpServer())
-      .get('/application/admin/list')
-      .query({ retreatId, search: '3456' }) // Part of Charlie's phone
+      .get('/admin/applications')
+      .query({ retreatId, search: UserGroup.BRIDGE })
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
-    const data = response.body.data;
+    const data = response.body.data.items;
     const names = data.map((d: any) => d.name);
     expect(names).toContain('Charlie');
   });
 
-  it('Should filter by NOT_CHECKED_IN', async () => {
+  it('Should filter by applicationStatus', async () => {
     const response = await request(app.getHttpServer())
-      .get('/application/admin/list')
-      .query({ retreatId, filter: 'NOT_CHECKED_IN' })
+      .get('/admin/applications')
+      .query({ retreatId, applicationStatus: ApplicationStatus.SUBMITTED })
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
-    const data = response.body.data;
+    const data = response.body.data.items;
     // Alice is checked in, so she should NOT be here.
     // Bob and Charlie are NOT checked in.
     const names = data.map((d: any) => d.name);
@@ -207,14 +218,48 @@ describe('Admin Application List (E2E)', () => {
     expect(names).toContain('Charlie');
   });
 
-  it('Should filter by FEE_UNPAID (Fee not paid)', async () => {
+  it('Should filter by group', async () => {
     const response = await request(app.getHttpServer())
-      .get('/application/admin/list')
-      .query({ retreatId, filter: 'FEE_UNPAID' })
+      .get('/admin/applications')
+      .query({ retreatId, group: UserGroup.BRIDGE })
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    const data = response.body.data.items;
+    const names = data.map((d: any) => d.name);
+    expect(names).toContain('Charlie');
+    expect(names).not.toContain('Alice');
+    expect(names).not.toContain('Bob');
+  });
+
+  it('Should paginate applications', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/admin/applications')
+      .query({ retreatId, page: 2, limit: 2 })
       .set('Authorization', `Bearer ${adminToken}`)
       .expect(200);
 
     const data = response.body.data;
+    expect(data.items.length).toBeLessThanOrEqual(2);
+    expect(data.meta).toEqual(
+      expect.objectContaining({
+        page: 2,
+        limit: 2,
+      }),
+    );
+    expect(data.meta.total).toBeGreaterThanOrEqual(3);
+    expect(data.meta.totalPages).toBeGreaterThanOrEqual(2);
+    expect(data.meta.hasPrev).toBe(true);
+  });
+
+  it('Should filter by paymentStatus', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/admin/applications')
+      .query({ retreatId, paymentStatus: PaymentStatus.PENDING })
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    const data = response.body.data.items;
     const names = data.map((d: any) => d.name);
     expect(names).toContain('Charlie');
     expect(names).not.toContain('Alice'); // Paid

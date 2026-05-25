@@ -16,6 +16,7 @@ import { Chat } from '@modules/chat/domain/entities/chat.entity';
 import { ChatReport } from '@modules/chat/domain/entities/chat-report.entity';
 import { Consent } from '@modules/consent/domain/entities/consent.entity';
 import { LectureEnrollment } from '@modules/lecture/domain/entities/lectureEnrollment.entity';
+import { UserGroup } from '../enums/user-group.enum';
 @Entity('User')
 export class User {
   @PrimaryGeneratedColumn()
@@ -34,8 +35,12 @@ export class User {
   @Column({ length: 191 })
   name: string;
 
-  @Column({ length: 191 })
-  group: string;
+  @Column({
+    type: 'enum',
+    enum: UserGroup,
+    default: UserGroup.ETC,
+  })
+  group: UserGroup;
 
   @Column({ length: 191 })
   phone: string;
@@ -103,7 +108,7 @@ export class User {
    */
   updateProfile(fields: {
     name?: string;
-    group?: string;
+    group?: UserGroup;
     phone?: string;
     birth?: Date;
     gender?: string;
