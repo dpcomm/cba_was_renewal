@@ -7,12 +7,23 @@ pipeline {
     NAMESPACE = "axdhp42jvukm"
     IMAGE_NAME = "cba_was_renew"
     IMAGE_LATEST = "${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest_dev"
-    IMAGE_TAGGED = "${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:dev-${BUILD_NUMBER}"
   }
 
   stages {
     stage('Checkout') {
       steps { checkout scm }
+    }
+
+    stage('Prepare image tag') {
+      steps {
+        script {
+          def timestamp = sh(script: 'TZ=Asia/Seoul date +%Y%m%d%H%M', returnStdout: true).trim()
+          def shortSha = sh(script: 'git rev-parse --short=7 HEAD', returnStdout: true).trim()
+          env.IMAGE_TAG = "dev-${timestamp}-${shortSha}"
+          env.IMAGE_TAGGED = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+          echo "Image tag: ${env.IMAGE_TAG}"
+        }
+      }
     }
 
     stage('Copy env file') {
@@ -76,7 +87,11 @@ pipeline {
 
     stage('Deploy') {
       steps {
-        build job: 'cba-deploy-was_all-dev', wait: false
+        build job: 'cba-deploy-was_all-dev',
+          wait: false,
+          parameters: [
+            string(name: 'WAS_TAG', value: env.IMAGE_TAG)
+          ]
       }
     }
   }
