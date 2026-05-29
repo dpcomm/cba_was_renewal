@@ -1,6 +1,5 @@
 FROM node:alpine AS base
 WORKDIR /app
-RUN npm install -g npm@latest
 
 FROM base AS deps
 COPY package*.json ./
@@ -23,7 +22,7 @@ COPY --from=builder /app/package*.json ./
 # Expo Push를 사용하므로 비활성화
 # COPY --from=builder /app/serviceAccountKey.json ./
 
-RUN --mount=type=cache,target=/root/.npm npm ci --only=production --ignore-scripts
+RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev --ignore-scripts
 
 RUN chown -R nestjs:nodejs /app
 

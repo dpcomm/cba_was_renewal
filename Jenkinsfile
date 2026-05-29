@@ -1,12 +1,16 @@
 pipeline {
   agent { label 'joey-host' }
-  options { disableConcurrentBuilds() }
+  options {
+    disableConcurrentBuilds()
+    skipDefaultCheckout(true)
+  }
 
   environment {
     REGISTRY = "ap-chuncheon-1.ocir.io"
     NAMESPACE = "axdhp42jvukm"
     IMAGE_NAME = "cba_was_renew"
     IMAGE_LATEST = "${REGISTRY}/${NAMESPACE}/${IMAGE_NAME}:latest_dev"
+    DEV_PLATFORM = "linux/amd64"
   }
 
   stages {
@@ -22,6 +26,7 @@ pipeline {
           env.IMAGE_TAG = "dev-${timestamp}-${shortSha}"
           env.IMAGE_TAGGED = "${env.REGISTRY}/${env.NAMESPACE}/${env.IMAGE_NAME}:${env.IMAGE_TAG}"
           echo "Image tag: ${env.IMAGE_TAG}"
+          echo "Dev image platform: ${env.DEV_PLATFORM}"
         }
       }
     }
@@ -77,7 +82,7 @@ pipeline {
           docker buildx inspect multiarch-builder >/dev/null 2>&1 || docker buildx create --use --name multiarch-builder
           docker buildx inspect --bootstrap
           docker buildx build \
-            --platform linux/amd64,linux/arm64 \
+            --platform ${DEV_PLATFORM} \
             -t ${IMAGE_LATEST} \
             -t ${IMAGE_TAGGED} \
             --push .
