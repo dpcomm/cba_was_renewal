@@ -4,15 +4,13 @@ import { ApiSuccessResponse } from '@shared/decorators/api-success-response.deco
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 import { ok } from '@shared/responses/api-response';
 import { SystemService } from '../../application/services/system.service';
-import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
-import { RankGuard } from '@shared/decorators/rank-guard.decorator';
-import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
 import {
   SystemConfigOptionsResponseDto,
   SystemConfigResponseDto,
 } from '../dto/system-config.response.dto';
 import { UpdateSystemConfigDto } from '../dto/update-system-config.request.dto';
 import { SystemConfig } from '@modules/system/domain/entities/system-config.entity';
+import { AdminGuard } from '@shared/decorators/admin-guard.decorator';
 
 @ApiTags('System')
 @Controller('system')
@@ -25,14 +23,22 @@ export class SystemController {
   async getSystemConfig() {
     const config = await this.systemService.getConfig();
 
-    return ok(this.toResponse(config), 'System config retrieved successfully');
+    return ok(
+      toSystemConfigResponse(config),
+      'System config retrieved successfully',
+    );
   }
+}
 
-  @Get('admin/options')
-  @RankGuard(UserRank.ADMIN)
-  @JwtGuard()
+@ApiTags('Admin System')
+@AdminGuard()
+@Controller('admin/system')
+export class AdminSystemController {
+  constructor(private readonly systemService: SystemService) {}
+
+  @Get('options')
   @ApiOperation({
-    summary: '[관리자] 시스템 설정(수련회, 학기)) 선택 옵션 조회',
+    summary: '[관리자] 시스템 설정(수련회, 학기) 선택 옵션 조회',
   })
   @ApiSuccessResponse({ type: SystemConfigOptionsResponseDto })
   @ApiFailureResponse(403, 'Forbidden')
@@ -41,9 +47,7 @@ export class SystemController {
     return ok(options, 'System config options retrieved successfully');
   }
 
-  @Put('admin')
-  @RankGuard(UserRank.ADMIN)
-  @JwtGuard()
+  @Put()
   @ApiOperation({ summary: '[관리자] 시스템 설정 수정' })
   @ApiSuccessResponse({})
   @ApiFailureResponse(403, 'Forbidden')
@@ -52,43 +56,46 @@ export class SystemController {
     body: UpdateSystemConfigDto,
   ) {
     const updated = await this.systemService.updateConfig(body);
-    return ok(this.toResponse(updated), 'System config updated successfully');
+    return ok(
+      toSystemConfigResponse(updated),
+      'System config updated successfully',
+    );
   }
+}
 
-  private toResponse(config: SystemConfig): SystemConfigResponseDto {
-    return {
-      application: {
-        name: config.appName,
-        versionName: config.versionName,
-        versionCode: config.versionCode,
-        minimumVersionCode: config.minimumVersionCode,
+function toSystemConfigResponse(config: SystemConfig): SystemConfigResponseDto {
+  return {
+    application: {
+      name: config.appName,
+      versionName: config.versionName,
+      versionCode: config.versionCode,
+      minimumVersionCode: config.minimumVersionCode,
+    },
+    consents: {
+      privacyPolicy: {
+        url: config.privacyPolicyUrl,
+        version: config.privacyPolicyVersion,
+        updatedAt: config.privacyPolicyUpdatedAt,
       },
-      consents: {
-        privacyPolicy: {
-          url: config.privacyPolicyUrl,
-          version: config.privacyPolicyVersion,
-          updatedAt: config.privacyPolicyUpdatedAt,
-        },
-      },
-      maintenance: {
-        mode: config.maintenanceMode,
-        message: config.maintenanceMessage,
-      },
-      currentTermId: config.currentTermId,
-      currentRetreatId: config.currentRetreatId,
-      currentTerm: config.currentTerm
-        ? {
-            id: config.currentTerm.id,
-            name: config.currentTerm.name,
-          }
-        : null,
-      currentRetreat: config.currentRetreat
-        ? {
-            id: config.currentRetreat.id,
-            title: config.currentRetreat.title,
-          }
-        : null,
-      updatedAt: config.updatedAt,
-    };
-  }
+    },
+    maintenance: {
+      mode: config.maintenanceMode,
+      message: config.maintenanceMessage,
+    },
+    currentTermId: config.currentTermId,
+    currentRetreatId: config.currentRetreatId,
+    currentTerm: config.currentTerm
+      ? {
+          id: config.currentTerm.id,
+          name: config.currentTerm.name,
+        }
+      : null,
+    currentRetreat: config.currentRetreat
+      ? {
+          id: config.currentRetreat.id,
+          title: config.currentRetreat.title,
+        }
+      : null,
+    updatedAt: config.updatedAt,
+  };
 }
