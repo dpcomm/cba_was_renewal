@@ -95,7 +95,8 @@ pipeline {
         build job: 'cba-deploy-was_all-dev',
           wait: false,
           parameters: [
-            string(name: 'WAS_TAG', value: env.IMAGE_TAG)
+            string(name: 'WAS_TAG', value: env.IMAGE_TAG),
+            booleanParam(name: 'WAS_ONLY', value: true)
           ]
       }
     }
