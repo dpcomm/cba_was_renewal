@@ -44,6 +44,28 @@ export class FinalSyncWithRenewApplicationSpec1775041536552 implements Migration
       }
     };
 
+    // Drop old FK constraints before renaming columns. MySQL keeps FK metadata
+    // tied to the original column names, so this makes repeated runs safer.
+    await safeDropFK('ApplicationMeal', 'ApplicationMeal_applicationId_fkey');
+    await safeDropFK('ApplicationMeal', 'ApplicationMeal_retreatMealId_fkey');
+    await safeDropFK('RetreatMeal', 'RetreatMeal_retreatId_fkey');
+    await safeDropFK(
+      'ApplicationTransport',
+      'ApplicationTransport_applicationId_fkey',
+    );
+    await safeDropFK(
+      'ApplicationTransport',
+      'ApplicationTransport_retreatTransportId_fkey',
+    );
+    await safeDropFK('RetreatTransport', 'RetreatTransport_retreatId_fkey');
+    await safeDropFK('Answer', 'Answer_questionId_fkey');
+    await safeDropFK('Answer', 'Answer_applicationId_fkey');
+    await safeDropFK('Answer', 'Answer_questionOptionId_fkey');
+    await safeDropFK('QuestionOption', 'QuestionOption_questionId_fkey');
+    await safeDropFK('Question', 'Question_surveyId_fkey');
+    await safeDropFK('Survey', 'Survey_retreatId_fkey');
+    await safeDropFK('Application', 'Application_surveyId_fkey');
+
     // 1. 컬럼명 부분 변경 복구 (Idempotent하게 Application/Retreat 남은 부분 처리)
     // Retreat 부분 복구 (location, retreat_end_at은 이미 snake_case일 수 있음)
     await safeRenameColumn(
@@ -83,6 +105,236 @@ export class FinalSyncWithRenewApplicationSpec1775041536552 implements Migration
       'retreatId',
       'retreat_id',
       'int NOT NULL',
+    );
+
+    // Tables created by AddRetreatApplicationSchemaRenewal used camelCase
+    // column names. Normalize them before any data backfill/index/FK work.
+    await safeRenameColumn(
+      'ApplicationMeal',
+      'applicationId',
+      'application_id',
+      'int NOT NULL',
+    );
+    await safeRenameColumn(
+      'ApplicationMeal',
+      'retreatMealId',
+      'retreat_meal_id',
+      'int NOT NULL',
+    );
+    await safeRenameColumn(
+      'ApplicationMeal',
+      'createdAt',
+      'created_at',
+      'datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)',
+    );
+    await safeRenameColumn(
+      'ApplicationMeal',
+      'updatedAt',
+      'updated_at',
+      'datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)',
+    );
+
+    await safeRenameColumn(
+      'RetreatMeal',
+      'retreatId',
+      'retreat_id',
+      'int NOT NULL',
+    );
+    await safeRenameColumn(
+      'RetreatMeal',
+      'dayNumber',
+      'day_number',
+      'int NOT NULL',
+    );
+    await safeRenameColumn(
+      'RetreatMeal',
+      'mealType',
+      'meal_type',
+      "enum ('BREAKFAST', 'LUNCH', 'DINNER') NOT NULL",
+    );
+    await safeRenameColumn(
+      'RetreatMeal',
+      'createdAt',
+      'created_at',
+      'datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)',
+    );
+    await safeRenameColumn(
+      'RetreatMeal',
+      'updatedAt',
+      'updated_at',
+      'datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)',
+    );
+
+    await safeRenameColumn(
+      'ApplicationTransport',
+      'applicationId',
+      'application_id',
+      'int NOT NULL',
+    );
+    await safeRenameColumn(
+      'ApplicationTransport',
+      'retreatTransportId',
+      'retreat_transport_id',
+      'int NOT NULL',
+    );
+    await safeRenameColumn(
+      'ApplicationTransport',
+      'vehicleNumber',
+      'vehicle_number',
+      'varchar(191) NULL',
+    );
+    await safeRenameColumn(
+      'ApplicationTransport',
+      'createdAt',
+      'created_at',
+      'datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)',
+    );
+    await safeRenameColumn(
+      'ApplicationTransport',
+      'updatedAt',
+      'updated_at',
+      'datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)',
+    );
+
+    await safeRenameColumn(
+      'RetreatTransport',
+      'retreatId',
+      'retreat_id',
+      'int NOT NULL',
+    );
+    await safeRenameColumn(
+      'RetreatTransport',
+      'transportType',
+      'transport_type',
+      "enum ('OWN_CAR', 'CARPOOL', 'BUS', 'PUBLIC', 'OTHER') NOT NULL",
+    );
+    await safeRenameColumn(
+      'RetreatTransport',
+      'isRemarkRequired',
+      'is_remark_required',
+      'tinyint NOT NULL DEFAULT 0',
+    );
+    await safeRenameColumn(
+      'RetreatTransport',
+      'isVehicleRequired',
+      'is_vehicle_required',
+      'tinyint NOT NULL DEFAULT 0',
+    );
+    await safeRenameColumn(
+      'RetreatTransport',
+      'createdAt',
+      'created_at',
+      'datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)',
+    );
+    await safeRenameColumn(
+      'RetreatTransport',
+      'updatedAt',
+      'updated_at',
+      'datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)',
+    );
+
+    await safeRenameColumn('Answer', 'questionId', 'question_id', 'int NOT NULL');
+    await safeRenameColumn(
+      'Answer',
+      'applicationId',
+      'application_id',
+      'int NOT NULL',
+    );
+    await safeRenameColumn(
+      'Answer',
+      'questionOptionId',
+      'question_option_id',
+      'int NULL',
+    );
+    await safeRenameColumn(
+      'Answer',
+      'createdAt',
+      'created_at',
+      'datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)',
+    );
+    await safeRenameColumn(
+      'Answer',
+      'updatedAt',
+      'updated_at',
+      'datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)',
+    );
+
+    await safeRenameColumn(
+      'QuestionOption',
+      'questionId',
+      'question_id',
+      'int NOT NULL',
+    );
+    await safeRenameColumn(
+      'QuestionOption',
+      'orderNo',
+      'order_no',
+      'int NOT NULL',
+    );
+    await safeRenameColumn(
+      'QuestionOption',
+      'createdAt',
+      'created_at',
+      'datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)',
+    );
+    await safeRenameColumn(
+      'QuestionOption',
+      'updatedAt',
+      'updated_at',
+      'datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)',
+    );
+
+    await safeRenameColumn('Question', 'surveyId', 'survey_id', 'int NOT NULL');
+    await safeRenameColumn(
+      'Question',
+      'answerType',
+      'answer_type',
+      "enum ('SINGLE_SELECT', 'MULTI_SELECT', 'SUBJECTIVE') NOT NULL",
+    );
+    await safeRenameColumn('Question', 'orderNo', 'order_no', 'int NOT NULL');
+    await safeRenameColumn(
+      'Question',
+      'isRequired',
+      'is_required',
+      'tinyint NOT NULL DEFAULT 0',
+    );
+    await safeRenameColumn(
+      'Question',
+      'createdAt',
+      'created_at',
+      'datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)',
+    );
+    await safeRenameColumn(
+      'Question',
+      'updatedAt',
+      'updated_at',
+      'datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)',
+    );
+
+    await safeRenameColumn('Survey', 'retreatId', 'retreat_id', 'int NOT NULL');
+    await safeRenameColumn(
+      'Survey',
+      'surveyStartAt',
+      'survey_start_at',
+      'datetime(3) NOT NULL',
+    );
+    await safeRenameColumn(
+      'Survey',
+      'surveyEndAt',
+      'survey_end_at',
+      'datetime(3) NOT NULL',
+    );
+    await safeRenameColumn(
+      'Survey',
+      'createdAt',
+      'created_at',
+      'datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3)',
+    );
+    await safeRenameColumn(
+      'Survey',
+      'updatedAt',
+      'updated_at',
+      'datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3)',
     );
 
     // 2. 데이터 클린업 및 기본값 삽입
