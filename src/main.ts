@@ -12,6 +12,15 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: new KSTLogger(),
   });
+  app.enableCors({
+    origin: [
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'https://admin.dev.recba.me',
+      'https://admin.recba.me',
+    ],
+    credentials: true,
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
