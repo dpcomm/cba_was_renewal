@@ -1,5 +1,11 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsBoolean,
+  IsDateString,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class UpdateSystemConfigDto {
   @ApiPropertyOptional({
@@ -20,26 +26,63 @@ export class UpdateSystemConfigDto {
   @IsOptional()
   versionCode?: number;
 
+  @ApiPropertyOptional({ description: '최소 지원 버전 코드', example: 1 })
+  @IsNumber()
+  @IsOptional()
+  minimumVersionCode?: number;
+
   @ApiPropertyOptional({
     description: '개인정보 처리방침 URL',
     example: 'https://sites.google.com/view/cba-connect',
+    nullable: true,
   })
   @IsString()
   @IsOptional()
-  privacyPolicyUrl?: string;
+  privacyPolicyUrl?: string | null;
 
   @ApiPropertyOptional({ description: '개인정보 처리방침 버전', example: 1 })
   @IsNumber()
   @IsOptional()
   privacyPolicyVersion?: number;
 
-  @ApiPropertyOptional({ description: '현재 학기 ID', example: 4 })
-  @IsNumber()
+  @ApiPropertyOptional({
+    description: '개인정보 처리방침 개정일',
+    example: '2026-01-19T00:00:00.000Z',
+    nullable: true,
+  })
+  @IsDateString()
   @IsOptional()
-  currentTermId?: number;
+  privacyPolicyUpdatedAt?: string | null;
 
-  @ApiPropertyOptional({ description: '현재 수련회 ID', example: 4 })
+  @ApiPropertyOptional({ description: '점검 모드 여부', example: false })
+  @IsBoolean()
+  @IsOptional()
+  maintenanceMode?: boolean;
+
+  @ApiPropertyOptional({
+    description: '점검 메시지',
+    example: '서비스 점검 중입니다.',
+    nullable: true,
+  })
+  @IsString()
+  @IsOptional()
+  maintenanceMessage?: string | null;
+
+  @ApiPropertyOptional({
+    description: '현재 학기 ID',
+    example: 4,
+    nullable: true,
+  })
   @IsNumber()
   @IsOptional()
-  currentRetreatId?: number;
+  currentTermId?: number | null;
+
+  @ApiPropertyOptional({
+    description: '현재 수련회 ID',
+    example: 4,
+    nullable: true,
+  })
+  @IsNumber()
+  @IsOptional()
+  currentRetreatId?: number | null;
 }
