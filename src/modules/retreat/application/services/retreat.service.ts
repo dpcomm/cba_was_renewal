@@ -9,7 +9,7 @@ import { Retreat } from '@modules/retreat/domain/entities/retreat.entity';
 import {
   CreateRetreatRequestDto,
   UpdateRetreatRequestDto,
-} from '../dto/retreat.request.dto';
+} from '../../presentation/dto/request/retreat.request.dto';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 @Injectable()

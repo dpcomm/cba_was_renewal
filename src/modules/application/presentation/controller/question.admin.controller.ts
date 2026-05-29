@@ -7,23 +7,17 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
-
 import { QuestionService } from '../../application/services/question.service';
-
 import {
   CreateQuestionRequestDto,
   UpdateQuestionRequestDto,
   ReorderQuestionRequestDto,
-} from '../../application/dto/question.request.dto';
-
-import { QuestionSummaryResponseDto } from '../dto/question.response.dto';
-
+} from '../dto/request/question.request.dto';
+import { QuestionSummaryResponseDto } from '../dto/response/question.response.dto';
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { RankGuard } from '@shared/decorators/rank-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
-
 import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
 import { ok } from '@shared/responses/api-response';
 
@@ -40,9 +34,7 @@ export class AdminQuestionController {
   @Post()
   @ApiOperation({ summary: '질문 생성' })
   @ApiSuccessResponse({ type: QuestionSummaryResponseDto })
-  async createQuestion(
-    @Body() dto: CreateQuestionRequestDto
-  ) {
+  async createQuestion(@Body() dto: CreateQuestionRequestDto) {
     const result = await this.questionService.createQuestion(dto);
     return ok(result, 'Success create question');
   }
@@ -72,9 +64,7 @@ export class AdminQuestionController {
    */
   @Delete(':questionId')
   @ApiOperation({ summary: '질문 삭제' })
-  async deleteQuestion(
-    @Param('questionId', ParseIntPipe) questionId: number,
-  ) {
+  async deleteQuestion(@Param('questionId', ParseIntPipe) questionId: number) {
     await this.questionService.deleteQuestion(questionId);
     return ok(null, 'Success delete question');
   }

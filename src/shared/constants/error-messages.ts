@@ -23,6 +23,8 @@ export const ERROR_MESSAGES = {
   TERM_ALREADY_EXISTS: 'Term with same year and termType already exists',
   TERM_NOT_FOUND: 'Term not found',
   APPLICATION_NOT_FOUND: 'Application not found',
+  APPLICATION_NOT_CHECKED_IN: 'Application not checked in',
+  EVENT_ALREADY_PLAYED: 'Event already played',
   RETREAT_NOT_FOUND: 'Retreat not found',
   LECTURE_CAPACITY_EXCEEDED: 'Selected users exceed remaining lecture capacity',
   LECTURE_ELIGIBLE_USER_REQUIRED:
@@ -34,7 +36,11 @@ export const ERROR_MESSAGES = {
     'SUBJECTIVE type cannot have options',
   QUESTION_OPTIONS_REQUIRED: 'Options are required for select type',
   DUPLICATE_QUESTION_OPTION_LABELS: 'Duplicate option labels',
+  MEAL_SLOT_ALREADY_EXISTS: 'The meal slot already exists',
+  MEAL_NOT_FOUND: 'Meal not found',
+  CANNOT_DELETE_MEAL_WITH_APPLICATIONS: 'Cannot delete meal with applications',
   TRANSPORT_ALREADY_EXISTS: 'The transport option already exists',
   TRANSPORT_NOT_FOUND: 'Transport option not found',
-  CANNOT_DELETE_TRANSPORT_WITH_APPLICATIONS: 'Cannot delete transport with applications',
+  CANNOT_DELETE_TRANSPORT_WITH_APPLICATIONS:
+    'Cannot delete transport with applications',
 } as const;

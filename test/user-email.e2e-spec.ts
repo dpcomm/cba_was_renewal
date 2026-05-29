@@ -22,7 +22,6 @@ describe('User Email Update (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.setGlobalPrefix('api/v2');
     app.useGlobalPipes(new ValidationPipe({ transform: true }));
     await app.init();
 
@@ -42,7 +41,7 @@ describe('User Email Update (e2e)', () => {
 
     it('1. 로그인하여 액세스 토큰 획득', async () => {
       const response = await request(app.getHttpServer())
-        .post('/api/v2/auth/login')
+        .post('/auth/login')
         .send({ userId: testUserId, password: testPassword })
         .expect(201);
 
@@ -54,7 +53,7 @@ describe('User Email Update (e2e)', () => {
 
     it('2. 이메일 인증 코드 발송 요청 (type=UPDATE)', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/api/v2/auth/email/${newEmail}?type=UPDATE`)
+        .get(`/auth/email/${newEmail}?type=UPDATE`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -75,7 +74,7 @@ describe('User Email Update (e2e)', () => {
       const code = (global as any).emailUpdateCode;
 
       const response = await request(app.getHttpServer())
-        .post('/api/v2/auth/email/verify')
+        .post('/auth/email/verify')
         .send({ email: newEmail, code })
         .expect(201);
 
@@ -87,7 +86,7 @@ describe('User Email Update (e2e)', () => {
 
     it('5. 이메일 등록/변경 API 호출', async () => {
       const response = await request(app.getHttpServer())
-        .patch('/api/v2/users/me/email')
+        .patch('/users/me/email')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           email: newEmail,
@@ -102,7 +101,7 @@ describe('User Email Update (e2e)', () => {
 
     it('6. 내 정보 조회하여 이메일 확인', async () => {
       const response = await request(app.getHttpServer())
-        .get('/api/v2/users/me')
+        .get('/users/me')
         .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
@@ -112,7 +111,7 @@ describe('User Email Update (e2e)', () => {
 
     it('7. 잘못된 토큰으로 이메일 변경 시도 - 실패', async () => {
       const response = await request(app.getHttpServer())
-        .patch('/api/v2/users/me/email')
+        .patch('/users/me/email')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           email: 'another@example.com',
@@ -127,7 +126,7 @@ describe('User Email Update (e2e)', () => {
       // 다른 이메일로 인증 코드 발송
       const anotherEmail = `another_${Date.now()}@example.com`;
       await request(app.getHttpServer())
-        .get(`/api/v2/auth/email/${anotherEmail}?type=UPDATE`)
+        .get(`/auth/email/${anotherEmail}?type=UPDATE`)
         .expect(200);
 
       const redisKey = `email_verification:${anotherEmail}`;
@@ -135,7 +134,7 @@ describe('User Email Update (e2e)', () => {
 
       // 인증 토큰 발급
       const verifyResponse = await request(app.getHttpServer())
-        .post('/api/v2/auth/email/verify')
+        .post('/auth/email/verify')
         .send({ email: anotherEmail, code })
         .expect(201);
 
@@ -143,7 +142,7 @@ describe('User Email Update (e2e)', () => {
 
       // 다른 이메일의 토큰으로 변경 시도 (불일치)
       const response = await request(app.getHttpServer())
-        .patch('/api/v2/users/me/email')
+        .patch('/users/me/email')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({
           email: 'mismatch@example.com', // 토큰과 다른 이메일

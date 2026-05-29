@@ -4,7 +4,7 @@ import {
   RetreatResponseDto,
   RetreatListResponse,
   RetreatSingleResponse,
-} from '@modules/retreat/presentation/dto/retreat.response.dto';
+} from '@modules/retreat/presentation/dto/response/retreat.response.dto';
 
 @Injectable()
 export class RetreatMapper {

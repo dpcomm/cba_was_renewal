@@ -12,8 +12,6 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     logger: new KSTLogger(),
   });
-  // renew 백엔드 서버 프리픽스 임시 적용
-  app.setGlobalPrefix('api/v2');
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -31,7 +29,7 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api-docs', app, swaggerDocument);
+  SwaggerModule.setup('docs', app, swaggerDocument);
 
   await app.listen(process.env.PORT ?? 3000);
 }

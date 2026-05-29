@@ -6,6 +6,7 @@ import { GetUserQuery } from '../queries/get-user.query';
 import { NotFoundException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { ERROR_MESSAGES } from '../../../../shared/constants/error-messages';
+import { UserGroup } from '../../domain/enums/user-group.enum';
 
 jest.mock('bcryptjs', () => ({
   hash: jest.fn().mockResolvedValue('hashedPassword123'),
@@ -48,13 +49,21 @@ describe('AdminUpdateUserUseCase', () => {
 
   it('should update profile fields via entity domain method', async () => {
     const user = new User();
-    Object.assign(user, { id: 1, name: 'Old', group: 'A', rank: 'M' });
+    Object.assign(user, {
+      id: 1,
+      name: 'Old',
+      group: UserGroup.ETC,
+      rank: 'M',
+    });
     mockGetUserQuery.byId.mockResolvedValueOnce(user);
 
-    const result = await useCase.execute(1, { name: 'New', group: 'B' });
+    const result = await useCase.execute(1, {
+      name: 'New',
+      group: UserGroup.BRIDGE,
+    });
 
     expect(result.name).toBe('New');
-    expect(result.group).toBe('B');
+    expect(result.group).toBe(UserGroup.BRIDGE);
   });
 
   it('should hash password via entity.changePassword', async () => {

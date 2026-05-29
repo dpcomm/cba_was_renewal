@@ -10,13 +10,13 @@ import { Survey } from '../../domain/entities/survey.entity';
 import {
   CreateSurveyRequestDto,
   UpdateSurveyPeriodRequestDto,
-} from '../dto/survey.request.dto';
+} from '../../presentation/dto/request/survey.request.dto';
 
 import {
   SurveySummaryResponseDto,
   SurveyResponseDto,
   SurveyPreviewResponseDto,
-} from '../../presentation/dto/survey.response.dto';
+} from '../../presentation/dto/response/survey.response.dto';
 
 import { SurveyMapper } from '../mappers/survey.mapper';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';

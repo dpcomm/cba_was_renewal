@@ -21,12 +21,12 @@ import { RetreatMapper } from '@modules/retreat/application/mappers/retreat.mapp
 import {
   CreateRetreatRequestDto,
   UpdateRetreatRequestDto,
-} from '../../application/dto/retreat.request.dto';
+} from '../dto/request/retreat.request.dto';
 import {
   RetreatResponseDto,
   RetreatListResponse,
   RetreatSingleResponse,
-} from '../dto/retreat.response.dto';
+} from '../dto/response/retreat.response.dto';
 
 @ApiTags('Admin Retreat')
 @AdminGuard()

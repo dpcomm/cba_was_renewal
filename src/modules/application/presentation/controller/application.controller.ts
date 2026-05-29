@@ -15,31 +15,41 @@ import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 import { User } from '@shared/decorators/user.decorator';
 import { User as UserEntity } from '@modules/user/domain/entities/user.entity';
 
-import { ApplicationService } from '@modules/application/application/services/application.service';
-import { PlayEventDto } from '../dto/play-event.dto';
-import { ApplicationDetailResponseDto } from '../dto/application-detail.response.dto';
+import { PlayEventDto } from '../dto/request/play-event.request.dto';
+import { ApplicationDetailResponseDto } from '../dto/response/application-detail.response.dto';
 import {
   CheckApplicationPaidResponseDto,
   CheckApplicationResponseDto,
-} from '../dto/check-application.response.dto';
-import { ApplicationHistoryResponseDto } from '../dto/application-history.response.dto';
-import { PlayEventResponseDto } from '../dto/play-event.response.dto';
+} from '../dto/response/check-application.response.dto';
+import { ApplicationHistoryResponseDto } from '../dto/response/application-history.response.dto';
+import { PlayEventResponseDto } from '../dto/response/play-event.response.dto';
+import { CheckMyApplicationQuery } from '@modules/application/application/queries/me/check-my-application.query';
+import { CheckMyApplicationPaidQuery } from '@modules/application/application/queries/me/check-my-application-paid.query';
+import { GetMyApplicationHistoryQuery } from '@modules/application/application/queries/me/get-my-application-history.query';
+import { GetMyApplicationDetailQuery } from '@modules/application/application/queries/me/get-my-application-detail.query';
+import { PlayEventUseCase } from '@modules/application/application/usecases/me/play-event.usecase';
 
 @ApiTags('Application')
 @Controller('application')
 @JwtGuard()
 export class ApplicationController {
-  constructor(private readonly applicationService: ApplicationService) {}
+  constructor(
+    private readonly checkMyApplicationQuery: CheckMyApplicationQuery,
+    private readonly checkMyApplicationPaidQuery: CheckMyApplicationPaidQuery,
+    private readonly getMyApplicationHistoryQuery: GetMyApplicationHistoryQuery,
+    private readonly getMyApplicationDetailQuery: GetMyApplicationDetailQuery,
+    private readonly playEventUseCase: PlayEventUseCase,
+  ) {}
 
-  @Get('check/:userId/:retreatId')
-  @ApiOperation({ summary: '수련회 신청 여부 확인' })
+  @Get('me/apply-check/:retreatId')
+  @ApiOperation({ summary: '내 수련회 신청 여부 확인' })
   @ApiSuccessResponse({ type: CheckApplicationResponseDto })
   async checkApplication(
-    @Param('userId') userId: string,
+    @User() user: UserEntity,
     @Param('retreatId', ParseIntPipe) retreatId: number,
   ) {
-    const result = await this.applicationService.checkApplication(
-      userId,
+    const result = await this.checkMyApplicationQuery.execute(
+      user.userId,
       retreatId,
     );
     return ok<CheckApplicationResponseDto>(
@@ -48,7 +58,7 @@ export class ApplicationController {
     );
   }
 
-  @Get('me/paid/:retreatId')
+  @Get('me/paid-check/:retreatId')
   @ApiOperation({ summary: '내 수련회 회비 납부 여부 확인' })
   @ApiSuccessResponse({ type: CheckApplicationPaidResponseDto })
   @ApiFailureResponse(404, ERROR_MESSAGES.APPLICATION_NOT_FOUND)
@@ -56,7 +66,7 @@ export class ApplicationController {
     @User() user: UserEntity,
     @Param('retreatId', ParseIntPipe) retreatId: number,
   ) {
-    const result = await this.applicationService.checkApplicatinoPaid(
+    const result = await this.checkMyApplicationPaidQuery.execute(
       user.userId,
       retreatId,
     );
@@ -69,8 +79,8 @@ export class ApplicationController {
   @Get('me/history')
   @ApiOperation({ summary: '내 수련회 히스토리 조회' })
   @ApiSuccessResponse({ type: ApplicationHistoryResponseDto })
-  async getApplicationsByUserId(@User() user: UserEntity) {
-    const retreatIds = await this.applicationService.getApplicationsByUserId(
+  async getMyApplicationHistory(@User() user: UserEntity) {
+    const retreatIds = await this.getMyApplicationHistoryQuery.execute(
       user.userId,
     );
     return ok<ApplicationHistoryResponseDto>(
@@ -87,7 +97,7 @@ export class ApplicationController {
     @User() user: UserEntity,
     @Param('retreatId', ParseIntPipe) retreatId: number,
   ) {
-    const application = await this.applicationService.getApplicationDetail(
+    const application = await this.getMyApplicationDetailQuery.execute(
       user.userId,
       retreatId,
     );
@@ -100,7 +110,7 @@ export class ApplicationController {
   @ApiFailureResponse(403, '체크인 후 이벤트 참여가 가능합니다.')
   @ApiFailureResponse(409, '이미 이벤트에 참여하셨습니다.')
   async playEvent(@User() user: UserEntity, @Body() dto: PlayEventDto) {
-    const result = await this.applicationService.playEvent(
+    const result = await this.playEventUseCase.execute(
       user.userId,
       dto.retreatId,
     );

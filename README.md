@@ -91,6 +91,7 @@ npm install
 ```
 - Node.js 22 LTS 이상 권장
 - `.env.dev`, `.env.prod`, `serviceAccountKey.json` 체크
+- RabbitMQ Producer 사용 시 `RABBITMQ_URL` 설정 (예: `amqp://localhost:5672`)
 
 ### 실행
 ```bash
@@ -110,7 +111,7 @@ npm run start:prod
 3. **API Response interface 사용**:
    - 성공 시: `return ok(data)`
    - 실패 시: `throw new NotFoundException()` (Nest 내장 에러 사용 시 필터가 자동 처리)
-4. **Swagger 확인**: 개발하면서 `http://localhost:3000/api/docs` 에서 문서가 잘 나오는지 체크
+4. **Swagger 확인**: 개발하면서 `http://localhost:3000/docs` 에서 문서가 잘 나오는지 체크
 
 ## 📖 API 문서화 가이드 (Swagger)
 
@@ -145,7 +146,7 @@ async getUser() { ... }
 > **Note**: 서비스 코드에서도 동일한 상수를 사용하여 에러를 던져야 합니다 (`throw new NotFoundException(ERROR_MESSAGES.USER_NOT_FOUND)`).
 
 ## 참고
-- **Swagger UI**: [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
+- **Swagger UI**: [http://localhost:3000/docs](http://localhost:3000/docs)
 - **레거시 코드**: `_LEGACY/` 폴더 (참고용)
 
 ## 🗄️ 데이터베이스 마이그레이션 (TypeORM)
