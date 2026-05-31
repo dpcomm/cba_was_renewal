@@ -22,6 +22,9 @@ export class Survey {
   @Column({ name: 'retreat_id' })
   retreatId: number;
 
+  @Column({ length: 191, name: 'title' })
+  title: string;
+
   @Column({
     type: 'datetime',
     precision: 3,
