@@ -21,6 +21,12 @@ export class SurveySummaryResponseDto {
   retreatId: number;
 
   @ApiProperty({
+    description: '설문 제목',
+    example: '2026 겨울 수련회 신청서',
+  })
+  title: string;
+
+  @ApiProperty({
     description: '설문 시작 시간',
     example: '2026-05-01T00:00:00.000Z',
   })

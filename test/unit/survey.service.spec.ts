@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 
 import { SurveyService } from '@modules/application/application/services/survey.service';
 import { Survey } from '@modules/application/domain/entities/survey.entity';
-import { SurveyMapper } from '@modules/application/application/mappers/survey.mapper';
+import { Retreat } from '@modules/retreat/domain/entities/retreat.entity';
 
 describe('SurveyService', () => {
   let service: SurveyService;
@@ -18,11 +18,8 @@ describe('SurveyService', () => {
     delete: jest.fn(),
   };
 
-  const mockMapper = {
-    toSurveySummaryList: jest.fn(),
-    toSurveySummary: jest.fn(),
-    toSurveyResponse: jest.fn(),
-    toSurveyPreview: jest.fn(),
+  const mockRetreatRepository = {
+    findOne: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -34,8 +31,8 @@ describe('SurveyService', () => {
           useValue: mockSurveyRepository,
         },
         {
-          provide: SurveyMapper,
-          useValue: mockMapper,
+          provide: getRepositoryToken(Retreat),
+          useValue: mockRetreatRepository,
         },
       ],
     }).compile();
@@ -52,7 +49,6 @@ describe('SurveyService', () => {
     const surveys = [{ id: 1 }];
 
     mockSurveyRepository.find.mockResolvedValue(surveys);
-    mockMapper.toSurveySummaryList.mockReturnValue(surveys);
 
     const result = await service.getSurveyByRetreat(100);
 
@@ -64,7 +60,6 @@ describe('SurveyService', () => {
     const survey = { id: 1, questions: [] };
 
     mockSurveyRepository.findOne.mockResolvedValue(survey);
-    mockMapper.toSurveyResponse.mockReturnValue(survey);
 
     const result = await service.getSurvey(1);
 
@@ -75,7 +70,6 @@ describe('SurveyService', () => {
     const survey = { id: 1, questions: [] };
 
     mockSurveyRepository.findOne.mockResolvedValue(survey);
-    mockMapper.toSurveyPreview.mockReturnValue(survey);
 
     const result = await service.previewSurvey(1);
 
@@ -91,9 +85,12 @@ describe('SurveyService', () => {
 
     const created = { id: 1 };
 
+    mockRetreatRepository.findOne.mockResolvedValue({
+      id: 100,
+      title: '2026 겨울 수련회',
+    });
     mockSurveyRepository.create.mockReturnValue(created);
     mockSurveyRepository.save.mockResolvedValue(created);
-    mockMapper.toSurveySummary.mockReturnValue(created);
 
     const result = await service.createSurvey(dto as any);
 

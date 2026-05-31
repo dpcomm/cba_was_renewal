@@ -20,13 +20,17 @@ import { RankGuard } from '@shared/decorators/rank-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
 import { ok } from '@shared/responses/api-response';
+import { QuestionMapper } from '../mappers/question.mapper';
 
 @ApiTags('Admin Question')
 @Controller('admin/questions')
 @RankGuard(UserRank.ADMIN)
 @JwtGuard()
 export class AdminQuestionController {
-  constructor(private readonly questionService: QuestionService) {}
+  constructor(
+    private readonly questionService: QuestionService,
+    private readonly questionMapper: QuestionMapper,
+  ) {}
 
   /**
    * 질문 생성
@@ -35,7 +39,8 @@ export class AdminQuestionController {
   @ApiOperation({ summary: '질문 생성' })
   @ApiSuccessResponse({ type: QuestionSummaryResponseDto })
   async createQuestion(@Body() dto: CreateQuestionRequestDto) {
-    const result = await this.questionService.createQuestion(dto);
+    const question = await this.questionService.createQuestion(dto);
+    const result = this.questionMapper.toSummary(question);
     return ok(result, 'Success create question');
   }
 

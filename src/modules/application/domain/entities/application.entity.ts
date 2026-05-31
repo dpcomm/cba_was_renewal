@@ -78,6 +78,9 @@ export class Application {
   })
   eventParticipatedAt: Date;
 
+  @Column({ type: 'text', nullable: true, name: 'admin_memo' })
+  adminMemo: string | null;
+
   @CreateDateColumn({
     type: 'datetime',
     precision: 3,

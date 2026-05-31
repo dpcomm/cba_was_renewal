@@ -19,11 +19,14 @@ import { User as UserEntity } from '@modules/user/domain/entities/user.entity';
 import { AdminScanResponseDto } from '../dto/response/admin-scan.response.dto';
 import { AdminApplicationListDto } from '../dto/request/admin-application-list.request.dto';
 import { AdminApplicationListResponseDto } from '../dto/response/admin-application-list.response.dto';
+import { AdminApplicationDetailResponseDto } from '../dto/response/admin-application-detail.response.dto';
 import { CheckInDto } from '../dto/request/check-in.request.dto';
 import { CheckInResponseDto } from '../dto/response/check-in.response.dto';
 import { ScanApplicationQuery } from '@modules/application/application/queries/admin/scan-application.query';
 import { GetAdminApplicationListQuery } from '@modules/application/application/queries/admin/get-admin-application-list.query';
+import { GetAdminApplicationDetailQuery } from '@modules/application/application/queries/admin/get-admin-application-detail.query';
 import { CheckInApplicationUseCase } from '@modules/application/application/usecases/admin/check-in-application.usecase';
+import { AdminApplicationDetailMapper } from '../mappers/admin-application-detail.mapper';
 
 @ApiTags('Admin / Application')
 @Controller('admin/applications')
@@ -32,6 +35,7 @@ export class ApplicationAdminController {
   constructor(
     private readonly scanApplicationQuery: ScanApplicationQuery,
     private readonly getAdminApplicationListQuery: GetAdminApplicationListQuery,
+    private readonly getApplicationDetailQuery: GetAdminApplicationDetailQuery,
     private readonly checkInApplicationUseCase: CheckInApplicationUseCase,
   ) {}
 
@@ -56,6 +60,22 @@ export class ApplicationAdminController {
       result,
       'Success get application list',
     );
+  }
+
+  @Get(':userId/:retreatId')
+  @ApiOperation({ summary: '[관리자] 수련회 신청자 상세 조회' })
+  @ApiSuccessResponse({ type: AdminApplicationDetailResponseDto })
+  @ApiFailureResponse(404, ERROR_MESSAGES.APPLICATION_NOT_FOUND)
+  async getApplicationDetail(
+    @Param('userId') userId: string,
+    @Param('retreatId', ParseIntPipe) retreatId: number,
+  ) {
+    const application = await this.getApplicationDetailQuery.execute(
+      userId,
+      retreatId,
+    );
+    const result = AdminApplicationDetailMapper.toDto(application);
+    return ok(result, 'Success get application detail');
   }
 
   @Post('check-in')
