@@ -71,6 +71,7 @@ describe('GetAdminApplicationListQuery', () => {
     );
     expect(queryBuilder.orderBy).toHaveBeenCalledWith('user.name', 'ASC');
     expect(queryBuilder.select).toHaveBeenCalledWith([
+      'app.id',
       'app.userId',
       'user.name',
       'user.phone',
