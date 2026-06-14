@@ -3,28 +3,29 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 import { ok } from '@shared/responses/api-response';
-import { SystemService } from '../../application/services/system.service';
 import {
   SystemConfigOptionsResponseDto,
   SystemConfigResponseDto,
-} from '../dto/system-config.response.dto';
-import { UpdateSystemConfigDto } from '../dto/update-system-config.request.dto';
-import { SystemConfig } from '@modules/system/domain/entities/system-config.entity';
+} from '../dto/response/system-config.response.dto';
+import { UpdateSystemConfigRequestDto } from '../dto/request/update-system-config.request.dto';
 import { AdminGuard } from '@shared/decorators/admin-guard.decorator';
+import { GetSystemConfigQuery } from '../../application/queries/get-system-config.query';
+import { GetSystemConfigOptionsQuery } from '../../application/queries/get-system-config-options.query';
+import { UpdateSystemConfigUseCase } from '../../application/usecases/update-system-config.usecase';
 
 @ApiTags('System')
 @Controller('system')
 export class SystemController {
-  constructor(private readonly systemService: SystemService) {}
+  constructor(private readonly getSystemConfigQuery: GetSystemConfigQuery) {}
 
   @Get()
   @ApiOperation({ summary: '시스템 설정 조회' })
   @ApiSuccessResponse({ type: SystemConfigResponseDto })
   async getSystemConfig() {
-    const config = await this.systemService.getConfig();
+    const config = await this.getSystemConfigQuery.execute();
 
     return ok(
-      toSystemConfigResponse(config),
+      new SystemConfigResponseDto(config),
       'System config retrieved successfully',
     );
   }
@@ -34,17 +35,23 @@ export class SystemController {
 @AdminGuard()
 @Controller('admin/system')
 export class AdminSystemController {
-  constructor(private readonly systemService: SystemService) {}
+  constructor(
+    private readonly getSystemConfigOptionsQuery: GetSystemConfigOptionsQuery,
+    private readonly updateSystemConfigUseCase: UpdateSystemConfigUseCase,
+  ) {}
 
   @Get('options')
   @ApiOperation({
-    summary: '[관리자] 시스템 설정(수련회, 학기) 선택 옵션 조회',
+    summary: '[관리자] 시스템 설정(수련회, 선택식 강의 시즌) 옵션 조회',
   })
   @ApiSuccessResponse({ type: SystemConfigOptionsResponseDto })
   @ApiFailureResponse(403, 'Forbidden')
   async getSystemConfigOptions() {
-    const options = await this.systemService.getOptions();
-    return ok(options, 'System config options retrieved successfully');
+    const options = await this.getSystemConfigOptionsQuery.execute();
+    return ok(
+      new SystemConfigOptionsResponseDto(options),
+      'System config options retrieved successfully',
+    );
   }
 
   @Put()
@@ -53,49 +60,14 @@ export class AdminSystemController {
   @ApiFailureResponse(403, 'Forbidden')
   async updateSystemConfig(
     @Body()
-    body: UpdateSystemConfigDto,
+    body: UpdateSystemConfigRequestDto,
   ) {
-    const updated = await this.systemService.updateConfig(body);
+    const updated = await this.updateSystemConfigUseCase.execute({
+      ...body,
+    });
     return ok(
-      toSystemConfigResponse(updated),
+      new SystemConfigResponseDto(updated),
       'System config updated successfully',
     );
   }
-}
-
-function toSystemConfigResponse(config: SystemConfig): SystemConfigResponseDto {
-  return {
-    application: {
-      name: config.appName,
-      versionName: config.versionName,
-      versionCode: config.versionCode,
-      minimumVersionCode: config.minimumVersionCode,
-    },
-    consents: {
-      privacyPolicy: {
-        url: config.privacyPolicyUrl,
-        version: config.privacyPolicyVersion,
-        updatedAt: config.privacyPolicyUpdatedAt,
-      },
-    },
-    maintenance: {
-      mode: config.maintenanceMode,
-      message: config.maintenanceMessage,
-    },
-    currentTermId: config.currentTermId,
-    currentRetreatId: config.currentRetreatId,
-    currentTerm: config.currentTerm
-      ? {
-          id: config.currentTerm.id,
-          name: config.currentTerm.name,
-        }
-      : null,
-    currentRetreat: config.currentRetreat
-      ? {
-          id: config.currentRetreat.id,
-          title: config.currentRetreat.title,
-        }
-      : null,
-    updatedAt: config.updatedAt,
-  };
 }

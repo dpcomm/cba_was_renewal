@@ -2,12 +2,12 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsBoolean,
   IsDateString,
-  IsNumber,
+  IsInt,
   IsOptional,
   IsString,
 } from 'class-validator';
 
-export class UpdateSystemConfigDto {
+export class UpdateSystemConfigRequestDto {
   @ApiPropertyOptional({
     description: '애플리케이션 이름',
     example: 'CBA Connect',
@@ -22,12 +22,12 @@ export class UpdateSystemConfigDto {
   versionName?: string;
 
   @ApiPropertyOptional({ description: '버전 코드', example: 1 })
-  @IsNumber()
+  @IsInt()
   @IsOptional()
   versionCode?: number;
 
   @ApiPropertyOptional({ description: '최소 지원 버전 코드', example: 1 })
-  @IsNumber()
+  @IsInt()
   @IsOptional()
   minimumVersionCode?: number;
 
@@ -41,7 +41,7 @@ export class UpdateSystemConfigDto {
   privacyPolicyUrl?: string | null;
 
   @ApiPropertyOptional({ description: '개인정보 처리방침 버전', example: 1 })
-  @IsNumber()
+  @IsInt()
   @IsOptional()
   privacyPolicyVersion?: number;
 
@@ -69,11 +69,11 @@ export class UpdateSystemConfigDto {
   maintenanceMessage?: string | null;
 
   @ApiPropertyOptional({
-    description: '현재 학기 ID',
+    description: '현재 선택식 강의 시즌 ID',
     example: 4,
     nullable: true,
   })
-  @IsNumber()
+  @IsInt()
   @IsOptional()
   currentTermId?: number | null;
 
@@ -82,7 +82,7 @@ export class UpdateSystemConfigDto {
     example: 4,
     nullable: true,
   })
-  @IsNumber()
+  @IsInt()
   @IsOptional()
   currentRetreatId?: number | null;
 }

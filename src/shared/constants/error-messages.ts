@@ -22,6 +22,8 @@ export const ERROR_MESSAGES = {
   USER_EMAIL_MISMATCH: 'User ID and email do not match',
   TERM_ALREADY_EXISTS: 'Term with same year and termType already exists',
   TERM_NOT_FOUND: 'Term not found',
+  CURRENT_TERM_NOT_FOUND: 'Current term does not exist',
+  CURRENT_RETREAT_NOT_FOUND: 'Current retreat does not exist',
   APPLICATION_NOT_FOUND: 'Application not found',
   APPLICATION_NOT_CHECKED_IN: 'Application not checked in',
   EVENT_ALREADY_PLAYED: 'Event already played',
