@@ -144,6 +144,97 @@
 - 결제 상태
 - 이벤트 참여 결과
 
+### 관리자 신청자 상세 수정 API
+
+신청자 상세 패널의 각 탭은 `application.id`를 기준으로 하나의 통합 API를 사용한다.
+
+- `PATCH /admin/applications/:applicationId`
+- 네 수정 필드 중 최소 하나는 요청에 포함해야 한다.
+- 요청에 포함하지 않은 필드는 기존 값을 유지한다.
+- 빈 식사/교통 배열은 해당 선택 전체 해제를 의미한다.
+- 여러 필드를 함께 보내면 하나의 트랜잭션에서 모두 반영한다.
+
+전체 요청 예시:
+
+```json
+{
+  "retreatMealIds": [1, 2, 3],
+  "transports": [
+    {
+      "retreatTransportId": 4,
+      "vehicleNumber": null,
+      "remark": null
+    }
+  ],
+  "paymentStatus": "PAID",
+  "checkedIn": true
+}
+```
+
+#### 식사 선택 변경
+
+- 요청 예시: `{ "retreatMealIds": [1, 2, 3] }`
+- 빈 배열은 모든 식사 선택 해제를 의미한다.
+- 모든 식사 슬롯은 신청과 동일한 `retreat_id`에 속해야 한다.
+- 중복 ID 또는 존재하지 않는 식사 슬롯이 포함되면 요청을 거부한다.
+- 기존 선택 삭제와 신규 선택 저장은 하나의 트랜잭션으로 처리한다.
+
+#### 교통 선택 변경
+
+- 요청 예시: `{ "transports": [{ "retreatTransportId": 1, "vehicleNumber": null, "remark": null }] }`
+- 빈 배열은 출발/복귀 교통을 모두 이용하지 않음을 의미한다.
+- 모든 교통 옵션은 신청과 동일한 `retreat_id`에 속해야 한다.
+- `direction`은 요청받지 않고 `retreat_transport.direction`에서 결정한다.
+- 출발/복귀 방향별 최대 한 개만 허용한다.
+- 마스터 옵션의 `is_vehicle_required`, `is_remark_required` 조건을 검증한다.
+- 기존 선택 삭제와 신규 선택 저장은 하나의 트랜잭션으로 처리한다.
+- 화면 시안의 출발 시간과 탑승/하차 장소는 현행 스키마에 없으므로 이번 API 범위에서 제외한다.
+
+#### 결제 상태 변경
+
+- 요청 예시: `{ "paymentStatus": "PAID" }`
+- 허용값은 `PENDING`, `PAID`, `REFUNDED`, `EXEMPTED`다.
+
+#### 체크인 상태 변경
+
+- 요청 예시: `{ "checkedIn": true }`
+- `true`이면 `status=CHECKED_IN`, `checked_in_at=현재 시각`으로 저장한다.
+- `false`이면 `status=SUBMITTED`, `checked_in_at=null`로 저장한다.
+- 취소(`CANCELED`)된 신청은 체크인 상태를 변경할 수 없다.
+
+### 공통 응답 및 예외
+
+- 성공 시 요청에 포함되어 실제 반영된 값들을 응답한다. 클라이언트는 필요 시 상세 조회 API를 다시 호출한다.
+- 신청이 없으면 `APPLICATION_NOT_FOUND`를 반환한다.
+- 다른 수련회의 옵션, 중복 옵션, 필수 입력 누락은 `400 Bad Request`로 반환한다.
+- 취소 신청의 체크인 변경은 `409 Conflict`로 반환한다.
+
+성공 응답 예시:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Success update application",
+  "data": {
+    "retreatMealIds": [1, 2, 3],
+    "transports": [
+      {
+        "retreatTransportId": 4,
+        "direction": "DEPARTURE",
+        "vehicleNumber": null,
+        "remark": null
+      }
+    ],
+    "paymentStatus": "PAID",
+    "applicationStatus": "CHECKED_IN",
+    "checkedInAt": "2026-04-20T09:15:00.000Z"
+  }
+}
+```
+
+요청에서 생략한 속성은 응답 `data`에도 포함하지 않는다.
+
 ---
 
 ## 5. 수련회 신청서 관리

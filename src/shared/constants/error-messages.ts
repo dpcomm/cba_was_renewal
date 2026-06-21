@@ -26,6 +26,14 @@ export const ERROR_MESSAGES = {
   CURRENT_RETREAT_NOT_FOUND: 'Current retreat does not exist',
   APPLICATION_NOT_FOUND: 'Application not found',
   APPLICATION_NOT_CHECKED_IN: 'Application not checked in',
+  APPLICATION_UPDATE_REQUIRED: 'At least one application update is required',
+  INVALID_APPLICATION_MEAL_SELECTION: 'Invalid application meal selection',
+  INVALID_APPLICATION_TRANSPORT_SELECTION:
+    'Invalid application transport selection',
+  TRANSPORT_VEHICLE_NUMBER_REQUIRED: 'Vehicle number is required',
+  TRANSPORT_REMARK_REQUIRED: 'Transport remark is required',
+  CANCELED_APPLICATION_CHECK_IN_NOT_ALLOWED:
+    'Canceled application cannot change check-in status',
   EVENT_ALREADY_PLAYED: 'Event already played',
   RETREAT_NOT_FOUND: 'Retreat not found',
   LECTURE_CAPACITY_EXCEEDED: 'Selected users exceed remaining lecture capacity',
