@@ -24,6 +24,11 @@ import { GetAdminApplicationListQuery } from './application/queries/admin/get-ad
 import { GetAdminApplicationDetailQuery } from './application/queries/admin/get-admin-application-detail.query';
 import { CheckInApplicationUseCase } from './application/usecases/admin/check-in-application.usecase';
 import { Retreat } from '@modules/retreat/domain/entities/retreat.entity';
+import { ApplicationMeal } from './domain/entities/application_meal.entity';
+import { ApplicationTransport } from './domain/entities/application_transport.entity';
+import { RetreatMeal } from '@modules/retreat/domain/entities/retreat_meal.entity';
+import { RetreatTransport } from '@modules/retreat/domain/entities/retreat_transport.entity';
+import { UpdateAdminApplicationUseCase } from './application/usecases/admin/update-admin-application.usecase';
 
 @Module({
   imports: [
@@ -33,6 +38,10 @@ import { Retreat } from '@modules/retreat/domain/entities/retreat.entity';
       Question,
       QuestionOption,
       Retreat,
+      RetreatMeal,
+      RetreatTransport,
+      ApplicationMeal,
+      ApplicationTransport,
     ]),
   ],
   controllers: [
@@ -53,6 +62,7 @@ import { Retreat } from '@modules/retreat/domain/entities/retreat.entity';
     GetAdminApplicationListQuery,
     GetAdminApplicationDetailQuery,
     CheckInApplicationUseCase,
+    UpdateAdminApplicationUseCase,
     SurveyService,
     QuestionService,
     SurveyMapper,

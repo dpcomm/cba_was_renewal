@@ -4,10 +4,11 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { AdminGuard } from '@shared/decorators/admin-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
@@ -27,6 +28,9 @@ import { GetAdminApplicationListQuery } from '@modules/application/application/q
 import { GetAdminApplicationDetailQuery } from '@modules/application/application/queries/admin/get-admin-application-detail.query';
 import { CheckInApplicationUseCase } from '@modules/application/application/usecases/admin/check-in-application.usecase';
 import { AdminApplicationDetailMapper } from '../mappers/admin-application-detail.mapper';
+import { UpdateAdminApplicationRequestDto } from '../dto/request/update-admin-application.request.dto';
+import { AdminApplicationUpdateResponseDto } from '../dto/response/admin-application-update.response.dto';
+import { UpdateAdminApplicationUseCase } from '@modules/application/application/usecases/admin/update-admin-application.usecase';
 
 @ApiTags('Admin / Application')
 @Controller('admin/applications')
@@ -37,6 +41,7 @@ export class ApplicationAdminController {
     private readonly getAdminApplicationListQuery: GetAdminApplicationListQuery,
     private readonly getApplicationDetailQuery: GetAdminApplicationDetailQuery,
     private readonly checkInApplicationUseCase: CheckInApplicationUseCase,
+    private readonly updateAdminApplicationUseCase: UpdateAdminApplicationUseCase,
   ) {}
 
   @Get('scan/:userId/:retreatId')
@@ -76,6 +81,91 @@ export class ApplicationAdminController {
     );
     const result = AdminApplicationDetailMapper.toDto(application);
     return ok(result, 'Success get application detail');
+  }
+
+  @Patch(':applicationId')
+  @ApiOperation({
+    summary: '[관리자] 신청자 상세 정보 통합 수정',
+    description:
+      '식사, 교통, 결제, 체크인 중 전달한 필드만 변경 Swagger 하단 Examples 참고!',
+  })
+  @ApiBody({
+    type: UpdateAdminApplicationRequestDto,
+    description: '수정할 필드를 하나 이상 전달해야 함',
+    examples: {
+      meals: {
+        summary: '식사 선택 변경',
+        value: { retreatMealIds: [1, 2, 3] },
+      },
+      transports: {
+        summary: '교통 선택 변경',
+        value: {
+          transports: [
+            {
+              retreatTransportId: 4,
+              vehicleNumber: null,
+              remark: null,
+            },
+          ],
+        },
+      },
+      payment: {
+        summary: '결제 상태 변경',
+        value: { paymentStatus: 'PAID' },
+      },
+      checkIn: {
+        summary: '체크인 상태 변경',
+        value: { checkedIn: true },
+      },
+      combined: {
+        summary: '여러 항목 동시 변경',
+        value: {
+          retreatMealIds: [1, 2, 3],
+          transports: [{ retreatTransportId: 4 }],
+          paymentStatus: 'PAID',
+          checkedIn: true,
+        },
+      },
+      clearSelections: {
+        summary: '식사와 교통 선택 전체 해제',
+        value: { retreatMealIds: [], transports: [] },
+      },
+    },
+  })
+  @ApiSuccessResponse({ type: AdminApplicationUpdateResponseDto })
+  @ApiFailureResponse(404, ERROR_MESSAGES.APPLICATION_NOT_FOUND)
+  @ApiFailureResponse(400, [
+    ERROR_MESSAGES.APPLICATION_UPDATE_REQUIRED,
+    ERROR_MESSAGES.INVALID_APPLICATION_MEAL_SELECTION,
+    ERROR_MESSAGES.INVALID_APPLICATION_TRANSPORT_SELECTION,
+    ERROR_MESSAGES.TRANSPORT_VEHICLE_NUMBER_REQUIRED,
+    ERROR_MESSAGES.TRANSPORT_REMARK_REQUIRED,
+  ])
+  @ApiFailureResponse(
+    409,
+    ERROR_MESSAGES.CANCELED_APPLICATION_CHECK_IN_NOT_ALLOWED,
+  )
+  async updateApplication(
+    @Param('applicationId', ParseIntPipe) applicationId: number,
+    @Body() dto: UpdateAdminApplicationRequestDto,
+  ) {
+    const result = await this.updateAdminApplicationUseCase.execute(
+      applicationId,
+      {
+        retreatMealIds: dto.retreatMealIds,
+        transports: dto.transports?.map((transport) => ({
+          retreatTransportId: transport.retreatTransportId,
+          vehicleNumber: transport.vehicleNumber,
+          remark: transport.remark,
+        })),
+        paymentStatus: dto.paymentStatus,
+        checkedIn: dto.checkedIn,
+      },
+    );
+    return ok(
+      new AdminApplicationUpdateResponseDto(result),
+      'Success update application',
+    );
   }
 
   @Post('check-in')
