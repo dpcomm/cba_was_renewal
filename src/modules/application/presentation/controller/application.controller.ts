@@ -28,6 +28,8 @@ import { CheckMyApplicationPaidQuery } from '@modules/application/application/qu
 import { GetMyApplicationHistoryQuery } from '@modules/application/application/queries/me/get-my-application-history.query';
 import { GetMyApplicationDetailQuery } from '@modules/application/application/queries/me/get-my-application-detail.query';
 import { PlayEventUseCase } from '@modules/application/application/usecases/me/play-event.usecase';
+import { GetApplicationOptionsQuery } from '@modules/application/application/queries/get-application-options.query';
+import { ApplicationOptionsResponseDto } from '../dto/response/application-options.response.dto';
 
 @ApiTags('Application')
 @Controller('application')
@@ -39,7 +41,26 @@ export class ApplicationController {
     private readonly getMyApplicationHistoryQuery: GetMyApplicationHistoryQuery,
     private readonly getMyApplicationDetailQuery: GetMyApplicationDetailQuery,
     private readonly playEventUseCase: PlayEventUseCase,
+    private readonly getApplicationOptionsQuery: GetApplicationOptionsQuery,
   ) {}
+
+  @Get('options/:retreatId')
+  @ApiOperation({
+    summary: '수련회 신청 화면 옵션 조회',
+    description:
+      '소속 중그룹, 식사 슬롯, 출발/복귀 교통 옵션을 수련회 기준으로 조회합니다.',
+  })
+  @ApiSuccessResponse({ type: ApplicationOptionsResponseDto })
+  @ApiFailureResponse(404, ERROR_MESSAGES.RETREAT_NOT_FOUND)
+  async getApplicationOptions(
+    @Param('retreatId', ParseIntPipe) retreatId: number,
+  ) {
+    const result = await this.getApplicationOptionsQuery.execute(retreatId);
+    return ok(
+      new ApplicationOptionsResponseDto(result),
+      'Success get application options',
+    );
+  }
 
   @Get('me/apply-check/:retreatId')
   @ApiOperation({ summary: '내 수련회 신청 여부 확인' })

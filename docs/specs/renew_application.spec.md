@@ -577,7 +577,35 @@ status != CHECKED_IN -> checked_in_at IS NULL
 
 ---
 
-# 8. 최종 요약
+# 8. 신청 화면 옵션 조회 API
+
+수련회 신청 화면에서 소속 중그룹, 식사 슬롯, 출발/복귀 교통 옵션을 한 번에 조회한다.
+
+## API
+
+- `GET /application/options/:retreatId`
+- 로그인 사용자만 호출할 수 있다.
+- `retreatId`는 명시적으로 전달하며, 현재 수련회 ID는 `GET /system`의 `currentRetreatId`를 사용한다.
+- 수련회가 존재하지 않으면 `RETREAT_NOT_FOUND`를 반환한다.
+
+## 응답 항목
+
+- `retreat`: 수련회 ID, 제목, 시작/종료 일시
+- `groups`: `UserGroup` enum 기반 중그룹 선택지
+- `meals`: 해당 수련회의 식사 슬롯 ID, 날짜, 식사 유형
+- `transports.departure`: 출발 교통 옵션
+- `transports.return`: 복귀 교통 옵션
+- 교통 옵션은 ID, 수단, 이름, 차량번호/비고 필수 여부를 반환한다.
+- 관리자용 신청 인원, 생성일, 수정일은 신청 화면 응답에서 제외한다.
+
+## 정렬
+
+- 식사: 날짜 오름차순, `BREAKFAST -> LUNCH -> DINNER`
+- 교통: 방향별 옵션 ID 오름차순
+
+---
+
+# 9. 최종 요약
 
 - 신청 본체는 `application`
 - 설문 버전 고정은 `application.survey_id`
