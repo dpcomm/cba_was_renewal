@@ -29,6 +29,7 @@ import { ApplicationTransport } from './domain/entities/application_transport.en
 import { RetreatMeal } from '@modules/retreat/domain/entities/retreat_meal.entity';
 import { RetreatTransport } from '@modules/retreat/domain/entities/retreat_transport.entity';
 import { UpdateAdminApplicationUseCase } from './application/usecases/admin/update-admin-application.usecase';
+import { GetApplicationOptionsQuery } from './application/queries/get-application-options.query';
 
 @Module({
   imports: [
@@ -63,6 +64,7 @@ import { UpdateAdminApplicationUseCase } from './application/usecases/admin/upda
     GetAdminApplicationDetailQuery,
     CheckInApplicationUseCase,
     UpdateAdminApplicationUseCase,
+    GetApplicationOptionsQuery,
     SurveyService,
     QuestionService,
     SurveyMapper,
