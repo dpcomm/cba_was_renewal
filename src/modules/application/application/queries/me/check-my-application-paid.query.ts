@@ -1,9 +1,12 @@
 import { Application } from '@modules/application/domain/entities/application.entity';
-import { PaymentStatus } from '@modules/application/domain/enum/application.enum';
+import {
+  ApplicationStatus,
+  PaymentStatus,
+} from '@modules/application/domain/enum/application.enum';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 
 @Injectable()
 export class CheckMyApplicationPaidQuery {
@@ -17,6 +20,7 @@ export class CheckMyApplicationPaidQuery {
       where: {
         userId: userId,
         retreatId: retreatId,
+        status: Not(ApplicationStatus.CANCELED),
       },
       select: ['paymentStatus'],
     });

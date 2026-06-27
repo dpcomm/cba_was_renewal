@@ -1,5 +1,8 @@
 import { NotFoundException } from '@nestjs/common';
 import { GetMyApplicationDetailQuery } from './get-my-application-detail.query';
+import { ApplicationStatus } from '@modules/application/domain/enum/application.enum';
+import { Not, Repository } from 'typeorm';
+import { Application } from '@modules/application/domain/entities/application.entity';
 
 describe('GetMyApplicationDetailQuery', () => {
   let query: GetMyApplicationDetailQuery;
@@ -8,7 +11,9 @@ describe('GetMyApplicationDetailQuery', () => {
   };
 
   beforeEach(() => {
-    query = new GetMyApplicationDetailQuery(repo as any);
+    query = new GetMyApplicationDetailQuery(
+      repo as unknown as Repository<Application>,
+    );
     jest.clearAllMocks();
   });
 
@@ -19,7 +24,11 @@ describe('GetMyApplicationDetailQuery', () => {
     await expect(query.execute('user1', 2)).resolves.toEqual(application);
 
     expect(repo.findOne).toHaveBeenCalledWith({
-      where: { userId: 'user1', retreatId: 2 },
+      where: {
+        userId: 'user1',
+        retreatId: 2,
+        status: Not(ApplicationStatus.CANCELED),
+      },
       relations: [
         'applicationMeals',
         'applicationMeals.retreatMeal',

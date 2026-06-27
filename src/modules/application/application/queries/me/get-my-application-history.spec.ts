@@ -1,4 +1,7 @@
 import { GetMyApplicationHistoryQuery } from './get-my-application-history.query';
+import { ApplicationStatus } from '@modules/application/domain/enum/application.enum';
+import { Not, Repository } from 'typeorm';
+import { Application } from '@modules/application/domain/entities/application.entity';
 
 describe('GetMyApplicationHistoryQuery', () => {
   let query: GetMyApplicationHistoryQuery;
@@ -7,7 +10,9 @@ describe('GetMyApplicationHistoryQuery', () => {
   };
 
   beforeEach(() => {
-    query = new GetMyApplicationHistoryQuery(repo as any);
+    query = new GetMyApplicationHistoryQuery(
+      repo as unknown as Repository<Application>,
+    );
     jest.clearAllMocks();
   });
 
@@ -17,7 +22,7 @@ describe('GetMyApplicationHistoryQuery', () => {
     await expect(query.execute('user1')).resolves.toEqual([1, 3]);
 
     expect(repo.find).toHaveBeenCalledWith({
-      where: { userId: 'user1' },
+      where: { userId: 'user1', status: Not(ApplicationStatus.CANCELED) },
       select: ['retreatId'],
       order: { createdAt: 'ASC' },
     });
