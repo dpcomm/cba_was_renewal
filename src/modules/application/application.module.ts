@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Application } from './domain/entities/application.entity';
+import { Answer } from './domain/entities/answer.entity';
 import { ApplicationController } from './presentation/controller/application.controller';
 import { ApplicationAdminController } from './presentation/controller/application-admin.controller';
 import { Survey } from './domain/entities/survey.entity';
@@ -30,11 +31,17 @@ import { RetreatMeal } from '@modules/retreat/domain/entities/retreat_meal.entit
 import { RetreatTransport } from '@modules/retreat/domain/entities/retreat_transport.entity';
 import { UpdateAdminApplicationUseCase } from './application/usecases/admin/update-admin-application.usecase';
 import { GetApplicationOptionsQuery } from './application/queries/get-application-options.query';
+import { GetApplicationFormQuery } from './application/queries/get-application-form.query';
+import { UpsertMyApplicationUseCase } from './application/usecases/me/upsert-my-application.usecase';
+import { SystemConfig } from '@modules/system/domain/entities/system-config.entity';
+import { User } from '@modules/user/domain/entities/user.entity';
+import { DeleteMyApplicationUseCase } from './application/usecases/me/delete-my-application.usecase';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Application,
+      Answer,
       Survey,
       Question,
       QuestionOption,
@@ -43,6 +50,8 @@ import { GetApplicationOptionsQuery } from './application/queries/get-applicatio
       RetreatTransport,
       ApplicationMeal,
       ApplicationTransport,
+      SystemConfig,
+      User,
     ]),
   ],
   controllers: [
@@ -65,6 +74,9 @@ import { GetApplicationOptionsQuery } from './application/queries/get-applicatio
     CheckInApplicationUseCase,
     UpdateAdminApplicationUseCase,
     GetApplicationOptionsQuery,
+    GetApplicationFormQuery,
+    UpsertMyApplicationUseCase,
+    DeleteMyApplicationUseCase,
     SurveyService,
     QuestionService,
     SurveyMapper,

@@ -1,8 +1,9 @@
 import { Application } from '@modules/application/domain/entities/application.entity';
+import { ApplicationStatus } from '@modules/application/domain/enum/application.enum';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 
 @Injectable()
 export class GetMyApplicationDetailQuery {
@@ -13,7 +14,7 @@ export class GetMyApplicationDetailQuery {
 
   async execute(userId: string, retreatId: number): Promise<Application> {
     const application = await this.applicationRepository.findOne({
-      where: { userId, retreatId },
+      where: { userId, retreatId, status: Not(ApplicationStatus.CANCELED) },
       relations: [
         'applicationMeals',
         'applicationMeals.retreatMeal',

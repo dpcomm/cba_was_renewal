@@ -1,6 +1,11 @@
-import { PaymentStatus } from '@modules/application/domain/enum/application.enum';
+import {
+  ApplicationStatus,
+  PaymentStatus,
+} from '@modules/application/domain/enum/application.enum';
 import { CheckMyApplicationPaidQuery } from './check-my-application-paid.query';
 import { NotFoundException } from '@nestjs/common';
+import { Not, Repository } from 'typeorm';
+import { Application } from '@modules/application/domain/entities/application.entity';
 
 describe('CheckMyApplicationPaidQuery', () => {
   let query: CheckMyApplicationPaidQuery;
@@ -9,7 +14,9 @@ describe('CheckMyApplicationPaidQuery', () => {
   };
 
   beforeEach(() => {
-    query = new CheckMyApplicationPaidQuery(repo as any);
+    query = new CheckMyApplicationPaidQuery(
+      repo as unknown as Repository<Application>,
+    );
     jest.clearAllMocks();
   });
 
@@ -21,7 +28,11 @@ describe('CheckMyApplicationPaidQuery', () => {
     await expect(query.execute('user1', 1)).resolves.toBe(true);
 
     expect(repo.findOne).toHaveBeenCalledWith({
-      where: { userId: 'user1', retreatId: 1 },
+      where: {
+        userId: 'user1',
+        retreatId: 1,
+        status: Not(ApplicationStatus.CANCELED),
+      },
       select: ['paymentStatus'],
     });
   });
