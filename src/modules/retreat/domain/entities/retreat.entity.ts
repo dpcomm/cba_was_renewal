@@ -23,6 +23,9 @@ export class Retreat {
   @Column({ length: 191, nullable: false, name: 'location' })
   location: string;
 
+  @Column({ length: 500, nullable: false, default: '', name: 'address' })
+  address: string;
+
   @Column({
     type: 'datetime',
     precision: 3,

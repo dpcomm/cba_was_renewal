@@ -44,7 +44,10 @@ export class GetApplicationOptionsQuery {
 
   async execute(retreatId: number): Promise<ApplicationOptionsResult> {
     const [retreat, meals, transports] = await Promise.all([
-      this.retreatRepository.findOneBy({ id: retreatId }),
+      this.retreatRepository.findOne({
+        where: { id: retreatId },
+        relations: ['surveys'],
+      }),
       this.mealRepository.find({
         where: { retreatId },
         order: { mealDay: 'ASC', id: 'ASC' },

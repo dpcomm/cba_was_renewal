@@ -89,18 +89,25 @@
 
 - 수련회 목록 조회
 - 수련회 생성/수정
-- 제목, 장소, 시작일시, 종료일시 관리
+- 제목, 장소명, 주소, 수련회 시작일시, 수련회 종료일시 관리
+- 신청서 시작일시, 신청서 종료일시 관리
+- 수련회 생성 시 기본 신청서(`Survey`) 자동 생성
 - 현재 활성 수련회 지정(SystemConfig 연동)
 - 연결된 설문/식사/교통/유튜브 관리 화면으로 이동
 
 ### 스키마 기준
 
-`retreat` 는 현재 `title`, `location`(필수), `retreat_start_at`, `retreat_end_at`(필수) 중심이고, 하나의 수련회 아래에 `survey`, `retreat_meal`, `retreat_transport`, `application`, `youtube` 가 연결된다. `SystemConfig.currentRetreatId` 로 현재 운영 대상을 지정할 수 있다. (기존 데이터의 NULL 값은 일괄 정규화되었으므로 관리자 화면에서도 필수값 처리 필요)
+`retreat` 는 현재 `title`, `location`(장소명, 필수), `address`(주소, 필수), `retreat_start_at`, `retreat_end_at`(필수) 중심이고, 하나의 수련회 아래에 `survey`, `retreat_meal`, `retreat_transport`, `application`, `youtube` 가 연결된다. `SystemConfig.currentRetreatId` 로 현재 운영 대상을 지정할 수 있다. (기존 데이터의 NULL 값은 일괄 정규화되었으므로 관리자 화면에서도 필수값 처리 필요)
+
+수련회 생성/수정 화면의 “신청서 기간”은 `Survey.survey_start_at`, `Survey.survey_end_at` 으로 저장한다. 수련회 생성 API는 `retreat` 저장 후 같은 트랜잭션에서 기본 `survey` 를 자동 생성한다. 생성된 기본 신청서의 제목은 기본적으로 `{수련회 제목} 신청서` 로 저장한다.
+
+수련회 수정 API는 `retreat` 기본 정보와 기본 `survey` 의 신청서 기간을 함께 수정한다. 현재 대표 신청서는 수련회에 연결된 가장 먼저 생성된 `survey` 로 본다. 향후 신청서 여러 개/활성화 관리를 확장할 경우 `survey` 에 활성화/대표 여부 필드를 추가해 기준을 명시한다.
 
 ### 운영 정책
 
 - 이미 신청 데이터가 있는 수련회는 삭제보다 종료/비활성 개념 권장
 - 활성 수련회 전환 시 대시보드/신청 현황/유튜브 화면 기본값도 같이 바뀌게 함
+- 수련회 시작/종료일 검증과 신청서 시작/종료일 검증은 각각 `start <= end` 만 강제한다. 신청서 종료일이 수련회 시작 전이어야 한다는 제약은 두지 않는다.
 
 ---
 

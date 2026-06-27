@@ -121,6 +121,9 @@ DINNER
 
 - 수련회별 설문 메타 정보
 - `application` 은 제출 당시 어떤 `survey` 기준인지 `survey_id` 로 고정한다
+- 백오피스 수련회 생성 API는 수련회 기본 정보 저장과 함께 기본 `survey` 를 자동 생성한다.
+- 백오피스 수련회 생성/수정 화면의 신청서 시작/종료 일시는 `survey_start_at`, `survey_end_at` 으로 저장한다.
+- 기본 `survey.title` 은 `{retreat.title} 신청서` 로 저장한다.
 
 ### 삭제 정책
 
@@ -670,7 +673,9 @@ status != CHECKED_IN -> checked_in_at IS NULL
 
 ## 응답 항목
 
-- `retreat`: 수련회 ID, 제목, 시작/종료 일시
+- `retreat`: 수련회 ID, 제목, 신청서 접수 시작/종료 일시
+  - 대표 `survey` 가 있으면 `survey_start_at`, `survey_end_at` 을 내려준다.
+  - 대표 `survey` 가 없는 기존 데이터는 `retreat_start_at`, `retreat_end_at` 을 fallback 으로 내려준다.
 - `groups`: `UserGroup` enum 기반 중그룹 선택지
 - `meals`: 해당 수련회의 식사 슬롯 ID, 날짜, 식사 유형
 - `transports.departure`: 출발 교통 옵션

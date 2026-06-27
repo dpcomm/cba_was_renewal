@@ -18,10 +18,14 @@ export class ApplicationOptionRetreatResponseDto {
   endAt: Date;
 
   constructor(result: ApplicationOptionsResult['retreat']) {
+    const representativeSurvey = result.surveys
+      ?.slice()
+      .sort((a, b) => a.id - b.id)[0];
+
     this.id = result.id;
     this.title = result.title;
-    this.startAt = result.retreatStartAt;
-    this.endAt = result.retreatEndAt;
+    this.startAt = representativeSurvey?.surveyStartAt ?? result.retreatStartAt;
+    this.endAt = representativeSurvey?.surveyEndAt ?? result.retreatEndAt;
   }
 }
 
