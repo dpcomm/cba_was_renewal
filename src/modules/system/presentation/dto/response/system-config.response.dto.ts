@@ -85,9 +85,25 @@ export class CurrentRetreatConfigResponseDto {
   @ApiProperty({ example: '2026 청년부 수련회' })
   title: string;
 
-  constructor(id: number, title: string) {
-    this.id = id;
-    this.title = title;
+  @ApiProperty({ example: '양평 십자수 기도원' })
+  location: string;
+
+  @ApiProperty({ example: '경기 양평군 서종면 중미산로 938' })
+  address: string;
+
+  @ApiProperty({ example: '2026-08-21T00:00:00.000Z' })
+  retreatStartAt: Date;
+
+  @ApiProperty({ example: '2026-08-23T09:00:00.000Z' })
+  retreatEndAt: Date;
+
+  constructor(retreat: any) {
+    this.id = retreat.id;
+    this.title = retreat.title;
+    this.location = retreat.location;
+    this.address = retreat.address;
+    this.retreatStartAt = retreat.retreatStartAt;
+    this.retreatEndAt = retreat.retreatEndAt;
   }
 }
 
@@ -129,10 +145,7 @@ export class SystemConfigResponseDto {
         )
       : null;
     this.currentRetreat = config.currentRetreat
-      ? new CurrentRetreatConfigResponseDto(
-          config.currentRetreat.id,
-          config.currentRetreat.title,
-        )
+      ? new CurrentRetreatConfigResponseDto(config.currentRetreat)
       : null;
     this.updatedAt = config.updatedAt;
   }
