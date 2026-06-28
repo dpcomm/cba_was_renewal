@@ -4,7 +4,7 @@ import { IsOptional, IsString } from 'class-validator';
 export class RegisterPushTokenDto {
   @ApiProperty({ example: 'ExponentPushToken[xxxxxx]', required: true })
   @IsString()
-  token?: string;
+  token!: string;
 
   @ApiProperty({ example: 1, required: false })
   @IsOptional()
@@ -14,5 +14,5 @@ export class RegisterPushTokenDto {
 export class DeletePushTokenDto {
   @ApiProperty({ example: 'ExponentPushToken[xxxxxx]' })
   @IsString()
-  token?: string;
+  token!: string;
 }
