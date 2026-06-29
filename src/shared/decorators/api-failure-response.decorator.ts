@@ -4,13 +4,15 @@ import { ApiResponseBaseDto } from '../responses/api-response.dto';
 
 export const ApiFailureResponse = (
   status: number,
-  message: string = 'Error',
+  message: string | readonly string[] = 'Error',
 ) => {
+  const messages = Array.isArray(message) ? message : [message];
+
   return applyDecorators(
     ApiExtraModels(ApiResponseBaseDto),
     ApiResponse({
       status,
-      description: message,
+      description: messages.join(' / '),
       schema: {
         allOf: [
           { $ref: getSchemaPath(ApiResponseBaseDto) },
@@ -18,7 +20,15 @@ export const ApiFailureResponse = (
             properties: {
               success: { example: false },
               statusCode: { example: status },
-              message: { example: message },
+              message:
+                messages.length === 1
+                  ? { example: messages[0] }
+                  : {
+                      oneOf: messages.map((errorMessage) => ({
+                        type: 'string',
+                        example: errorMessage,
+                      })),
+                    },
               error: { example: { code: 'ERROR_CODE', details: '...' } },
             },
           },

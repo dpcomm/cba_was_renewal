@@ -36,7 +36,7 @@ import { Survey } from './survey.entity';
 @Index('idx_application_retreat_checkedin', ['retreatId', 'checkedInAt'])
 export class Application {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({
     type: 'enum',
@@ -44,7 +44,7 @@ export class Application {
     default: ApplicationStatus.SUBMITTED,
     name: 'status',
   })
-  status: ApplicationStatus;
+  status!: ApplicationStatus;
 
   @Column({
     type: 'enum',
@@ -52,7 +52,7 @@ export class Application {
     default: PaymentStatus.PENDING,
     name: 'payment_status',
   })
-  paymentStatus: PaymentStatus;
+  paymentStatus!: PaymentStatus;
 
   @Column({
     type: 'datetime',
@@ -60,7 +60,7 @@ export class Application {
     nullable: true,
     name: 'checked_in_at',
   })
-  checkedInAt: Date;
+  checkedInAt!: Date | null;
 
   @Column({
     type: 'enum',
@@ -68,7 +68,7 @@ export class Application {
     nullable: true,
     name: 'event_result',
   })
-  eventResult: EventResult;
+  eventResult!: EventResult;
 
   @Column({
     type: 'datetime',
@@ -76,7 +76,10 @@ export class Application {
     nullable: true,
     name: 'event_participated_at',
   })
-  eventParticipatedAt: Date;
+  eventParticipatedAt!: Date;
+
+  @Column({ type: 'text', nullable: true, name: 'admin_memo' })
+  adminMemo!: string | null;
 
   @CreateDateColumn({
     type: 'datetime',
@@ -84,7 +87,7 @@ export class Application {
     default: () => 'CURRENT_TIMESTAMP(3)',
     name: 'created_at',
   })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({
     type: 'datetime',
@@ -93,16 +96,16 @@ export class Application {
     onUpdate: 'CURRENT_TIMESTAMP(3)',
     name: 'updated_at',
   })
-  updatedAt: Date;
+  updatedAt!: Date;
 
   @Column({ length: 191, name: 'user_id' })
-  userId: string;
+  userId!: string;
 
   @Column({ name: 'retreat_id' })
-  retreatId: number;
+  retreatId!: number;
 
   @Column({ nullable: false, name: 'survey_id' })
-  surveyId: number;
+  surveyId!: number;
 
   @ManyToOne(() => Survey, (survey) => survey.applications, {
     onDelete: 'RESTRICT',
@@ -112,7 +115,7 @@ export class Application {
     name: 'survey_id',
     foreignKeyConstraintName: 'Application_surveyId_fkey',
   })
-  survey: Survey;
+  survey!: Survey;
 
   @ManyToOne(() => User, (user) => user.applications, {
     onDelete: 'RESTRICT',
@@ -123,7 +126,7 @@ export class Application {
     referencedColumnName: 'userId',
     foreignKeyConstraintName: 'Application_userId_fkey',
   })
-  user: User;
+  user!: User;
 
   @ManyToOne(() => Retreat, (retreat) => retreat.applications, {
     onDelete: 'RESTRICT',
@@ -133,14 +136,31 @@ export class Application {
     name: 'retreat_id',
     foreignKeyConstraintName: 'Application_retreatId_fkey',
   })
-  retreat: Retreat;
+  retreat!: Retreat;
 
   @OneToMany(() => ApplicationMeal, (meal) => meal.application)
-  applicationMeals: ApplicationMeal[];
+  applicationMeals!: ApplicationMeal[];
 
   @OneToMany(() => ApplicationTransport, (transport) => transport.application)
-  applicationTransports: ApplicationTransport[];
+  applicationTransports!: ApplicationTransport[];
 
   @OneToMany(() => Answer, (answer) => answer.application)
-  answers: Answer[];
+  answers!: Answer[];
+
+  changePaymentStatus(paymentStatus: PaymentStatus): void {
+    this.paymentStatus = paymentStatus;
+  }
+
+  changeCheckInStatus(checkedIn: boolean, checkedInAt = new Date()): void {
+    if (checkedIn) {
+      const existingCheckedInAt =
+        this.status === ApplicationStatus.CHECKED_IN ? this.checkedInAt : null;
+      this.status = ApplicationStatus.CHECKED_IN;
+      this.checkedInAt = existingCheckedInAt ?? checkedInAt;
+      return;
+    }
+
+    this.status = ApplicationStatus.SUBMITTED;
+    this.checkedInAt = null;
+  }
 }

@@ -16,7 +16,6 @@ import {
   ReorderQuestionRequestDto,
 } from '../../presentation/dto/request/question.request.dto';
 
-import { QuestionMapper } from '../mappers/question.mapper';
 import { AnswerType } from '@modules/application/domain/enum/survey.enum';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
@@ -31,8 +30,6 @@ export class QuestionService {
 
     @InjectRepository(Survey)
     private readonly surveyRepository: Repository<Survey>,
-
-    private readonly mapper: QuestionMapper,
 
     private readonly dataSource: DataSource,
   ) {}
@@ -68,7 +65,7 @@ export class QuestionService {
       await this.syncOptions(question.id, dto.options);
     }
 
-    return this.mapper.toSummary(question);
+    return question;
   }
 
   async getQuestion(questionId: number) {
@@ -86,7 +83,7 @@ export class QuestionService {
       throw new NotFoundException(ERROR_MESSAGES.QUESTION_NOT_FOUND);
     }
 
-    return this.mapper.toDetail(question);
+    return question;
   }
   
   async getQuestionsBySurvey(surveyId: number) {
@@ -101,7 +98,7 @@ export class QuestionService {
       },
     });
 
-    return this.mapper.toSummaryList(questions);
+    return questions;
 
   }
   /**

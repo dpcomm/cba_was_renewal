@@ -1,24 +1,14 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Param,
-  ParseEnumPipe,
   ParseIntPipe,
   Post,
-  Query,
 } from '@nestjs/common';
 import { ok } from '@shared/responses/api-response';
-import {
-  ApiOkResponse,
-  ApiOperation,
-  ApiRequestTimeoutResponse,
-  ApiTags,
-} from '@nestjs/swagger';
-import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
-import { RankGuard } from '@shared/decorators/rank-guard.decorator';
-import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AdminGuard } from '@shared/decorators/admin-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ApiFailureResponse } from '@shared/decorators/api-failure-response.decorator';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
@@ -29,11 +19,7 @@ import {
   createTermRequestDto,
   updateTermRequestDto,
 } from '@modules/term/application/dto/term.request.dto';
-import {
-  TermResponseDto,
-  TermListResponse,
-  TermSingleResponse,
-} from '../dto/term.response.dto';
+import { TermResponseDto, TermListResponse } from '../dto/term.response.dto';
 
 import { LectureMapper } from '@modules/lecture/application/mappers/lecture.mapper';
 import {
@@ -41,9 +27,9 @@ import {
   LectureResponseDto,
 } from '@modules/lecture/presentation/dto/lecture.response.dto';
 
-@ApiTags('Term')
-@Controller('term')
-@JwtGuard()
+@ApiTags('Admin Term')
+@AdminGuard()
+@Controller('admin/term')
 export class TermController {
   constructor(
     private readonly termService: TermService,
@@ -53,7 +39,6 @@ export class TermController {
 
   // term 생성
   @Post()
-  @RankGuard(UserRank.ADMIN)
   @ApiOperation({ summary: 'term 생성' })
   @ApiSuccessResponse({ type: TermResponseDto })
   @ApiFailureResponse(409, ERROR_MESSAGES.TERM_ALREADY_EXISTS)
@@ -92,7 +77,6 @@ export class TermController {
 
   // term 수정
   @Post('update')
-  @RankGuard(UserRank.ADMIN)
   @ApiOperation({ summary: 'term 수정' })
   @ApiSuccessResponse({ type: TermResponseDto })
   @ApiFailureResponse(404, ERROR_MESSAGES.TERM_NOT_FOUND)

@@ -19,19 +19,24 @@ import { ApiSuccessResponse } from '@shared/decorators/api-success-response.deco
 import { RankGuard } from '@shared/decorators/rank-guard.decorator';
 import { UserRank } from '@modules/user/domain/enums/user-rank.enum';
 import { ok } from '@shared/responses/api-response';
+import { SurveyMapper } from '../mappers/survey.mapper';
 
 @ApiTags('Admin Survey')
 @Controller('admin/surveys')
 @RankGuard(UserRank.ADMIN)
 @JwtGuard()
 export class AdminSurveyController {
-  constructor(private readonly surveyService: SurveyService) {}
+  constructor(
+    private readonly surveyService: SurveyService,
+    private readonly surveyMapper: SurveyMapper,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: '설문 생성' })
   @ApiSuccessResponse({ type: SurveySummaryResponseDto })
   async createSurvey(@Body() dto: CreateSurveyRequestDto) {
-    const result = await this.surveyService.createSurvey(dto);
+    const survey = await this.surveyService.createSurvey(dto);
+    const result = this.surveyMapper.toSurveySummary(survey);
     return ok(result, 'Success crete survey');
   }
 

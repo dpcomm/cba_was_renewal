@@ -5,9 +5,9 @@ import { QuestionService } from '@modules/application/application/services/quest
 import { Question } from '@modules/application/domain/entities/question.entity';
 import { QuestionOption } from '@modules/application/domain/entities/question_option.entity';
 import { Survey } from '@modules/application/domain/entities/survey.entity';
-import { QuestionMapper } from '@modules/application/application/mappers/question.mapper';
 
 import { AnswerType } from '@modules/application/domain/enum/survey.enum';
+import { DataSource } from 'typeorm';
 
 describe('QuestionService', () => {
   let service: QuestionService;
@@ -31,9 +31,22 @@ describe('QuestionService', () => {
     findOne: jest.fn(),
   };
 
-  const mockMapper = {
-    toSummary: jest.fn(),
-    toDetail: jest.fn(),
+  const queryBuilder = {
+    update: jest.fn().mockReturnThis(),
+    set: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    execute: jest.fn(),
+  };
+
+  const mockManager = {
+    find: jest.fn(),
+    findOne: jest.fn(),
+    delete: jest.fn(),
+    createQueryBuilder: jest.fn(() => queryBuilder),
+  };
+
+  const mockDataSource = {
+    transaction: jest.fn((callback) => callback(mockManager)),
   };
 
   beforeEach(async () => {
@@ -53,8 +66,8 @@ describe('QuestionService', () => {
           useValue: mockSurveyRepo,
         },
         {
-          provide: QuestionMapper,
-          useValue: mockMapper,
+          provide: DataSource,
+          useValue: mockDataSource,
         },
       ],
     }).compile();
@@ -77,8 +90,6 @@ describe('QuestionService', () => {
 
     mockQuestionRepo.create.mockReturnValue({ id: 1 });
     mockQuestionRepo.save.mockResolvedValue({ id: 1 });
-
-    mockMapper.toSummary.mockReturnValue({ id: 1 });
 
     const dto = {
       surveyId: 1,
@@ -137,7 +148,7 @@ describe('QuestionService', () => {
   // REORDER
   // =========================
   it('reorderQuestions - should reorder questions', async () => {
-    mockQuestionRepo.find.mockResolvedValue([
+    mockManager.find.mockResolvedValue([
       { id: 1, orderNo: 1 },
       { id: 2, orderNo: 2 },
     ]);
@@ -149,18 +160,18 @@ describe('QuestionService', () => {
 
     await service.reorderQuestions(dto as any);
 
-    expect(mockQuestionRepo.save).toHaveBeenCalled();
+    expect(mockManager.createQueryBuilder).toHaveBeenCalled();
   });
 
   // =========================
   // DELETE
   // =========================
   it('deleteQuestion - should delete question', async () => {
-    mockQuestionRepo.findOne.mockResolvedValue({ id: 1 });
+    mockManager.findOne.mockResolvedValue({ id: 1 });
 
     await service.deleteQuestion(1);
 
-    expect(mockQuestionRepo.delete).toHaveBeenCalledWith(1);
+    expect(mockManager.delete).toHaveBeenCalledWith(Question, { id: 1 });
   });
 
   // =========================

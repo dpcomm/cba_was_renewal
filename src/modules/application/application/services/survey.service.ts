@@ -6,19 +6,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Survey } from '../../domain/entities/survey.entity';
+import { Retreat } from '@modules/retreat/domain/entities/retreat.entity';
 
 import {
   CreateSurveyRequestDto,
   UpdateSurveyPeriodRequestDto,
 } from '../../presentation/dto/request/survey.request.dto';
 
-import {
-  SurveySummaryResponseDto,
-  SurveyResponseDto,
-  SurveyPreviewResponseDto,
-} from '../../presentation/dto/response/survey.response.dto';
-
-import { SurveyMapper } from '../mappers/survey.mapper';
 import { ERROR_MESSAGES } from '@shared/constants/error-messages';
 
 @Injectable()
@@ -27,29 +21,24 @@ export class SurveyService {
     @InjectRepository(Survey)
     private readonly surveyRepository: Repository<Survey>,
 
-    private readonly mapper: SurveyMapper,
+    @InjectRepository(Retreat)
+    private readonly retreatRepository: Repository<Retreat>,
   ) {}
 
   /**
    * 수련회별 설문 조회 (summary)
    */
-  async getSurveyByRetreat(
-    retreatId: number,
-  ): Promise<SurveySummaryResponseDto[]> {
-    const surveys = await this.surveyRepository.find({
+  async getSurveyByRetreat(retreatId: number): Promise<Survey[]> {
+    return this.surveyRepository.find({
       where: { retreatId },
       order: { surveyStartAt: 'DESC' },
     });
-
-    return this.mapper.toSurveySummaryList(surveys);
   }
 
   /**
    * 설문 상세 조회 (질문 리스트 포함)
    */
-  async getSurvey(
-    surveyId: number,
-  ): Promise<SurveyResponseDto> {
+  async getSurvey(surveyId: number): Promise<Survey> {
     const survey = await this.surveyRepository.findOne({
       where: { id: surveyId },
       relations: ['questions'],
@@ -59,15 +48,13 @@ export class SurveyService {
       throw new NotFoundException(ERROR_MESSAGES.SURVEY_NOT_FOUND);
     }
 
-    return this.mapper.toSurveyResponse(survey);
+    return survey;
   }
 
   /**
    * 설문 미리보기 (질문 + 옵션 포함)
    */
-  async previewSurvey(
-    surveyId: number,
-  ): Promise<SurveyPreviewResponseDto> {
+  async previewSurvey(surveyId: number): Promise<Survey> {
     const survey = await this.surveyRepository.findOne({
       where: { id: surveyId },
       relations: ['questions', 'questions.options'],
@@ -77,24 +64,29 @@ export class SurveyService {
       throw new NotFoundException(ERROR_MESSAGES.SURVEY_NOT_FOUND);
     }
 
-    return this.mapper.toSurveyPreview(survey);
+    return survey;
   }
 
   /**
    * 설문 생성
    */
-  async createSurvey(
-    dto: CreateSurveyRequestDto,
-  ): Promise<SurveySummaryResponseDto> {
+  async createSurvey(dto: CreateSurveyRequestDto): Promise<Survey> {
+    const retreat = await this.retreatRepository.findOne({
+      where: { id: dto.retreatId },
+    });
+
+    if (!retreat) {
+      throw new NotFoundException(ERROR_MESSAGES.RETREAT_NOT_FOUND);
+    }
+
     const survey = this.surveyRepository.create({
       retreatId: dto.retreatId,
+      title: `${retreat.title} 신청서`,
       surveyStartAt: new Date(dto.surveyStartAt),
       surveyEndAt: new Date(dto.surveyEndAt),
     });
 
-    const saved = await this.surveyRepository.save(survey);
-
-    return this.mapper.toSurveySummary(saved);
+    return this.surveyRepository.save(survey);
   }
 
   /**

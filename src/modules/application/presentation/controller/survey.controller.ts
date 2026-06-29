@@ -9,12 +9,16 @@ import {
 import { JwtGuard } from '@shared/decorators/jwt-guard.decorator';
 import { ApiSuccessResponse } from '@shared/decorators/api-success-response.decorator';
 import { ok } from '@shared/responses/api-response';
+import { SurveyMapper } from '../mappers/survey.mapper';
 
 @ApiTags('Survey')
 @Controller('surveys')
 @JwtGuard()
 export class SurveyController {
-  constructor(private readonly surveyService: SurveyService) {}
+  constructor(
+    private readonly surveyService: SurveyService,
+    private readonly surveyMapper: SurveyMapper,
+  ) {}
 
   /**
    * 수련회별 설문 조회 (summary)
@@ -25,7 +29,8 @@ export class SurveyController {
   async getSurveyByRetreat(
     @Param('retreatId', ParseIntPipe) retreatId: number,
   ) {
-    const result = await this.surveyService.getSurveyByRetreat(retreatId);
+    const surveys = await this.surveyService.getSurveyByRetreat(retreatId);
+    const result = this.surveyMapper.toSurveySummaryList(surveys);
     return ok(result, 'Success get survey list by retreatId');
   }
 
@@ -36,7 +41,8 @@ export class SurveyController {
   @ApiOperation({ summary: '설문 상세 조회 (질문 포함)' })
   @ApiSuccessResponse({ type: SurveyResponseDto })
   async getSurvey(@Param('surveyId', ParseIntPipe) surveyId: number) {
-    const result = await this.surveyService.getSurvey(surveyId);
+    const survey = await this.surveyService.getSurvey(surveyId);
+    const result = this.surveyMapper.toSurveyResponse(survey);
     return ok(result, 'Success get survey detail by surveyId');
   }
 
@@ -47,7 +53,8 @@ export class SurveyController {
   @ApiOperation({ summary: '설문 미리보기 (옵션 포함)' })
   @ApiSuccessResponse({ type: SurveyPreviewResponseDto })
   async previewSurvey(@Param('surveyId', ParseIntPipe) surveyId: number) {
-    const result = await this.surveyService.previewSurvey(surveyId);
+    const survey = await this.surveyService.previewSurvey(surveyId);
+    const result = this.surveyMapper.toSurveyPreview(survey);
     return ok(result, 'Success get survey overview');
   }
 }

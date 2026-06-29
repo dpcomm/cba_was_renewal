@@ -14,6 +14,7 @@ import { DeleteMealUseCase } from './application/usecase/meal.delete.usecase';
 import { UpdateMealUseCase } from './application/usecase/meal.update.usecase';
 import { RetreatMeal } from './domain/entities/retreat_meal.entity';
 import { ApplicationMeal } from '@modules/application/domain/entities/application_meal.entity';
+import { Survey } from '@modules/application/domain/entities/survey.entity';
 
 import { CreateTransportUseCase } from './application/usecases/transport-create.usecase';
 import { UpdateTransportUseCase } from './application/usecases/transport-update.usecase';
@@ -29,6 +30,7 @@ import { GetTransportQuery } from './application/queries/get-transport.query';
       ApplicationTransport,
       RetreatMeal,
       ApplicationMeal,
+      Survey,
     ]),
   ],
   controllers: [RetreatController, TransportController],

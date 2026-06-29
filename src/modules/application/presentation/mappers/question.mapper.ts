@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { Question } from '../../domain/entities/question.entity';
-import { QuestionOption } from '../../domain/entities/question_option.entity';
+import { Question } from '@modules/application/domain/entities/question.entity';
+import { QuestionOption } from '@modules/application/domain/entities/question_option.entity';
 
 import {
   QuestionSummaryResponseDto,
   QuestionDetailResponseDto,
   QuestionOptionResponseDto,
-} from '../../presentation/dto/response/question.response.dto';
+} from '../dto/response/question.response.dto';
 
 @Injectable()
 export class QuestionMapper {

@@ -22,8 +22,26 @@ export const ERROR_MESSAGES = {
   USER_EMAIL_MISMATCH: 'User ID and email do not match',
   TERM_ALREADY_EXISTS: 'Term with same year and termType already exists',
   TERM_NOT_FOUND: 'Term not found',
+  CURRENT_TERM_NOT_FOUND: 'Current term does not exist',
+  CURRENT_RETREAT_NOT_FOUND: 'Current retreat does not exist',
   APPLICATION_NOT_FOUND: 'Application not found',
   APPLICATION_NOT_CHECKED_IN: 'Application not checked in',
+  APPLICATION_UPDATE_REQUIRED: 'At least one application update is required',
+  APPLICATION_PERIOD_CLOSED: 'Application period is closed',
+  APPLICATION_FORM_NOT_FOUND: 'Application form not found',
+  CHECKED_IN_APPLICATION_UPDATE_NOT_ALLOWED:
+    'Checked-in application cannot be updated by user',
+  CHECKED_IN_APPLICATION_DELETE_NOT_ALLOWED:
+    'Checked-in application cannot be deleted by user',
+  INVALID_APPLICATION_MEAL_SELECTION: 'Invalid application meal selection',
+  INVALID_APPLICATION_TRANSPORT_SELECTION:
+    'Invalid application transport selection',
+  INVALID_APPLICATION_ANSWER: 'Invalid application answer',
+  REQUIRED_APPLICATION_ANSWER_MISSING: 'Required application answer is missing',
+  TRANSPORT_VEHICLE_NUMBER_REQUIRED: 'Vehicle number is required',
+  TRANSPORT_REMARK_REQUIRED: 'Transport remark is required',
+  CANCELED_APPLICATION_CHECK_IN_NOT_ALLOWED:
+    'Canceled application cannot change check-in status',
   EVENT_ALREADY_PLAYED: 'Event already played',
   RETREAT_NOT_FOUND: 'Retreat not found',
   LECTURE_CAPACITY_EXCEEDED: 'Selected users exceed remaining lecture capacity',

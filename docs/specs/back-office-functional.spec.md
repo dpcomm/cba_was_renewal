@@ -89,18 +89,25 @@
 
 - 수련회 목록 조회
 - 수련회 생성/수정
-- 제목, 장소, 시작일시, 종료일시 관리
+- 제목, 장소명, 주소, 수련회 시작일시, 수련회 종료일시 관리
+- 신청서 시작일시, 신청서 종료일시 관리
+- 수련회 생성 시 기본 신청서(`Survey`) 자동 생성
 - 현재 활성 수련회 지정(SystemConfig 연동)
 - 연결된 설문/식사/교통/유튜브 관리 화면으로 이동
 
 ### 스키마 기준
 
-`retreat` 는 현재 `title`, `location`(필수), `retreat_start_at`, `retreat_end_at`(필수) 중심이고, 하나의 수련회 아래에 `survey`, `retreat_meal`, `retreat_transport`, `application`, `youtube` 가 연결된다. `SystemConfig.currentRetreatId` 로 현재 운영 대상을 지정할 수 있다. (기존 데이터의 NULL 값은 일괄 정규화되었으므로 관리자 화면에서도 필수값 처리 필요)
+`retreat` 는 현재 `title`, `location`(장소명, 필수), `address`(주소, 필수), `retreat_start_at`, `retreat_end_at`(필수) 중심이고, 하나의 수련회 아래에 `survey`, `retreat_meal`, `retreat_transport`, `application`, `youtube` 가 연결된다. `SystemConfig.currentRetreatId` 로 현재 운영 대상을 지정할 수 있다. (기존 데이터의 NULL 값은 일괄 정규화되었으므로 관리자 화면에서도 필수값 처리 필요)
+
+수련회 생성/수정 화면의 “신청서 기간”은 `Survey.survey_start_at`, `Survey.survey_end_at` 으로 저장한다. 수련회 생성 API는 `retreat` 저장 후 같은 트랜잭션에서 기본 `survey` 를 자동 생성한다. 생성된 기본 신청서의 제목은 기본적으로 `{수련회 제목} 신청서` 로 저장한다.
+
+수련회 수정 API는 `retreat` 기본 정보와 기본 `survey` 의 신청서 기간을 함께 수정한다. 현재 대표 신청서는 수련회에 연결된 가장 먼저 생성된 `survey` 로 본다. 향후 신청서 여러 개/활성화 관리를 확장할 경우 `survey` 에 활성화/대표 여부 필드를 추가해 기준을 명시한다.
 
 ### 운영 정책
 
 - 이미 신청 데이터가 있는 수련회는 삭제보다 종료/비활성 개념 권장
 - 활성 수련회 전환 시 대시보드/신청 현황/유튜브 화면 기본값도 같이 바뀌게 함
+- 수련회 시작/종료일 검증과 신청서 시작/종료일 검증은 각각 `start <= end` 만 강제한다. 신청서 종료일이 수련회 시작 전이어야 한다는 제약은 두지 않는다.
 
 ---
 
@@ -143,6 +150,97 @@
 - 체크인 시각
 - 결제 상태
 - 이벤트 참여 결과
+
+### 관리자 신청자 상세 수정 API
+
+신청자 상세 패널의 각 탭은 `application.id`를 기준으로 하나의 통합 API를 사용한다.
+
+- `PATCH /admin/applications/:applicationId`
+- 네 수정 필드 중 최소 하나는 요청에 포함해야 한다.
+- 요청에 포함하지 않은 필드는 기존 값을 유지한다.
+- 빈 식사/교통 배열은 해당 선택 전체 해제를 의미한다.
+- 여러 필드를 함께 보내면 하나의 트랜잭션에서 모두 반영한다.
+
+전체 요청 예시:
+
+```json
+{
+  "retreatMealIds": [1, 2, 3],
+  "transports": [
+    {
+      "retreatTransportId": 4,
+      "vehicleNumber": null,
+      "remark": null
+    }
+  ],
+  "paymentStatus": "PAID",
+  "checkedIn": true
+}
+```
+
+#### 식사 선택 변경
+
+- 요청 예시: `{ "retreatMealIds": [1, 2, 3] }`
+- 빈 배열은 모든 식사 선택 해제를 의미한다.
+- 모든 식사 슬롯은 신청과 동일한 `retreat_id`에 속해야 한다.
+- 중복 ID 또는 존재하지 않는 식사 슬롯이 포함되면 요청을 거부한다.
+- 기존 선택 삭제와 신규 선택 저장은 하나의 트랜잭션으로 처리한다.
+
+#### 교통 선택 변경
+
+- 요청 예시: `{ "transports": [{ "retreatTransportId": 1, "vehicleNumber": null, "remark": null }] }`
+- 빈 배열은 출발/복귀 교통을 모두 이용하지 않음을 의미한다.
+- 모든 교통 옵션은 신청과 동일한 `retreat_id`에 속해야 한다.
+- `direction`은 요청받지 않고 `retreat_transport.direction`에서 결정한다.
+- 출발/복귀 방향별 최대 한 개만 허용한다.
+- 마스터 옵션의 `is_vehicle_required`, `is_remark_required` 조건을 검증한다.
+- 기존 선택 삭제와 신규 선택 저장은 하나의 트랜잭션으로 처리한다.
+- 화면 시안의 출발 시간과 탑승/하차 장소는 현행 스키마에 없으므로 이번 API 범위에서 제외한다.
+
+#### 결제 상태 변경
+
+- 요청 예시: `{ "paymentStatus": "PAID" }`
+- 허용값은 `PENDING`, `PAID`, `REFUNDED`, `EXEMPTED`다.
+
+#### 체크인 상태 변경
+
+- 요청 예시: `{ "checkedIn": true }`
+- `true`이면 `status=CHECKED_IN`, `checked_in_at=현재 시각`으로 저장한다.
+- `false`이면 `status=SUBMITTED`, `checked_in_at=null`로 저장한다.
+- 취소(`CANCELED`)된 신청은 체크인 상태를 변경할 수 없다.
+
+### 공통 응답 및 예외
+
+- 성공 시 요청에 포함되어 실제 반영된 값들을 응답한다. 클라이언트는 필요 시 상세 조회 API를 다시 호출한다.
+- 신청이 없으면 `APPLICATION_NOT_FOUND`를 반환한다.
+- 다른 수련회의 옵션, 중복 옵션, 필수 입력 누락은 `400 Bad Request`로 반환한다.
+- 취소 신청의 체크인 변경은 `409 Conflict`로 반환한다.
+
+성공 응답 예시:
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Success update application",
+  "data": {
+    "retreatMealIds": [1, 2, 3],
+    "transports": [
+      {
+        "retreatTransportId": 4,
+        "direction": "DEPARTURE",
+        "vehicleNumber": null,
+        "remark": null
+      }
+    ],
+    "paymentStatus": "PAID",
+    "applicationStatus": "CHECKED_IN",
+    "checkedInAt": "2026-04-20T09:15:00.000Z"
+  }
+}
+```
+
+요청에서 생략한 속성은 응답 `data`에도 포함하지 않는다.
 
 ---
 
@@ -420,21 +518,25 @@
 
 ## 14. 시스템 설정
 
-### 신규 추가 추천, 아주 작은 설정 화면이면 됨
+### 신규 추가
 
 ### 목적
 
-현재 운영 기준인 활성 수련회와 활성 학기를 지정.
+앱과 백오피스에서 공통으로 참조하는 운영 설정 데이터를 관리한다.
 
 ### 필수 기능
 
 - 현재 활성 수련회 선택
-- 현재 활성 학기 선택
+- 현재 선택식 강의 시즌 선택
 - 시스템 설정 조회/수정
 
 ### 기준
 
-`SystemConfig` 는 단일 레코드이고 `currentRetreatId`, `currentTermId` 를 가진다. 백오피스 대부분의 기본 조회 기준을 여기서 가져오게 하면 화면 전환 시 UX가 훨씬 깔끔해진다. `GET /api/v2/system`, `PUT /api/v2/system/admin` 도 이미 있다.
+`SystemConfig` 는 단일 레코드이고 `currentRetreatId`, `currentTermId` 를 가진다. 백오피스 대부분의 기본 조회 기준은 이 설정을 사용한다.
+
+롤링배너 관리는 별도 담당 기능으로 이번 시스템 설정 작업 범위에서 제외한다.
+
+상세 기능, 데이터 모델, API, 예외 규칙 및 구현 계획은 [`system-settings.spec.md`](./system-settings.spec.md)를 따른다.
 
 ---
 

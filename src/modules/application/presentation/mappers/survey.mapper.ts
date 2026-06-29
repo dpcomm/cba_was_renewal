@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { Survey } from '../../domain/entities/survey.entity';
+import { Survey } from '@modules/application/domain/entities/survey.entity';
 
 import {
   SurveySummaryResponseDto,
   SurveyResponseDto,
   SurveyPreviewResponseDto,
-} from '../../presentation/dto/response/survey.response.dto';
+} from '../dto/response/survey.response.dto';
 
 import { QuestionMapper } from './question.mapper';
 
@@ -19,6 +19,7 @@ export class SurveyMapper {
     return {
       id: survey.id,
       retreatId: survey.retreatId,
+      title: survey.title,
       surveyStartAt: survey.surveyStartAt,
       surveyEndAt: survey.surveyEndAt,
     };

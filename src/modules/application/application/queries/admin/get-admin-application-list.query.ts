@@ -93,6 +93,7 @@ export class GetAdminApplicationListQuery {
 
     const [applications, total] = await query
       .select([
+        'app.id',
         'app.userId',
         'user.name',
         'user.phone',

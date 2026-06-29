@@ -9,12 +9,20 @@ import {
 @Injectable()
 export class RetreatMapper {
   toResponse(retreat: Retreat): RetreatResponseDto {
+    const representativeSurvey = retreat.surveys
+      ?.slice()
+      .sort((a, b) => a.id - b.id)[0];
+
     return {
       id: retreat.id,
       title: retreat.title,
       location: retreat.location,
+      address: retreat.address,
       retreatStartAt: retreat.retreatStartAt.toISOString(),
       retreatEndAt: retreat.retreatEndAt.toISOString(),
+      surveyId: representativeSurvey?.id ?? null,
+      surveyStartAt: representativeSurvey?.surveyStartAt.toISOString() ?? null,
+      surveyEndAt: representativeSurvey?.surveyEndAt.toISOString() ?? null,
       createdAt: retreat.createdAt.toISOString(),
       updatedAt: retreat.updatedAt.toISOString(),
     };

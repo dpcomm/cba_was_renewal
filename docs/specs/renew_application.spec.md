@@ -121,6 +121,9 @@ DINNER
 
 - 수련회별 설문 메타 정보
 - `application` 은 제출 당시 어떤 `survey` 기준인지 `survey_id` 로 고정한다
+- 백오피스 수련회 생성 API는 수련회 기본 정보 저장과 함께 기본 `survey` 를 자동 생성한다.
+- 백오피스 수련회 생성/수정 화면의 신청서 시작/종료 일시는 `survey_start_at`, `survey_end_at` 으로 저장한다.
+- 기본 `survey.title` 은 `{retreat.title} 신청서` 로 저장한다.
 
 ### 삭제 정책
 
@@ -318,7 +321,9 @@ DINNER
 ### 설명
 
 - 한 유저는 한 수련회에 대해 하나의 신청 row만 가진다
-- 취소 후 재신청은 새 row 생성이 아니라 기존 row의 상태 변경으로 처리한다
+- 사용자 취소는 `application.status = CANCELED` 로 처리한다
+- 취소 후 재신청은 기존 `CANCELED` row를 `SUBMITTED` 로 복구하여 재사용한다
+- 취소된 row의 식사/교통/답변 선택은 감사/복구를 위해 보존한다
 
 ### 상태 규칙
 
@@ -536,7 +541,8 @@ status != CHECKED_IN -> checked_in_at IS NULL
 
 - `application.retreat_id === survey.retreat_id`
 - 동일 유저의 동일 수련회 신청은 기존 row 재사용
-- 취소 후 재신청 시 새 row 생성하지 않고 기존 row 상태 갱신
+- 사용자 취소는 `CANCELED` 상태 변경으로 처리
+- 취소 후 재신청 시 기존 `CANCELED` row를 `SUBMITTED` 로 복구
 - `status = CHECKED_IN` 인 경우에만 `checked_in_at` 허용
 
 ## 6.2 application_transport 저장 시
@@ -560,14 +566,64 @@ status != CHECKED_IN -> checked_in_at IS NULL
 
 신청서 제출/수정은 하나의 트랜잭션으로 처리한다.
 
+## API
+
+- `PUT /application/me/:retreatId`
+- 로그인 사용자만 호출할 수 있다.
+- 동일 유저의 동일 수련회 신청은 `application` row 하나를 재사용한다.
+- 신청이 없으면 생성하고, 신청이 있으면 식사/교통/설문 응답 선택을 전체 교체한다.
+- 기존 운영 데이터에 `CANCELED` 상태 row가 남아있는 경우 재신청 시 `SUBMITTED` 로 복구한다.
+- `CHECKED_IN` 상태는 사용자 수정이 불가하며 관리자 수정 API를 사용한다.
+
+## 취소 API
+
+- `DELETE /application/me/:retreatId`
+- 로그인 사용자만 호출할 수 있다.
+- 사용자의 해당 수련회 신청 row를 삭제하지 않고 `status = CANCELED` 로 변경한다.
+- 연결된 `answer`, `application_meal`, `application_transport` 는 삭제하지 않고 보존한다.
+- `CHECKED_IN` 상태는 삭제할 수 없다.
+- 신청이 없으면 `APPLICATION_NOT_FOUND` 를 반환한다.
+
+### 요청 예시
+
+```json
+{
+  "group": "KWON_SOON_YOUNG_AND_LIM_KANG_MI_M",
+  "surveyId": 10,
+  "retreatMealIds": [1, 2, 3],
+  "transports": [
+    {
+      "retreatTransportId": 5,
+      "vehicleNumber": null,
+      "remark": null
+    }
+  ],
+  "answers": [
+    {
+      "questionId": 1,
+      "questionOptionId": 3,
+      "content": null
+    },
+    {
+      "questionId": 2,
+      "questionOptionId": null,
+      "content": "기도 제목입니다."
+    }
+  ]
+}
+```
+
 ## 권장 순서
 
-1. `application` 조회 또는 생성
-2. `survey`, `retreat` 정합성 검증
-3. `application` 저장
-4. 기존 `answer`, `application_meal`, `application_transport` 삭제
-5. 새로운 답변/식사/교통 선택 일괄 insert
-6. commit
+1. `retreat`, `survey`, `user` 조회 및 정합성 검증
+2. 신청 기간(`survey_start_at`, `survey_end_at`) 검증
+3. `application` 조회 또는 생성
+4. 식사/교통/답변 입력값 검증
+5. 사용자 중그룹(`user.group`) 저장
+6. `application` 저장
+7. 기존 `answer`, `application_meal`, `application_transport` 삭제
+8. 새로운 답변/식사/교통 선택 일괄 insert
+9. commit
 
 ## 이유
 
@@ -577,7 +633,64 @@ status != CHECKED_IN -> checked_in_at IS NULL
 
 ---
 
-# 8. 최종 요약
+# 8. 신청 화면 양식/옵션 조회 API
+
+## 8.1 신청 화면 양식 조회
+
+신청 앱 화면에서 필요한 신청서 질문/보기, 소속 중그룹, 식사 슬롯, 출발/복귀 교통 옵션, 기존 내 신청 값을 한 번에 조회한다.
+
+### API
+
+- `GET /application/form`
+  - `GET /system`의 `currentRetreatId` 기준으로 조회한다.
+- `GET /application/form/:retreatId`
+  - 특정 수련회 기준으로 조회한다.
+- 로그인 사용자만 호출할 수 있다.
+- 현재 수련회가 설정되지 않으면 `CURRENT_RETREAT_NOT_FOUND`를 반환한다.
+- 수련회에 연결된 신청서가 없으면 `APPLICATION_FORM_NOT_FOUND`를 반환한다.
+
+### 응답 항목
+
+- `retreat`: 수련회 ID, 제목, 장소명, 수련회 시작/종료 일시
+- `survey`: 신청서 ID, 제목, 신청 시작/종료 일시, 질문/보기 목록
+- `groups`: `UserGroup` enum 기반 중그룹 선택지
+- `currentGroup`: 현재 사용자 중그룹
+- `meals`: 해당 수련회의 식사 슬롯 ID, 날짜, 식사 유형
+- `transports.departure`: 출발 교통 옵션
+- `transports.return`: 복귀 교통 옵션
+- `myApplication`: 이미 신청한 경우 기존 식사/교통/답변 선택값, 없으면 `null`
+
+## 8.2 신청 화면 옵션 조회 API
+
+수련회 신청 화면에서 소속 중그룹, 식사 슬롯, 출발/복귀 교통 옵션을 한 번에 조회한다.
+
+## API
+
+- `GET /application/options/:retreatId`
+- 로그인 사용자만 호출할 수 있다.
+- `retreatId`는 명시적으로 전달하며, 현재 수련회 ID는 `GET /system`의 `currentRetreatId`를 사용한다.
+- 수련회가 존재하지 않으면 `RETREAT_NOT_FOUND`를 반환한다.
+
+## 응답 항목
+
+- `retreat`: 수련회 ID, 제목, 신청서 접수 시작/종료 일시
+  - 대표 `survey` 가 있으면 `survey_start_at`, `survey_end_at` 을 내려준다.
+  - 대표 `survey` 가 없는 기존 데이터는 `retreat_start_at`, `retreat_end_at` 을 fallback 으로 내려준다.
+- `groups`: `UserGroup` enum 기반 중그룹 선택지
+- `meals`: 해당 수련회의 식사 슬롯 ID, 날짜, 식사 유형
+- `transports.departure`: 출발 교통 옵션
+- `transports.return`: 복귀 교통 옵션
+- 교통 옵션은 ID, 수단, 이름, 차량번호/비고 필수 여부를 반환한다.
+- 관리자용 신청 인원, 생성일, 수정일은 신청 화면 응답에서 제외한다.
+
+## 정렬
+
+- 식사: 날짜 오름차순, `BREAKFAST -> LUNCH -> DINNER`
+- 교통: 방향별 옵션 ID 오름차순
+
+---
+
+# 9. 최종 요약
 
 - 신청 본체는 `application`
 - 설문 버전 고정은 `application.survey_id`
